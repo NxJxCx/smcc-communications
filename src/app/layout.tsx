@@ -5,8 +5,8 @@ import "./globals.css";
 const poppins = Poppins({ subsets: ["latin"], weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"] });
 
 export const metadata: Metadata = {
-  title: { default: "Home", template: "%s | BAL-OBP" },
-  description: "BAL-OBP app",
+  title: { default: "Home", template: "%s | OCS" },
+  description: "OCS for the SMCC",
 };
 
 export default function RootLayout({
@@ -16,7 +16,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="scroll-smooth focus:scroll-auto">
-      <body className={poppins.className}>{children}</body>
+      <body className={poppins.className}>
+        {/* <SessionProvider> */}
+          {children}
+        {/* </SessionProvider> */}
+      </body>
     </html>
   );
 }

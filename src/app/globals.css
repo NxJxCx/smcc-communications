@@ -58,6 +58,9 @@ body {
   .font-arial-narrow {
     font-family: 'Arial Narrow', Arial, Calibri, serif;
   }
+  .text-shadow-yellow {
+    text-shadow: 1px 1px 0 #cf9e18, -1px -1px 0 #cf9e18, 1px -1px 0 #cf9e18, -1px 1px 0 #cf9e18;
+  }
   table.square-numbers tbody tr td {
     line-height: 100%;
     @apply aspect-square border text-center border-[rgb(var(--foreground-rgb))] px-1 pt-1

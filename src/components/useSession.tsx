@@ -1,6 +1,6 @@
 'use client';
 import { updateReadAllNotification, updateReadNotification } from "@/actions/notifications";
-import { NotificationDocument, UserRoles } from "@/lib/models/interfaces";
+import { NotificationDocument, Roles } from "@/lib/models/interfaces";
 import { toaster } from "evergreen-ui";
 import { type JWTPayload } from "jose";
 import { usePathname } from "next/navigation";
@@ -30,7 +30,7 @@ export const SessionContext = createContext<{
   markAsAllRead: () => {},
 })
 
-export function SessionProvider({ role, children }: Readonly<{ role: UserRoles; children: React.ReactNode; }>) {
+export function SessionProvider({ children }: Readonly<{ children: React.ReactNode; }>) {
 
   const [data, setData] = useState<SessionPayload | null>()
   const [status, setStatus] = useState<AuthenticationStatus>('loading')
@@ -38,6 +38,10 @@ export function SessionProvider({ role, children }: Readonly<{ role: UserRoles; 
   const [notifications, setNotifications] = useState<NotificationDocument[]>([])
   const [eventSource, setEventSource] = useState<EventSource|undefined>()
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+
+  const pathname = usePathname()
+
+  const role = useMemo(() => [Roles.Admin, Roles.Faculty, Roles.SuperAdmin].includes(pathname.substring(1).split('/')?.[0] as any) ? pathname.substring(1).split('/')[0] : undefined, [pathname])
 
   const authenticated = useMemo(() => status === 'authenticated', [status])
 
@@ -117,14 +121,14 @@ export function SessionProvider({ role, children }: Readonly<{ role: UserRoles; 
     // eslint-disable-next-line
   }, [authenticated, refreshTrigger]);
 
-  const refresh = useCallback((role: UserRoles, redirect: boolean) => {
-    if (authenticated) {
-      if (data!.user.role === role && !data!.user.isEmailVerified) {
-        const up = updateSession.bind(null, role)
-        up().catch(console.log)
-      }
-    }
-    const url = new URL('/' + role + '/api/session', window.location.origin);
+  const refresh = useCallback((role: Roles, redirect: boolean) => {
+    // if (authenticated) {
+    //   if (data!.user.role === role && !data!.user.isEmailVerified) {
+    //     const up = updateSession.bind(null, role)
+    //     up().catch(console.log)
+    //   }
+    // }
+    const url = new URL('/api/session', window.location.origin);
 
     fetch(url)
       .then((response) => response.json())
@@ -150,16 +154,15 @@ export function SessionProvider({ role, children }: Readonly<{ role: UserRoles; 
           window.location.replace(window.location.origin + '/' + role + '/login')
         }
       })
-  }, [authenticated, data]);
+  }, []);
 
   const update = useCallback(() => {
-    updateSession(role).catch(console.log)
+    updateSession(role as any).catch(console.log)
   }, [role])
 
-  const pathname = usePathname()
 
   useEffect(() => {
-    refresh(role, false)
+    refresh(role as any, false)
     // eslint-disable-next-line
   }, [pathname])
 
@@ -171,7 +174,7 @@ export function SessionProvider({ role, children }: Readonly<{ role: UserRoles; 
     error,
     data,
     status,
-    refresh: (redirect: boolean = true) => refresh(role, redirect),
+    refresh: (redirect: boolean = true) => refresh(role as any, redirect),
     update
   }}>
     {children}
