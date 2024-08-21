@@ -1,5 +1,5 @@
 'use client'
-import { UserRoles } from "@/lib/models/interfaces";
+import { Roles } from "@/lib/models/interfaces";
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import { SidebarNavigation, getSidebarNavigations } from "./sidebar-navigations";
 
@@ -22,7 +22,7 @@ export default function SidebarProvider({
   role
 }: Readonly<{
   children: React.ReactNode;
-  role: UserRoles;
+  role: Roles;
 }>) {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true)
   const sidebarNavigations = useMemo(() => getSidebarNavigations(role), [role])
