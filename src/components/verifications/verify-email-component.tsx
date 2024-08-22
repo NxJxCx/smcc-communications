@@ -1,8 +1,8 @@
 'use client'
 
-import { useSession } from "@/components/useSession";
-import { UserRoles } from "@/lib/models/interfaces";
+import { Roles } from "@/lib/models/interfaces";
 import { sendEmailVerificationCode } from "@/lib/twilio";
+import { useSession } from "@/lib/useSession";
 import { Spinner } from "evergreen-ui";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -11,7 +11,7 @@ import SendVerificationEmail from "./send-verification-email";
 import VerifyNotSent from "./verify-not-sent";
 import VerifySent from "./verify-sent";
 
-export default function VerifyEmailComponent({ role = UserRoles.User, resend }: { role?: UserRoles; resend?: string; }) {
+export default function VerifyEmailComponent({ role = Roles.User, resend }: { role?: Roles; resend?: string; }) {
   const { data: session, status } = useSession({
     redirect: true,
   });

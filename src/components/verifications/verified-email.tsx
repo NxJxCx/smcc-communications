@@ -1,6 +1,6 @@
-import { UserRoles } from '@/lib/models/interfaces'
+import { Roles } from '@/lib/models/interfaces'
 
-export default function VerifiedEmail({ role }: { role: UserRoles }) { return (
+export default function VerifiedEmail({ role }: { role: Roles }) { return (
   <div className="mt-16 mx-auto max-w-xl p-8 text-center text-gray-800 bg-white shadow-xl lg:max-w-3xl rounded-3xl lg:p-12">
     <div className="bg-white p-6  md:mx-auto">
       <svg viewBox="0 0 24 24" className="text-green-600 w-16 h-16 mx-auto my-6">

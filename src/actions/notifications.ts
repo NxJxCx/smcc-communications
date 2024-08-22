@@ -1,12 +1,12 @@
 'use server'
 
-import { UserRoles } from "@/lib/models/interfaces";
+import { Roles } from "@/lib/models/interfaces";
 import User from "@/lib/models/User";
 import { getMyNotifications, getSession } from "@/lib/session";
 import { NextRequest } from "next/server";
 
 export async function getNotifications(request: NextRequest) {
-  const role = request.nextUrl.pathname.split('/')[1] as UserRoles;
+  const role = request.nextUrl.pathname.split('/')[1] as Roles;
   const unreadOnly = request.nextUrl.searchParams.get('unread')
 
   let ni = -1;
@@ -56,7 +56,7 @@ export async function getNotifications(request: NextRequest) {
   });
 }
 
-export async function updateReadNotification(role: UserRoles, notifId: string) {
+export async function updateReadNotification(role: Roles, notifId: string) {
   try {
     const session = await getSession(role);
     if (!session) {
@@ -90,7 +90,7 @@ export async function updateReadNotification(role: UserRoles, notifId: string) {
   }
 }
 
-export async function updateReadAllNotification(role: UserRoles) {
+export async function updateReadAllNotification(role: Roles) {
   try {
     const session = await getSession(role);
     if (!session) {
@@ -149,7 +149,7 @@ export async function addNotification(userId: string, { title, message, href }: 
   return false
 }
 
-export async function broadcastNotification({ role = UserRoles.OBO, title, message, href }: { role?: UserRoles, title: string, message: string, href: string }) {
+export async function broadcastNotification({ role = Roles.OBO, title, message, href }: { role?: Roles, title: string, message: string, href: string }) {
   try {
     const notification = {
       title,

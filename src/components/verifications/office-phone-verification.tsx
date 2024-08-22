@@ -1,16 +1,16 @@
 'use client'
 
 import { contactCheckExist, updatePhoneNumber } from "@/actions/signup";
-import { useSession } from "@/components/useSession";
-import { UserRoles } from "@/lib/models/interfaces";
+import { Roles } from "@/lib/models/interfaces";
 import { sendSMSVerificationCode, verifySMSVerificationCode } from "@/lib/twilio";
+import { useSession } from "@/lib/useSession";
 import { Button, Group, Icon, Spinner, TextInputField } from "evergreen-ui";
 import NextLink from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 
-export default function OfficePhoneVerificationComponent({ role }: { role: UserRoles}) {
+export default function OfficePhoneVerificationComponent({ role }: { role: Roles}) {
   const { data: session, status, refresh } = useSession({
     redirect: true,
   });

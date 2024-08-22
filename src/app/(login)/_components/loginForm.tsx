@@ -1,7 +1,7 @@
 'use client';;
 import { login } from '@/actions/auth';
-import { useSession } from '@/components/useSession';
 import { Roles } from '@/lib/models/interfaces';
+import { useSession } from '@/lib/useSession';
 import { toaster } from 'evergreen-ui';
 import { redirect, useRouter } from "next/navigation";
 import { useEffect } from 'react';
@@ -44,7 +44,7 @@ export default function LoginForm({
         </div>
         <div className="flex flex-wrap justify-evenly items-center">
           <button type="submit" className="border border-black rounded-full text-white bg-blue-800 px-6 py-1">Login</button>
-          <button type="reset" className="border border-black rounded-full text-white bg-blue-800 px-6 py-1" onClick={() => router.back()}>Back</button>
+          <button type="reset" className="border border-black rounded-full text-white bg-blue-800 px-6 py-1" onClick={() => router.push("/")}>Back</button>
         </div>
       </form>
       <div className="text-center text-red-500 pt-4 text-[10px]">Reminder: Please remember your password.</div>

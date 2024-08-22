@@ -1,10 +1,10 @@
 'use client';
 import LoadingComponent from "@/components/loading";
-import { useSession } from "@/components/useSession";
+import { useSession } from "@/lib/useSession";
 import { HomeIcon, PeopleIcon } from "evergreen-ui";
 import NextLink from 'next/link';
 import { useMemo } from "react";
-import BannerWithBreadcrumb from "../../banner-with-breadcrumb";
+import BannerWithBreadcrumb from "../../_components/banner-with-breadcrumb";
 import CardContainer from "../../card-container";
 
 export default function AccountsPage() {

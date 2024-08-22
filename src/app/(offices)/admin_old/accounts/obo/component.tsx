@@ -1,9 +1,9 @@
 'use client';
-import BannerWithBreadcrumb from "@/app/(offices)/banner-with-breadcrumb";
-import CardContainer from "@/app/(offices)/card-container";
+import BannerWithBreadcrumb from "@/app/(offices)/_components/banner-with-breadcrumb";
+import CardContainer from "@/app/(offices)/_components/card-container";
 import LoadingComponent from "@/components/loading";
-import { useSession } from "@/components/useSession";
-import { UserRoles } from "@/lib/models/interfaces";
+import { Roles } from "@/lib/models/interfaces";
+import { useSession } from "@/lib/useSession";
 import { HomeIcon, PeopleIcon } from "evergreen-ui";
 import { useMemo } from "react";
 import AccountManagementTable from "../account-management";
@@ -44,7 +44,7 @@ export default function OBOAccountsPage() {
       />
       <div className="p-6">
         <CardContainer title="OBO Accounts">
-          <AccountManagementTable role={UserRoles.OBO} />
+          <AccountManagementTable role={Roles.OBO} />
         </CardContainer>
       </div>
     </>

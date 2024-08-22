@@ -1,6 +1,6 @@
 'use client';;
 import { changePassword } from "@/actions/auth";
-import { UserRoles } from "@/lib/models/interfaces";
+import { Roles } from "@/lib/models/interfaces";
 import { updateSession } from "@/lib/session";
 import { ResponseFormState, SessionPayload } from "@/lib/types";
 import clsx from "clsx";
@@ -8,14 +8,14 @@ import { Alert, Paragraph, StatusIndicator, toaster } from "evergreen-ui";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import { useFormState, useFormStatus } from "react-dom";
-import CardContainer from "../../(offices)/card-container";
+import CardContainer from "../../(offices)/_components/card-container";
 import ChangePasswordForm from "./change-password";
 
 export default function ChangePasswordPageContent({ session } : { session: SessionPayload | null; }) {
 
   const role = useMemo(() => session?.user.role, [session?.user.role])
 
-  const changePassAction = changePassword.bind(null, role as UserRoles);
+  const changePassAction = changePassword.bind(null, role as Roles);
 
   const [state, action] = useFormState<ResponseFormState>(
     changePassAction as any,

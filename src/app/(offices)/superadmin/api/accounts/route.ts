@@ -2,17 +2,17 @@
 
 import connectDB from "@/lib/database";
 import User from "@/lib/models/User";
-import { UserRoles } from "@/lib/models/interfaces";
+import { Roles } from "@/lib/models/interfaces";
 import { getSession } from "@/lib/session";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
-  const session = await getSession(UserRoles.Admin);
+  const session = await getSession(Roles.Admin);
   if (session === null) {
     return NextResponse.json('access denied', { status: 401, statusText: 'Access Denied' })
   }
   const role = request.nextUrl.searchParams.get('acct');
-  if (!!role && Object.values(UserRoles).includes(role as any)) {
+  if (!!role && Object.values(Roles).includes(role as any)) {
     await connectDB();
     try {
       const data = await User.find({ role }).select('-password -notification').sort('-createdAt').exec();
@@ -23,13 +23,13 @@ export async function GET(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const session = await getSession(UserRoles.Admin);
+  const session = await getSession(Roles.Admin);
   if (session === null) {
     return NextResponse.json('access denied', { status: 401, statusText: 'Access Denied' })
   }
   const role = request.nextUrl.searchParams.get('acct');
   const uid = request.nextUrl.searchParams.get('uid');
-  if (!!role && Object.values(UserRoles).includes(role as any) && !!uid && uid.length === 24) {
+  if (!!role && Object.values(Roles).includes(role as any) && !!uid && uid.length === 24) {
     await connectDB();
     try {
       const updated = await User.updateOne(
@@ -45,13 +45,13 @@ export async function DELETE(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const session = await getSession(UserRoles.Admin);
+  const session = await getSession(Roles.Admin);
   if (session === null) {
     return NextResponse.json('access denied', { status: 401, statusText: 'Access Denied' })
   }
   try {
     const { role, uid } = await request.json();
-    if (!!role && Object.values(UserRoles).includes(role as any) && !!uid && uid.length === 24) {
+    if (!!role && Object.values(Roles).includes(role as any) && !!uid && uid.length === 24) {
       await connectDB();
         const updated = await User.updateOne(
           { _id: uid as string, role },

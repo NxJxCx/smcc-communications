@@ -1,10 +1,10 @@
 'use client';;
-import { UserRoles } from "@/lib/models/interfaces";
-import { useSession } from "@/components/useSession";
+import { Roles } from "@/lib/models/interfaces";
+import { useSession } from "@/lib/useSession";
 import { Alert, Link } from "evergreen-ui";
 import { useEffect, useState } from "react";
 
-export default function AlertComponent({ role = UserRoles.User }: { role?: UserRoles }) {
+export default function AlertComponent({ role = Roles.User }: { role?: Roles }) {
   const { data: session, status } = useSession({ redirect: false })
   const [alertMessage, setAlertMessage] = useState<any>({
     intent: 'warning',

@@ -1,5 +1,5 @@
-'use client'
-import { Roles } from "@/lib/models/interfaces";
+'use client';
+import { useSession } from "@/lib/useSession";
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import { SidebarNavigation, getSidebarNavigations } from "./sidebar-navigations";
 
@@ -19,14 +19,13 @@ export const SidebarContext = createContext<{
 
 export default function SidebarProvider({
   children,
-  role
 }: Readonly<{
   children: React.ReactNode;
-  role: Roles;
 }>) {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true)
+  const { data: sessionData, status } = useSession({ redirect: false })
+  const role = useMemo(() => status === 'authenticated' ? sessionData?.user?.role || undefined : undefined, [status, sessionData])
   const sidebarNavigations = useMemo(() => getSidebarNavigations(role), [role])
-
   const toggleSidebar = useCallback(() => {
     setIsSidebarOpen(!isSidebarOpen)
   }, [isSidebarOpen]);
@@ -39,15 +38,17 @@ export default function SidebarProvider({
     setIsSidebarOpen(true)
   }, []);
 
-  return <SidebarContext.Provider value={{
-    isSidebarOpen,
-    toggleSidebar,
-    closeSidebar,
-    openSidebar,
-    sidebarNavigations
-  }}>
-    {children}
-  </SidebarContext.Provider>
+  return (
+    <SidebarContext.Provider value={{
+      isSidebarOpen,
+      toggleSidebar,
+      closeSidebar,
+      openSidebar,
+      sidebarNavigations
+    }}>
+      {children}
+    </SidebarContext.Provider>
+  )
 }
 
 export function useSidebar() {

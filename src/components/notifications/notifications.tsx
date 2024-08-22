@@ -1,9 +1,9 @@
 'use client';
-import { UserRoles, type NotificationDocument } from "@/lib/models/interfaces";
+import { Roles, type NotificationDocument } from "@/lib/models/interfaces";
 import { DotIcon, Icon, NotificationsIcon, Popover, Position } from "evergreen-ui";
 import NotificationsContent from "./notifications-content";
 
-export default function NotificationsNav({ notifications = [], iconColor = "orange25", isShown, onOpenComplete, role = UserRoles.User, onMarkAsRead = (notifId: string) => {}, onMarkAllRead = () => {}, ...props }: { onMarkAsRead?: (notifId: string) => void; onMarkAllRead?: () => void, role?: UserRoles, isShown?: boolean, onOpenComplete?: () => void, notifications?: NotificationDocument[], iconColor?: string } & React.HTMLAttributes<HTMLDivElement>) {
+export default function NotificationsNav({ notifications = [], iconColor = "orange25", isShown, onOpenComplete, role = Roles.User, onMarkAsRead = (notifId: string) => {}, onMarkAllRead = () => {}, ...props }: { onMarkAsRead?: (notifId: string) => void; onMarkAllRead?: () => void, role?: Roles, isShown?: boolean, onOpenComplete?: () => void, notifications?: NotificationDocument[], iconColor?: string } & React.HTMLAttributes<HTMLDivElement>) {
   return (<div {...props}>
       <Popover
         isShown={isShown}

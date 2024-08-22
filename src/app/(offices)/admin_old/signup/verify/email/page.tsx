@@ -1,6 +1,6 @@
-import { Metadata } from "next";
 import EmailVerificationComponent from "@/components/verifications/email-verification";
-import { UserRoles } from "@/lib/models/interfaces";
+import { Roles } from "@/lib/models/interfaces";
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Email Verification - Admin",
@@ -14,5 +14,5 @@ type ParamsProp = Readonly<{
 }>
 
 export default function Page({ searchParams: { token, code } }: ParamsProp) {
-  return <EmailVerificationComponent role={UserRoles.Admin} token={token} code={code} />
+  return <EmailVerificationComponent role={Roles.Admin} token={token} code={code} />
 }

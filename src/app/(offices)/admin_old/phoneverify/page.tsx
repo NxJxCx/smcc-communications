@@ -1,11 +1,11 @@
-import { Metadata } from "next";
 import OfficePhoneVerificationComponent from "@/components/verifications/office-phone-verification";
-import { UserRoles } from "@/lib/models/interfaces";
+import { Roles } from "@/lib/models/interfaces";
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Phone Verification - Admin",
 };
 
 export default function Page() {
-  return <OfficePhoneVerificationComponent role={UserRoles.Admin} />
+  return <OfficePhoneVerificationComponent role={Roles.Admin} />
 }

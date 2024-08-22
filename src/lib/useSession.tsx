@@ -5,8 +5,8 @@ import { toaster } from "evergreen-ui";
 import { type JWTPayload } from "jose";
 import { usePathname } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { destroySession, updateSession } from "../lib/session";
-import type { AuthenticationStatus, SessionPayload } from "../lib/types";
+import { destroySession, updateSession } from "./session";
+import type { AuthenticationStatus, SessionPayload } from "./types";
 
 export const SessionContext = createContext<{
   error: Error | undefined;

@@ -1,7 +1,7 @@
 'use client';;
 import { FormButton } from "@/components/forms/button";
 import LoadingComponent from "@/components/loading";
-import { GovIdDocument, UserDocument, UserRoles } from "@/lib/models/interfaces";
+import { GovIdDocument, Roles, UserDocument } from "@/lib/models/interfaces";
 import clsx from "clsx";
 import { Button, Image, Paragraph, TextInputField, UploadIcon } from "evergreen-ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -239,7 +239,7 @@ export default function ProfileSettingsForm({
       </div>
       <div>
         {
-          role !== UserRoles.User && (
+          role !== Roles.User && (
             <>
               <Paragraph fontWeight="bold" color="green500" textTransform="uppercase">Position <span className="lowercase italic text-gray-500 text-xs font-normal">(title shown below your name)</span></Paragraph>
               <hr className="mb-2" />
@@ -250,7 +250,7 @@ export default function ProfileSettingsForm({
                   name="position"
                   value={position}
                   onChange={(ev: any) => setGovId(ev.target.value ? ev.target.value : undefined)}
-                  readOnly={!isEditing || role === UserRoles.Admin}
+                  readOnly={!isEditing || role === Roles.Admin}
                   disabled={pending || isPending}
                 />
               ) : (
@@ -262,7 +262,7 @@ export default function ProfileSettingsForm({
             </>
           )
         }
-        <Paragraph fontWeight="bold" color="green500" textTransform="uppercase" marginTop={role !== UserRoles.User ? undefined : 4}>Government ID</Paragraph>
+        <Paragraph fontWeight="bold" color="green500" textTransform="uppercase" marginTop={role !== Roles.User ? undefined : 4}>Government ID</Paragraph>
         <hr className="mb-2" />
         { isEditing ? (
           <>

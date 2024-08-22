@@ -1,10 +1,10 @@
-import { SessionProvider } from "@/components/useSession";
-import { UserRoles } from "@/lib/models/interfaces";
+import { Roles } from "@/lib/models/interfaces";
+import { SessionProvider } from "@/lib/useSession";
 import { Metadata } from "next";
-import FooterComponent from "../footer";
-import HeaderComponent from "../header";
+import FooterComponent from "../_components/footer";
+import HeaderComponent from "../_components/header";
+import SidebarProvider from "../_components/sidebar-context";
 import MainComponent from "../main";
-import SidebarProvider from "../sidebar-context";
 
 export const metadata: Metadata = {
   title: "Admin",
@@ -17,8 +17,8 @@ export default function Layout({
   children: React.ReactNode;
 }>) {
   return (
-    <SessionProvider role={UserRoles.Admin}>
-      <SidebarProvider role={UserRoles.Admin}>
+    <SessionProvider role={Roles.Admin}>
+      <SidebarProvider role={Roles.Admin}>
         <HeaderComponent />
         <MainComponent>
           {children}

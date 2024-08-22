@@ -1,8 +1,8 @@
 'use client';;
-import BannerWithBreadcrumb from "@/app/(offices)/banner-with-breadcrumb";
+import BannerWithBreadcrumb from "@/app/(offices)/_components/banner-with-breadcrumb";
 import LoadingComponent from "@/components/loading";
-import { useSession } from "@/components/useSession";
-import { UserRoles } from "@/lib/models/interfaces";
+import { Roles } from "@/lib/models/interfaces";
+import { useSession } from "@/lib/useSession";
 import { HomeIcon, LockIcon } from "evergreen-ui";
 import { useEffect, useMemo } from "react";
 import ChangePasswordPageContent from "./content";
@@ -45,7 +45,7 @@ export default function ChangePasswordPage() {
   return status === 'authenticated' && (
     <>
       <BannerWithBreadcrumb
-        role={role as UserRoles}
+        role={role as Roles}
         title="Change Password"
         icon={LockIcon}
         description="Change My Password"

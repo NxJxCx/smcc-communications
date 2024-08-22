@@ -1,10 +1,10 @@
 'use server';
-import { UserRoles } from "@/lib/models/interfaces";
+import { Roles } from "@/lib/models/interfaces";
 import { getMyNotifications } from "@/lib/session";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
-  const role = request.nextUrl.pathname.split('/')[1] as UserRoles;
+  const role = request.nextUrl.pathname.split('/')[1] as Roles;
   const unreadOnly = request.nextUrl.searchParams.get('unread')
   const data = await getMyNotifications(role, unreadOnly === '1');
   if (data === null) {

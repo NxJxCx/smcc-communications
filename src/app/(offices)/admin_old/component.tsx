@@ -1,6 +1,6 @@
 'use client';
 import LoadingComponent from "@/components/loading";
-import { useSession } from "@/components/useSession";
+import { useSession } from "@/lib/useSession";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 

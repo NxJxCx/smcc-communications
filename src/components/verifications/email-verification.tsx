@@ -1,16 +1,16 @@
 'use client';
 import NotFoundPage from "@/components/errorpages/404";
-import { useSession } from "@/components/useSession";
 import VerifiedEmail from "@/components/verifications/verified-email";
 import VerifySent from "@/components/verifications/verify-sent";
-import { UserRoles } from "@/lib/models/interfaces";
+import { Roles } from "@/lib/models/interfaces";
 import { decrypt, updateSession } from "@/lib/session";
 import { sendEmailVerificationCode, verifyEmailVerificationCode } from "@/lib/twilio";
+import { useSession } from "@/lib/useSession";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import LoadingComponent from "../loading";
 import VerifyNotSent from "./verify-not-sent";
 
-export default function EmailVerificationComponent({ role = UserRoles.User, token, code }: { role?: UserRoles, token?: string, code?: string }) {
+export default function EmailVerificationComponent({ role = Roles.User, token, code }: { role?: Roles, token?: string, code?: string }) {
   const { data: session, status } = useSession({
     redirect: false
   })

@@ -36,7 +36,7 @@ export async function generateSessionPayload(role: Roles, userId: string, expHou
       return {
         user: {
           userId,
-          fullName: [user.prefixName, user.firstName, user.middleName?.[0] + ".", user.lastName, user.suffixName].filter((v) => !!v).join(" "),
+          fullName: [user.prefixName, user.firstName, user.middleName?.[0] ? user.middleName[0] + "." : '', user.lastName, user.suffixName].filter((v) => !!v).join(" "),
           ...JSON.parse(JSON.stringify(user))
         },
         expiresAt: new Date(Date.now() + expHours * 60 * 60 * 1000)

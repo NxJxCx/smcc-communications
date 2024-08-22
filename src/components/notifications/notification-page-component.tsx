@@ -1,9 +1,9 @@
 'use client';;
-import BannerWithBreadcrumb from "@/app/(offices)/banner-with-breadcrumb";
-import CardContainer from "@/app/(offices)/card-container";
+import BannerWithBreadcrumb from "@/app/(offices)/_components/banner-with-breadcrumb";
+import CardContainer from "@/app/(offices)/_components/card-container";
 import LoadingComponent from "@/components/loading";
-import { useSession } from "@/components/useSession";
 import { NotificationDocument } from "@/lib/models/interfaces";
+import { useSession } from "@/lib/useSession";
 import clsx from "clsx";
 import { Button, HomeIcon, Pagination, PeopleIcon, Spinner } from "evergreen-ui";
 import NextLink from 'next/link';

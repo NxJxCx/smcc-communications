@@ -2,20 +2,20 @@
 
 import connectDB from "@/lib/database";
 import Assignation from "@/lib/models/Assignation";
-import { UserRoles } from "@/lib/models/interfaces";
+import { Roles } from "@/lib/models/interfaces";
 import User from "@/lib/models/User";
 import { getSession } from "@/lib/session";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function GET(_: NextRequest) {
-  const session = await getSession(UserRoles.Admin);
+  const session = await getSession(Roles.Admin);
   if (session === null) {
     return NextResponse.json('access denied', { status: 401, statusText: 'Access Denied' })
   }
   await connectDB();
   try {
     const filterSearch = {
-      role: { $nin: [UserRoles.Admin, UserRoles.User] },
+      role: { $nin: [Roles.Admin, Roles.User] },
       deactivated: false,
     }
     const data = await User.find(filterSearch).select('firstName middleName lastName role position').exec();

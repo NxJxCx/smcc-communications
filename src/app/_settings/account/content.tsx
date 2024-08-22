@@ -4,7 +4,7 @@ import { SessionPayload } from "@/lib/types";
 import { WarningSignIcon } from "evergreen-ui";
 import NextLink from 'next/link';
 import { useCallback, useState } from "react";
-import CardContainer from "../../(offices)/card-container";
+import CardContainer from "../../(offices)/_components/card-container";
 import AccountSettingsEmailForm from "./email-change";
 import AccountSettingsPhoneForm from "./phone-change";
 

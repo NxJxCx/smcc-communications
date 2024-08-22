@@ -1,12 +1,12 @@
 'use client';;
 import { updateProfile } from "@/actions/auth";
-import { UserDocument, UserRoles } from "@/lib/models/interfaces";
+import { Roles, UserDocument } from "@/lib/models/interfaces";
 import { ResponseFormState, SessionPayload } from "@/lib/types";
 import clsx from "clsx";
 import { Alert, Button, CrossIcon, EditIcon, Paragraph, StatusIndicator, toaster } from "evergreen-ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useFormState } from "react-dom";
-import CardContainer from "../../(offices)/card-container";
+import CardContainer from "../../(offices)/_components/card-container";
 import ProfileSettingsForm from "./profile-settings";
 
 export default function ProfilePageContent({ session, refresh } : { session: SessionPayload | null; refresh: () => void; }) {
@@ -16,7 +16,7 @@ export default function ProfilePageContent({ session, refresh } : { session: Ses
   const [isEditing, setEditing] = useState<boolean>(false)
   const [userData, setUserData] = useState<UserDocument|null>(null)
 
-  const profileChangeAction = updateProfile.bind(null, role as UserRoles)
+  const profileChangeAction = updateProfile.bind(null, role as Roles)
   const [state, action, pending] = useFormState<ResponseFormState>(
     profileChangeAction as any,
     undefined

@@ -1,10 +1,10 @@
 'use client';
-import { UserRoles, type NotificationDocument } from "@/lib/models/interfaces";
+import { Roles, type NotificationDocument } from "@/lib/models/interfaces";
 import { Button, Menu, NotificationsUpdatedIcon, Tooltip } from "evergreen-ui";
 import NextLink from 'next/link';
 import { Fragment, useMemo } from "react";
 
-export default function NotificationsContent({ notifications = [], role = UserRoles.User, onMarkAsRead = (notifId: string) => {}, onMarkAllRead = () => {} }: { onMarkAsRead?: (innotifIddex: string) => void; onMarkAllRead?: () => void; notifications?: NotificationDocument[]; role?: UserRoles }) {
+export default function NotificationsContent({ notifications = [], role = Roles.User, onMarkAsRead = (notifId: string) => {}, onMarkAllRead = () => {} }: { onMarkAsRead?: (innotifIddex: string) => void; onMarkAllRead?: () => void; notifications?: NotificationDocument[]; role?: Roles }) {
 
   const notificationsCount = useMemo(() => notifications.length, [notifications]);
 

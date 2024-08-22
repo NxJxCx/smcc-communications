@@ -3,7 +3,7 @@ import { updateAccount } from '@/actions/auth';
 import { signup } from '@/actions/signup';
 import { FormButton } from '@/components/forms/button';
 import LoadingComponent from '@/components/loading';
-import { UserRoles, VerificationStatus, type UserDocument } from '@/lib/models/interfaces';
+import { Roles, VerificationStatus, type UserDocument } from '@/lib/models/interfaces';
 import { ResponseFormState } from '@/lib/types';
 import clsx from 'clsx';
 import {
@@ -61,7 +61,7 @@ export default function AccountManagementTable({
   onDeactivateAccount = (success: boolean, user?: UserDocument) => {},
   onActivateAccount = (success: boolean, user?: UserDocument) => {},
 } : Readonly<{
-  role: UserRoles;
+  role: Roles;
   onSelected?: (user?: UserDocument) => void;
   onLoading?: (isLoading: boolean) => void;
   onDeactivateAccount?: (success: boolean, user?: UserDocument) => void;
@@ -125,7 +125,7 @@ export default function AccountManagementTable({
     // eslint-disable-next-line
   }, []);
 
-  const columnsFinal = useMemo<ColumnsType>(() => role !== UserRoles.User ? [{ label: 'Position', value: 'position' }, ...columns] : columns, [role]);
+  const columnsFinal = useMemo<ColumnsType>(() => role !== Roles.User ? [{ label: 'Position', value: 'position' }, ...columns] : columns, [role]);
 
   const [selectedColumnsState, setSelectedColumns] = useState<string[]>(columnsFinal.map((col: any) => col.value));
   const selectedColumns = useMemo(() => selectedColumnsState.length === 0 ? columnsFinal : columnsFinal.filter((item: ColumnsProp) => selectedColumnsState.includes(item.value)), [selectedColumnsState, columnsFinal]);
@@ -450,7 +450,7 @@ export default function AccountManagementTable({
                 validationMessage={contactNo.length === 0 ? undefined : (!/^\+639[0-9]{9}$/.test('+63' + contactNo) ? 'Invalid Contact No.' : (contactExists ? 'Contact No. already taken' : undefined))}
                 required
               />
-              { role !== UserRoles.User && (
+              { role !== Roles.User && (
                 <TextInputField
                   name="position"
                   placeholder="Ex: Engineer 1"
@@ -576,9 +576,9 @@ export default function AccountManagementTable({
                   label="Account Role"
                   name="role"
                   onChange={(ev: any) => setUpdateRoleValue(ev.target.value)}
-                  defaultValue={selectedUser?.role || UserRoles.User}
+                  defaultValue={selectedUser?.role || Roles.User}
                 >
-                  {Object.entries(UserRoles).map(([key, value]) => (
+                  {Object.entries(Roles).map(([key, value]) => (
                     <option key={value} value={value}>{key}</option>
                   ))}
                 </SelectField>
@@ -610,7 +610,7 @@ export default function AccountManagementTable({
                 validationMessage={(contactNo.length === 0 || selectedUser?.contactNo.substring(3) === contactNo) ? undefined : (!/^\+639[0-9]{9}$/.test('+63' + contactNo) ? 'Invalid Contact No.' : (contactExists ? 'Contact No. already taken' : undefined))}
                 required
               />
-              { (role !== UserRoles.User || (!!updateRoleValue && updateRoleValue !== UserRoles.User)) && (
+              { (role !== Roles.User || (!!updateRoleValue && updateRoleValue !== Roles.User)) && (
                 <TextInputField
                   name="position"
                   placeholder="Ex: Engineer 1"
