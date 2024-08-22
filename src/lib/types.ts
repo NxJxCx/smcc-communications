@@ -3,17 +3,21 @@ import { z } from 'zod';
 import { Roles } from './models/interfaces';
 
 export const SignupFormSchema = z.object({
- 
+  employeeId: z.string().trim(),
+  password: z.string(),
+  role: z.enum([Roles.Admin, Roles.SuperAdmin, Roles.Faculty]),
+  email: z.string().trim().email({ message: 'Invalid Email' }),
+  prefixName: z.string().trim().optional(),
+  suffixName: z.string().trim().optional(),
+  firstName: z.string().trim(),
+  middleName: z.string().trim().optional(),
+  lastName: z.string().trim(),
+  departmentIds: z.array(z.string()).optional(),
 })
 
 export const LoginFormSchema = z.object({
   role: z.enum([Roles.Admin, Roles.SuperAdmin, Roles.Faculty]),
-  email: z.union([
-    z.string().trim().email({ message: 'Invalid Email' }),
-    z.string().trim().regex(/^\+639[0-9]{9}$/, { message: 'Invalid Phone Number' }),
-    z.string().trim().regex(/^09[0-9]{9}$/, { message: 'Invalid Phone Number' }),
-    z.string().trim().regex(/^9[0-9]{9}$/, { message: 'Invalid Phone Number' }),
-  ]),
+  employeeId: z.string().trim(),
   password: z.string()
     .min(1, { message: 'Fill in password' })
     .trim(),
@@ -41,9 +45,10 @@ export const ChangePasswordFormSchema = z.object({
 
 export type LoginFormState =
 | {
+    success?: boolean,
     errors?: {
       role?: string[]
-      email?: string[]
+      employeeId?: string[]
       password?: string[]
       credentials?: string[]
     }
@@ -63,11 +68,16 @@ export type ResponseFormState =
 
 export interface UserSessionProp {
   userId: string;
+  employeeId: string
   email: string;
+  fullName: string;
   role: Roles;
+  prefixName?: string
+  suffixName?: string
   firstName: string;
   middleName?: string;
   lastName: string;
+  photo: Buffer|string;
   deactivated: boolean;
   createdAt: Date|string;
   updatedAt: Date|string;

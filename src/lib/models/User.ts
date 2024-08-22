@@ -71,6 +71,10 @@ const UserSchema = new Schema({
     }],
     default: []
   },
+  photo: {
+    type:Schema.Types.ObjectId,
+    ref: 'PhotoFile'
+  },
   deactivated: {
     type: Boolean,
     default: false

@@ -5,7 +5,6 @@ export interface SidebarNavigation {
   name: string;
   icon?: JSX.Element|IconComponent;
   url?: string;
-  children?: SidebarNavigation[];
 }
 
 const superAdminSidebarNavList: SidebarNavigation[] = [

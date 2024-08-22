@@ -4,6 +4,12 @@ export interface Documents {
   updatedAt?: Date|string|null
 }
 
+export interface PhotoFileDocument extends Documents {
+  file: Buffer|string
+  mimeType: string
+  size: number
+}
+
 export interface DocFileDocument extends Documents {
   file: Buffer|string
   mimeType: string
@@ -35,6 +41,9 @@ export interface UserDocument extends Documents {
   middleName?: string
   lastName: string
   departmentIds: DepartmentDocument[]|string[]
+  readMemos: MemoDocument[]|string[]
+  readLetters: LetterDocument[]|string[]
+  photo: PhotoFileDocument|string|null
   deactivated: boolean
   notification: NotificationDocument[]
 }

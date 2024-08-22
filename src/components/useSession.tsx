@@ -122,38 +122,34 @@ export function SessionProvider({ children }: Readonly<{ children: React.ReactNo
   }, [authenticated, refreshTrigger]);
 
   const refresh = useCallback((role: Roles, redirect: boolean) => {
-    // if (authenticated) {
-    //   if (data!.user.role === role && !data!.user.isEmailVerified) {
-    //     const up = updateSession.bind(null, role)
-    //     up().catch(console.log)
-    //   }
-    // }
-    const url = new URL('/api/session', window.location.origin);
+    if ([Roles.Admin, Roles.Faculty, Roles.SuperAdmin].includes(role)) {
+      const url = new URL('/' + role + '/api/session', window.location.origin);
 
-    fetch(url)
-      .then((response) => response.json())
-      .then(async ({ data: session }: { data: JWTPayload | SessionPayload | { [key: string]: any;} | null;}) => {
-        if (!session || (new Date(session!.expiresAt as Date|string).getTime()) < (new Date()).getTime()) {
-          const signOut = destroySession.bind(null, role)
-          await signOut()
-          setData(null)
-          setStatus('unauthenticated')
-          if (redirect) {
-            window.location.href = window.location.origin + '/' + role + '/login';
+      fetch(url)
+        .then((response) => response.json())
+        .then(async ({ data: session }: { data: JWTPayload | SessionPayload | { [key: string]: any;} | null;}) => {
+          if (!session || (new Date(session!.expiresAt as Date|string).getTime()) < (new Date()).getTime()) {
+            const signOut = destroySession.bind(null, role)
+            await signOut()
+            setData(null)
+            setStatus('unauthenticated')
+            if (redirect) {
+              window.location.href = window.location.origin + '/' + role + '/login';
+            }
+          } else {
+            setData(session as SessionPayload|null)
+            setStatus('authenticated')
           }
-        } else {
-          setData(session as SessionPayload|null)
-          setStatus('authenticated')
-        }
-      })
-      .catch((error: any) => {
-        setData(null)
-        setError(error)
-        setStatus('error')
-        if (redirect) {
-          window.location.replace(window.location.origin + '/' + role + '/login')
-        }
-      })
+        })
+        .catch((error: any) => {
+          setData(null)
+          setError(error)
+          setStatus('error')
+          if (redirect) {
+            window.location.replace(window.location.origin + '/' + role + '/login')
+          }
+        })
+    }
   }, []);
 
   const update = useCallback(() => {

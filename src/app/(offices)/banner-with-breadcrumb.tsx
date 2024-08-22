@@ -1,5 +1,5 @@
 'use client'
-import { UserRoles } from "@/lib/models/interfaces";
+import { Roles } from "@/lib/models/interfaces";
 import { type IconComponent, Badge, HomeIcon, Icon } from "evergreen-ui";
 import NextLink from 'next/link';
 import { Fragment } from "react";
@@ -20,7 +20,7 @@ export default function BannerWithBreadcrumb({
     url: '/' + role,
   }],
 }: {
-  role: UserRoles;
+  role: Roles;
   title: string;
   icon?: JSX.Element|IconComponent;
   description?: string;
