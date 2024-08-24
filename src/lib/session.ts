@@ -3,7 +3,7 @@ import type { SessionPayload } from '@/lib/types';
 import { type JWTPayload, SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import connectDB from './database';
-import { NotificationDocument, Roles } from './models/interfaces';
+import { NotificationDocument, Roles } from './modelInterfaces';
 import User from './models/User';
 const secretKey = process.env.SESSION_SECRET
 const encodedKey = new TextEncoder().encode(secretKey)

@@ -1,6 +1,17 @@
 import { JWTPayload } from 'jose';
 import { z } from 'zod';
-import { Roles } from './models/interfaces';
+import { Roles } from './modelInterfaces';
+
+export interface TableColumnProps {
+  label: string
+  field: string
+  align?: 'left' | 'center' | 'right'
+  sortable?: boolean
+  searchable?: boolean
+  render?: (row: any) => JSX.Element|string
+}
+
+export type SortDirection = 'asc' | 'desc'
 
 export const SignupFormSchema = z.object({
   employeeId: z.string().trim(),

@@ -1,6 +1,6 @@
-import { Schema, model, models, type Document } from 'mongoose'
-import 'server-only'
-import { Roles, type ESignatureDocument } from './interfaces';
+import { Schema, model, models, type Document } from 'mongoose';
+import 'server-only';
+import { Roles, type ESignatureDocument } from '../modelInterfaces';
 import User from './User';
 
 

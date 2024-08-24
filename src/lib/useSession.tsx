@@ -1,6 +1,6 @@
 'use client';
 import { updateReadAllNotification, updateReadNotification } from "@/actions/notifications";
-import { NotificationDocument, Roles } from "@/lib/models/interfaces";
+import { NotificationDocument, Roles } from "@/lib/modelInterfaces";
 import { toaster } from "evergreen-ui";
 import { type JWTPayload } from "jose";
 import { usePathname } from "next/navigation";

@@ -1,5 +1,5 @@
 'use client'
-import { Roles } from "@/lib/models/interfaces";
+import { Roles } from "@/lib/modelInterfaces";
 import { type IconComponent, Badge, HomeIcon, Icon } from "evergreen-ui";
 import NextLink from 'next/link';
 import { Fragment } from "react";

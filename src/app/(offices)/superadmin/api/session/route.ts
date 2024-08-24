@@ -1,6 +1,6 @@
 'use server'
 
-import { Roles } from "@/lib/models/interfaces";
+import { Roles } from "@/lib/modelInterfaces";
 import { getSession } from "@/lib/session";
 import { NextResponse, type NextRequest } from "next/server";
 

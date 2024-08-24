@@ -1,6 +1,6 @@
 import { Schema, model, models, type Document } from 'mongoose'
 import 'server-only'
-import { type DepartmentDocument } from './interfaces'
+import { type DepartmentDocument } from '../modelInterfaces'
 
 const DepartmentSchema = new Schema({
   name: {

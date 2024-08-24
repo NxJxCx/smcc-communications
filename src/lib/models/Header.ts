@@ -1,6 +1,6 @@
-import { Schema, model, models, type Document } from 'mongoose'
-import 'server-only'
-import { type HeaderDocument } from './interfaces';
+import { Schema, model, models, type Document } from 'mongoose';
+import 'server-only';
+import { type HeaderDocument } from '../modelInterfaces';
 
 const HeaderSchema = new Schema({
   file: {

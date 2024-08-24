@@ -1,7 +1,7 @@
 import { Schema, model, models, type Document } from 'mongoose'
 import 'server-only'
 import { hashPassword } from '../hash'
-import { Roles, type UserDocument } from './interfaces'
+import { Roles, type UserDocument } from '../modelInterfaces'
 
 const UserSchema = new Schema({
   employeeId: {

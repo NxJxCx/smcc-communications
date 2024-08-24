@@ -1,4 +1,4 @@
-import { Roles } from "@/lib/models/interfaces";
+import { Roles } from "@/lib/modelInterfaces";
 
 export interface SidebarNavigation {
   name: string;
@@ -9,6 +9,10 @@ const superAdminSidebarNavList: SidebarNavigation[] = [
   {
     name: 'Dashboard',
     url: '/superadmin',
+  },
+  {
+    name: 'Departments',
+    url: '/superadmin/departments',
   },
   {
     name: 'Admin Accounts',

@@ -1,5 +1,5 @@
 'use client';
-import { Roles } from "@/lib/models/interfaces";
+import { Roles } from "@/lib/modelInterfaces";
 import { destroySession } from "@/lib/session";
 import { useSession } from "@/lib/useSession";
 import clsx from "clsx";
@@ -24,11 +24,11 @@ export default function HeaderComponent() {
   }, [signout, role])
 
   return (
-    <header className="sticky right-0 top-0 w-full min-h-[70px]">
+    <header className="sticky right-0 top-0 w-full min-h-[70px] z-10">
       <nav className="mb-0 bg-white shadow h-full items-center">
         <div className="flex h-full gap-x-2 mb-3 flex-between items-center flex-nowrap pl-3 pr-8">
           <div className="flex-grow justify-start">
-            <button onClick={toggleSidebar} className="flex-shrink flex items-center px-2 py-1 text-sm font-medium text-slate-800 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-slate-300">
+            <button type="button" title="Toggle Sidebar" onClick={toggleSidebar} className="flex-shrink flex items-center px-2 py-1 text-sm font-medium text-slate-800 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-slate-300">
               <ListIcon />
             </button>
           </div>
@@ -48,7 +48,7 @@ export default function HeaderComponent() {
               </div>
               <div className={
                 clsx(
-                  "top-full right-0 absolute mt-2 rounded-xl p-2 border border-slate-200 bg-white shadow-lg border-radius-md w-56 z-10",
+                  "top-full right-0 absolute mt-2 rounded-xl p-2 border border-slate-200 bg-white shadow-lg border-radius-md w-56",
                   isShown? "block" : "hidden",
                 )
               }>

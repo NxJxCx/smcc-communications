@@ -1,6 +1,6 @@
 'use client';;
 import { login } from '@/actions/auth';
-import { Roles } from '@/lib/models/interfaces';
+import { Roles } from '@/lib/modelInterfaces';
 import { useSession } from '@/lib/useSession';
 import { toaster } from 'evergreen-ui';
 import { redirect, useRouter } from "next/navigation";

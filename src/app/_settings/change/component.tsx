@@ -1,7 +1,7 @@
 'use client';;
 import BannerWithBreadcrumb from "@/app/(offices)/_components/banner-with-breadcrumb";
 import LoadingComponent from "@/components/loading";
-import { Roles } from "@/lib/models/interfaces";
+import { Roles } from "@/lib/modelInterfaces";
 import { useSession } from "@/lib/useSession";
 import { HomeIcon, LockIcon } from "evergreen-ui";
 import { useEffect, useMemo } from "react";

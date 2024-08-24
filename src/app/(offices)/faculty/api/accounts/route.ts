@@ -1,8 +1,8 @@
 'use server'
 
 import connectDB from "@/lib/database";
+import { Roles } from "@/lib/modelInterfaces";
 import User from "@/lib/models/User";
-import { Roles } from "@/lib/models/interfaces";
 import { getSession } from "@/lib/session";
 import { NextRequest, NextResponse } from "next/server";
 

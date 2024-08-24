@@ -1,4 +1,4 @@
-import { Roles } from "@/lib/models/interfaces";
+import { Roles } from "@/lib/modelInterfaces";
 import { getSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 

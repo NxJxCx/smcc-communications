@@ -1,6 +1,6 @@
 import { Schema, model, models, type Document } from 'mongoose'
 import 'server-only'
-import { type PhotoFileDocument } from './interfaces'
+import { type PhotoFileDocument } from '../modelInterfaces'
 
 const PhotoFileSchema = new Schema({
   file: {

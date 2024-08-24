@@ -2,7 +2,7 @@
 import BannerWithBreadcrumb from "@/app/(offices)/_components/banner-with-breadcrumb";
 import CardContainer from "@/app/(offices)/_components/card-container";
 import LoadingComponent from "@/components/loading";
-import { NotificationDocument } from "@/lib/models/interfaces";
+import { NotificationDocument } from "@/lib/modelInterfaces";
 import { useSession } from "@/lib/useSession";
 import clsx from "clsx";
 import { Button, HomeIcon, Pagination, PeopleIcon, Spinner } from "evergreen-ui";

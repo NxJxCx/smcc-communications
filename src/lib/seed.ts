@@ -1,6 +1,6 @@
 import 'server-only';
+import { Roles } from './modelInterfaces';
 import User from './models/User';
-import { Roles } from './models/interfaces';
 export async function seed() {
   try {
     const sadmin = await User.findOne({

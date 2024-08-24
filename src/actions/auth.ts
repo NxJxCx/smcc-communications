@@ -2,7 +2,7 @@
 
 import connectDB from "@/lib/database";
 import { compare } from "@/lib/hash";
-import { Roles } from "@/lib/models/interfaces";
+import { Roles } from "@/lib/modelInterfaces";
 import User from "@/lib/models/User";
 import { createSession, getSession } from "@/lib/session";
 import {

@@ -1,6 +1,6 @@
 'use server'
 
-import { Roles } from "@/lib/models/interfaces";
+import { Roles } from "@/lib/modelInterfaces";
 import User from "@/lib/models/User";
 import { getMyNotifications, getSession } from "@/lib/session";
 import { NextRequest } from "next/server";
@@ -149,7 +149,7 @@ export async function addNotification(userId: string, { title, message, href }: 
   return false
 }
 
-export async function broadcastNotification({ role = Roles.OBO, title, message, href }: { role?: Roles, title: string, message: string, href: string }) {
+export async function broadcastNotification({ role = Roles.Admin, title, message, href }: { role?: Roles, title: string, message: string, href: string }) {
   try {
     const notification = {
       title,

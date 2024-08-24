@@ -1,6 +1,6 @@
-import { Schema, model, models, type Document } from 'mongoose'
-import 'server-only'
-import { type TemplateDocument } from './interfaces';
+import { Schema, model, models, type Document } from 'mongoose';
+import 'server-only';
+import { type TemplateDocument } from '../modelInterfaces';
 
 const TemplateSchema = new Schema({
   documentType: {

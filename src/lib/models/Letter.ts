@@ -1,8 +1,8 @@
-import { Schema, model, models, type Document } from 'mongoose'
-import 'server-only'
-import User from './User'
-import { Roles, type LetterDocument } from './interfaces';
+import { Roles, type LetterDocument } from "@/lib/modelInterfaces";
+import { Schema, model, models, type Document } from 'mongoose';
+import 'server-only';
 import Department from './Department';
+import User from './User';
 
 const LetterSchema = new Schema({
   templateId: {

@@ -1,6 +1,6 @@
 'use client';;
 import { changePassword } from "@/actions/auth";
-import { Roles } from "@/lib/models/interfaces";
+import { Roles } from "@/lib/modelInterfaces";
 import { updateSession } from "@/lib/session";
 import { ResponseFormState, SessionPayload } from "@/lib/types";
 import clsx from "clsx";
