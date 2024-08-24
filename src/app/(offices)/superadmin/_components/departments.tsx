@@ -5,6 +5,7 @@ import { Roles } from "@/lib/modelInterfaces";
 import type { TableColumnProps } from "@/lib/types";
 import clsx from "clsx";
 import { EditIcon, PlusIcon, RemoveIcon, toaster } from "evergreen-ui";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
 import AddDepartmentModal from "./addDepartmentModal";
@@ -60,6 +61,8 @@ export default function DepartmentsPage() {
   const [selectedUpdateId, setSelectedUpdateId] = useState("");
   const selectedDepartmentName = useMemo(() => data.find((d) => d._id == selectedUpdateId), [data, selectedUpdateId]);
 
+  const pathname = usePathname();
+
   const getData = useCallback(() => {
     if (data.length === 0) {
       setLoading(true);
@@ -107,7 +110,8 @@ export default function DepartmentsPage() {
 
   useEffect(() => {
     getData();
-  }, [getData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   return (
     <div className="px-8 py-4">

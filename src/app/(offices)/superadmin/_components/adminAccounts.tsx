@@ -17,6 +17,7 @@ import {
   UpdatedIcon,
   WarningSignIcon,
 } from "evergreen-ui";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
 import AddAdminAccountModal from "./addAdminAccountModal";
@@ -141,6 +142,8 @@ export default function AdminAccountsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selectedDepartmentNames = useMemo(() => data?.find((d) => d._id === selectedId)?.map((d: AccountsColumns) => d.departmentIds?.map((dept) => dept.name) || []), [selectedId, data])
 
+  const pathname = usePathname();
+
   const onUpdate = useCallback((id: string) => {
     console.log(`Updating: ${id}`);
   }, []);
@@ -201,7 +204,8 @@ export default function AdminAccountsPage() {
 
   useEffect(() => {
     getData();
-  }, [getData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   useEffect(() => {
     return () => {

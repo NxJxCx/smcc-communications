@@ -4,6 +4,7 @@ import { DepartmentDocument, Roles } from "@/lib/modelInterfaces";
 import type { TableColumnProps } from "@/lib/types";
 import clsx from "clsx";
 import { AddIcon, Avatar, CrossIcon, EditIcon, PlusIcon, RemoveIcon, UpdatedIcon, WarningSignIcon } from "evergreen-ui";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import AddFacultyAccountModal from "./addFacultyAccountModal";
 import type { AccountsColumns } from './types';
@@ -115,6 +116,8 @@ export default function FacultyAccountsPage() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
 
+  const pathname = usePathname();
+
   const onUpdate = useCallback((id: string) => {
     console.log(`Updating: ${id}`);
   }, []);
@@ -151,7 +154,8 @@ export default function FacultyAccountsPage() {
 
   useEffect(() => {
     getData();
-  }, [getData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   useEffect(() => {
     return () => {
