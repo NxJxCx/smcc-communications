@@ -189,6 +189,35 @@ export async function updateDepartment(id: string|undefined, prevState: ActionRe
   }
 }
 
+export async function updateAccount(id: string|undefined, prevState: ActionResponseType, formData: FormData): Promise<ActionResponseType>
+{
+  try {
+    const session = await getSession(role)
+    if (!session) {
+      return {
+        error: 'Invalid Session'
+      }
+    }
+    const data = {
+      email: formData.get('email'),
+      prefixName: formData.get('prefixName') || '',
+      suffixName: formData.get('suffixName') || '',
+      firstName: formData.get('firstName'),
+      middleName: formData.get('middleName') || '',
+      lastName: formData.get('lastName'),
+    }
+    const account = User.findByIdAndUpdate(id, data, { new: true, upsert: false, runValidators: true }).exec();
+    if (!!account) {
+      return {
+        success: 'Account updated successfully'
+      }
+    }
+  } catch (e) {}
+  return {
+    error: 'Failed to update department'
+  }
+}
+
 export async function dissolveDepartment(id: string|undefined): Promise<ActionResponseType>
 {
   try {

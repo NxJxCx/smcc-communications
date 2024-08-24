@@ -23,6 +23,7 @@ import Swal from "sweetalert2";
 import AddAdminAccountModal from "./addAdminAccountModal";
 import AddAdminDepartmentModal from "./addAdminDepartmentModal";
 import type { AccountsColumns } from './types';
+import UpdateAccountModal from "./updateAccountModal";
 
 const objectURLS = new Map<string, string>();
 
@@ -140,6 +141,8 @@ export default function AdminAccountsPage() {
   const [open, setOpen] = useState(false);
   const [deptOpen, setDeptOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedUpdate, setSelectedUpdate] = useState<AccountsColumns|undefined>();
+
   const pathname = usePathname();
 
   const selectedDepartmentNames = useMemo(() => {
@@ -150,7 +153,8 @@ export default function AdminAccountsPage() {
   }, [selectedId, data]);
 
   const onUpdate = useCallback((id: string) => {
-  }, []);
+    setSelectedUpdate(data.find((d) => d._id === id));
+  }, [data]);
 
   const onToggleActive = useCallback((id: string) => {
   }, []);
@@ -230,6 +234,7 @@ export default function AdminAccountsPage() {
       ]} />
       <AddAdminAccountModal open={open} onClose={() => setOpen(false)} onRefresh={() => getData()} />
       <AddAdminDepartmentModal id={selectedId} departments={selectedDepartmentNames} open={deptOpen} onClose={() => setDeptOpen(false)} onRefresh={() => getData()} />
+      <UpdateAccountModal oldData={selectedUpdate} open={!!selectedUpdate} onClose={() => setSelectedUpdate(undefined)} onRefresh={() => getData()} />
     </div>
   )
 }

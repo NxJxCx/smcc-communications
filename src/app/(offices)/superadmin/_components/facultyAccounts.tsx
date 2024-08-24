@@ -11,6 +11,7 @@ import Swal from "sweetalert2";
 import AddFacultyAccountModal from "./addFacultyAccountModal";
 import AddFacultyDepartmentModal from "./addFacultyDepartmentModal";
 import type { AccountsColumns } from './types';
+import UpdateAccountModal from "./updateAccountModal";
 
 const objectURLS = new Map<string, string>();
 
@@ -120,6 +121,7 @@ export default function FacultyAccountsPage() {
   const [open, setOpen] = useState(false);
   const [deptOpen, setDeptOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedUpdate, setSelectedUpdate] = useState<AccountsColumns|undefined>();
 
   const pathname = usePathname();
 
@@ -128,12 +130,12 @@ export default function FacultyAccountsPage() {
     const dt = data.find((d) => d?._id === selectedId)
     if (!dt) return [];
     return dt.departmentIds?.map((dept) => dept?.name || "") || []
-  }, [selectedId, data])
+  }, [selectedId, data]);
 
 
   const onUpdate = useCallback((id: string) => {
-    console.log(`Updating: ${id}`);
-  }, []);
+    setSelectedUpdate(data.find((d) => d._id === id));
+  }, [data]);
 
   const onToggleActive = useCallback((id: string) => {
     console.log(`Activate/Deactivate: ${id}`);
@@ -214,6 +216,7 @@ export default function FacultyAccountsPage() {
       ]} />
       <AddFacultyAccountModal open={open} onClose={() => setOpen(false)} onRefresh={() => getData()} />
       <AddFacultyDepartmentModal id={selectedId} departments={selectedDepartmentNames} open={deptOpen} onClose={() => setDeptOpen(false)} onRefresh={() => getData()} />
+      <UpdateAccountModal oldData={selectedUpdate} open={!!selectedUpdate} onClose={() => setSelectedUpdate(undefined)} onRefresh={() => getData()} />
     </div>
   )
 }

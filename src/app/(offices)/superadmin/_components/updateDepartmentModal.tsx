@@ -62,14 +62,14 @@ export default function UpdateDepartmentModal({
   }, [state, pending])
 
   return (
-  <OCSModal title="Update Department" open={open} onClose={onModalClose}>
-    <div className="p-4">
-      <form action={action} ref={formRef} className="flex flex-col">
-        <input type="text" name="name" placeholder="Department Name" value={name} onChange={(e) => setName(e.target.value)} className="px-2 py-1 rounded bg-white border border-slate-400" required />
-        {exists && <div className="text-red-500 text-xs mt-1 w-full">Department already exists</div>}
-        <FormButton label="Submit" disabled={exists || !name || loading} className="max-w-32 mx-auto mt-4" />
-      </form>
-    </div>
-  </OCSModal>
+    <OCSModal title="Update Department" open={open} onClose={onModalClose}>
+      <div className="p-4">
+        <form action={action} ref={formRef} className="flex flex-col">
+          <input type="text" name="name" placeholder="Department Name" value={name} onChange={(e) => setName(e.target.value)} className="px-2 py-1 rounded bg-white border border-slate-400" required />
+          {exists && <div className="text-red-500 text-xs mt-1 w-full">Department already exists</div>}
+          <FormButton label="Submit" disabled={exists || !name || loading} className="max-w-32 mx-auto mt-4" />
+        </form>
+      </div>
+    </OCSModal>
   )
 }
