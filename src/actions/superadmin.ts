@@ -199,12 +199,14 @@ export async function updateAccount(id: string|undefined, prevState: ActionRespo
       }
     }
     const data = {
-      email: formData.get('email'),
-      prefixName: formData.get('prefixName') || '',
-      suffixName: formData.get('suffixName') || '',
-      firstName: formData.get('firstName'),
-      middleName: formData.get('middleName') || '',
-      lastName: formData.get('lastName'),
+      $set: {
+        email: formData.get('email'),
+        prefixName: formData.get('prefixName') || '',
+        suffixName: formData.get('suffixName') || '',
+        firstName: formData.get('firstName'),
+        middleName: formData.get('middleName') || '',
+        lastName: formData.get('lastName'),
+      }
     }
     const account = User.findByIdAndUpdate(id, data, { new: true, upsert: false, runValidators: true }).exec();
     if (!!account) {
@@ -236,6 +238,36 @@ export async function dissolveDepartment(id: string|undefined): Promise<ActionRe
     await Department.deleteOne({ _id: id }).exec()
     return {
       success: 'Department dissolved successfully'
+    }
+  } catch (e) {}
+  return {
+    error: 'Failed to dissolve department'
+  }
+}
+
+
+export async function toogleActiveAccount(id: string): Promise<ActionResponseType>
+{
+  try {
+    const session = await getSession(role)
+    if (!session) {
+      return {
+        error: 'Invalid Session'
+      }
+    }
+    if (!id) {
+      return {
+        error: 'Invalid Account ID'
+      }
+    }
+    // check if department already exists
+    const account = await User.findById(id).exec();
+    account.deactivated = !account.deactivated;
+    const update = await account.save();
+    if (!!update) {
+      return {
+        success: 'Account ' + (update.deactivated ? 'deactivated' : 'activated') + ' successfully'
+      }
     }
   } catch (e) {}
   return {

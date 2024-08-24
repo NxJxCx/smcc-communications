@@ -1,5 +1,5 @@
 'use client';
-import { removeAccountDepartment } from "@/actions/superadmin";
+import { removeAccountDepartment, toogleActiveAccount } from "@/actions/superadmin";
 import OCSTable from "@/components/table";
 import { DepartmentDocument, Roles } from "@/lib/modelInterfaces";
 import type { TableColumnProps } from "@/lib/types";
@@ -25,7 +25,7 @@ function getPhotoURL(id?: string, photoBuffer?: Buffer, type?: string): string |
   return objectURL;
 }
 
-function getFacultyAccountsColumns({ onRemoveDepartment, onAddDepartment, onUpdate, onToggleActive }: Readonly<{ onUpdate: (id: string) => void, onToggleActive: (id: string) => void, onAddDepartment: (id: string) => void, onRemoveDepartment: (id: string, departmentId: string) => void }>): TableColumnProps[]
+function getFacultyAccountsColumns({ onRemoveDepartment, onAddDepartment, onUpdate, onToggleActive }: Readonly<{ onUpdate: (id: string) => void, onToggleActive: (id: string, activate: boolean) => void, onAddDepartment: (id: string) => void, onRemoveDepartment: (id: string, departmentId: string) => void }>): TableColumnProps[]
 {
   return [
     {
@@ -37,7 +37,7 @@ function getFacultyAccountsColumns({ onRemoveDepartment, onAddDepartment, onUpda
       ),
     },
     {
-      label: "Employee ID", field: "employeeId", sortable: true, searchable: true,
+      label: "Employee ID", field: "employeeId", sortable: true, searchable: true, align: 'center'
     },
     {
       label: "Prefix Name", field: "prefixName", sortable: true, searchable: true,
@@ -106,7 +106,7 @@ function getFacultyAccountsColumns({ onRemoveDepartment, onAddDepartment, onUpda
           <button type="button" onClick={() => onUpdate(row._id)} title="Edit">
             <EditIcon />
           </button>
-          <button type="button" onClick={() => onToggleActive(row._id)} title="Active/Deactivate Account" className={clsx(row.deactivated ? "text-green-500" : "text-red-500")}>
+          <button type="button" onClick={() => onToggleActive(row._id, row.deactivated)} title="Active/Deactivate Account" className={clsx(row.deactivated ? "text-green-500" : "text-red-500")}>
             {row.deactivated ? <UpdatedIcon /> : <RemoveIcon />}
           </button>
         </div>
@@ -132,14 +132,51 @@ export default function FacultyAccountsPage() {
     return dt.departmentIds?.map((dept) => dept?.name || "") || []
   }, [selectedId, data]);
 
+  const getData = useCallback(async () => {
+    if (data.length === 0) {
+      setLoading(true)
+    }
+    try {
+      const response = await fetch('/' + Roles.SuperAdmin + '/api/faculties')
+      const { result } = await response.json();
+      setData(result)
+    } catch (e) {
+      console.log(e)
+    } finally {
+      setLoading(false)
+    }
+  }, [data])
 
   const onUpdate = useCallback((id: string) => {
     setSelectedUpdate(data.find((d) => d._id === id));
   }, [data]);
 
-  const onToggleActive = useCallback((id: string) => {
-    console.log(`Activate/Deactivate: ${id}`);
-  }, []);
+  const onToggleActive = useCallback((id: string, activate: boolean) => {
+    Swal.fire({
+      title: (activate ? 'Activate' : 'Deactivate') + ' Account?',
+      text: data.find((d) => d._id === id)?.employeeId,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: activate ? '#168d26' : '#d33',
+      cancelButtonColor: '#888',
+      confirmButtonText: 'Yes, ' + (activate ? 'Activate' : 'Deactivate') + ' it!'
+    })
+      .then(({ isConfirmed }) => {
+        if (isConfirmed) {
+          const removeDept = toogleActiveAccount.bind(null, id);
+          removeDept()
+            .then(({ success, error } ) => {
+              if (error) {
+                toaster.danger(error);
+              } else {
+                toaster.success(success)
+                getData()
+              }
+            })
+            .catch(console.log)
+        }
+      })
+  }, [data, getData]);
 
   const onAddDepartment = useCallback((id: string) => {
     setSelectedId(id);
@@ -149,7 +186,7 @@ export default function FacultyAccountsPage() {
   const onRemoveDepartment = useCallback((id: string, departmentId: string) => {
     Swal.fire({
       title: 'Remove Department from Employee ID ' + data.find((d) => d._id == id)?.employeeId + '?',
-      text: data.find((d) => d._id === id)?.departmentIds?.find((d) => d._id == departmentId)?.name,
+      text: "Employee ID " + data.find((d) => d._id === id)?.departmentIds?.find((d) => d._id == departmentId)?.name,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
@@ -165,12 +202,13 @@ export default function FacultyAccountsPage() {
                 toaster.danger(error);
               } else {
                 toaster.success(success)
+                getData()
               }
             })
             .catch(console.log)
         }
       })
-  }, [data]);
+  }, [data, getData]);
 
   const facultyColumns = getFacultyAccountsColumns({
     onUpdate,
@@ -178,21 +216,6 @@ export default function FacultyAccountsPage() {
     onAddDepartment,
     onRemoveDepartment,
   });
-
-  const getData = useCallback(async () => {
-    if (data.length === 0) {
-      setLoading(true)
-    }
-    try {
-      const response = await fetch('/' + Roles.SuperAdmin + '/api/faculties')
-      const { result } = await response.json();
-      setData(result)
-    } catch (e) {
-      console.log(e)
-    } finally {
-      setLoading(false)
-    }
-  }, [data])
 
   useEffect(() => {
     getData();

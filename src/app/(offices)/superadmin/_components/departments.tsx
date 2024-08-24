@@ -79,12 +79,10 @@ export default function DepartmentsPage() {
   }, [data])
 
   const onUpdate = useCallback((id: string) => {
-    console.log(`Updating department: ${id}`);
     setSelectedUpdateId(id);
   }, []);
 
   const onDissolve = useCallback((id: string) => {
-    console.log(`Dissolving department: ${id}`);
     const deptName = data.find((d) => d._id == selectedUpdateId)?.name
     Swal.fire({
       icon: 'warning',

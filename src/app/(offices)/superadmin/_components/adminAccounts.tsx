@@ -1,5 +1,5 @@
 'use client';
-import { removeAccountDepartment } from "@/actions/superadmin";
+import { removeAccountDepartment, toogleActiveAccount } from "@/actions/superadmin";
 import OCSTable from "@/components/table";
 import { DepartmentDocument, Roles } from "@/lib/modelInterfaces";
 import type { TableColumnProps } from "@/lib/types";
@@ -37,7 +37,7 @@ function getPhotoURL(id?: string, photoBuffer?: Buffer, type?: string): string |
   return objectURL;
 }
 
-function getAdminAccountsColumns({ onRemoveDepartment, onAddDepartment, onUpdate, onToggleActive }: Readonly<{ onUpdate: (id: string) => void, onToggleActive: (id: string) => void, onAddDepartment: (id: string) => void, onRemoveDepartment: (id: string, departmentId: string) => void }>): TableColumnProps[]
+function getAdminAccountsColumns({ onRemoveDepartment, onAddDepartment, onUpdate, onToggleActive }: Readonly<{ onUpdate: (id: string) => void, onToggleActive: (id: string, activate: boolean) => void, onAddDepartment: (id: string) => void, onRemoveDepartment: (id: string, departmentId: string) => void }>): TableColumnProps[]
 {
   return [
     {
@@ -126,7 +126,7 @@ function getAdminAccountsColumns({ onRemoveDepartment, onAddDepartment, onUpdate
           <button type="button" onClick={() => onUpdate(row._id)} title="Edit">
             <EditIcon />
           </button>
-          <button type="button" onClick={() => onToggleActive(row._id)} title="Active/Deactivate Account" className={clsx(row.deactivated ? "text-green-500" : "text-red-500")}>
+          <button type="button" onClick={() => onToggleActive(row._id, row.deactivated)} title="Active/Deactivate Account" className={clsx(row.deactivated ? "text-green-500" : "text-red-500")}>
             {row.deactivated ? <UpdatedIcon /> : <RemoveIcon />}
           </button>
         </div>
@@ -152,51 +152,6 @@ export default function AdminAccountsPage() {
     return dt.departmentIds?.map((dept) => dept?.name || "") || []
   }, [selectedId, data]);
 
-  const onUpdate = useCallback((id: string) => {
-    setSelectedUpdate(data.find((d) => d._id === id));
-  }, [data]);
-
-  const onToggleActive = useCallback((id: string) => {
-  }, []);
-
-  const onAddDepartment = useCallback((id: string) => {
-    setSelectedId(id);
-    setDeptOpen(true);
-  }, []);
-
-  const onRemoveDepartment = useCallback((id: string, departmentId: string) => {
-    Swal.fire({
-      title: 'Remove Department from Employee ID ' + data.find((d) => d._id == id)?.employeeId + '?',
-      text: data.find((d) => d._id === id)?.departmentIds?.find((d) => d._id == departmentId)?.name,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes, remove it!'
-    })
-      .then(({ isConfirmed }) => {
-        if (isConfirmed) {
-          const removeDept = removeAccountDepartment.bind(null, { id, departmentId });
-          removeDept()
-            .then(({ success, error } ) => {
-              if (error) {
-                toaster.danger(error);
-              } else {
-                toaster.success(success)
-              }
-            })
-            .catch(console.log)
-        }
-      })
-  }, [data]);
-
-  const adminColumns = getAdminAccountsColumns({
-    onUpdate,
-    onToggleActive,
-    onAddDepartment,
-    onRemoveDepartment,
-  });
-
   const getData = useCallback(async () => {
     if (data.length === 0) {
       setLoading(true)
@@ -211,6 +166,76 @@ export default function AdminAccountsPage() {
       setLoading(false)
     }
   }, [data]);
+
+  const onUpdate = useCallback((id: string) => {
+    setSelectedUpdate(data.find((d) => d._id === id));
+  }, [data]);
+
+  const onToggleActive = useCallback((id: string, activate: boolean) => {
+    Swal.fire({
+      title: (activate ? 'Activate' : 'Deactivate') + ' Account?',
+      text: "Employee ID " + data.find((d) => d._id === id)?.employeeId,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: activate ? '#168d26' : '#d33',
+      cancelButtonColor: '#888',
+      confirmButtonText: 'Yes, ' + (activate ? 'Activate' : 'Deactivate') + ' it!'
+    })
+      .then(({ isConfirmed }) => {
+        if (isConfirmed) {
+          const removeDept = toogleActiveAccount.bind(null, id);
+          removeDept()
+            .then(({ success, error } ) => {
+              if (error) {
+                toaster.danger(error);
+              } else {
+                toaster.success(success)
+                getData()
+              }
+            })
+            .catch(console.log)
+        }
+      })
+  }, [data, getData]);
+
+  const onAddDepartment = useCallback((id: string) => {
+    setSelectedId(id);
+    setDeptOpen(true);
+  }, []);
+
+  const onRemoveDepartment = useCallback((id: string, departmentId: string) => {
+    Swal.fire({
+      title: 'Remove Department from Employee ID ' + data.find((d) => d._id == id)?.employeeId + '?',
+      text: data.find((d) => d._id === id)?.departmentIds?.find((d) => d._id == departmentId)?.name,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#888',
+      confirmButtonText: 'Yes, remove it!'
+    })
+      .then(({ isConfirmed }) => {
+        if (isConfirmed) {
+          const removeDept = removeAccountDepartment.bind(null, { id, departmentId });
+          removeDept()
+            .then(({ success, error } ) => {
+              if (error) {
+                toaster.danger(error);
+              } else {
+                toaster.success(success)
+                getData();
+              }
+            })
+            .catch(console.log)
+        }
+      })
+  }, [data, getData]);
+
+  const adminColumns = getAdminAccountsColumns({
+    onUpdate,
+    onToggleActive,
+    onAddDepartment,
+    onRemoveDepartment,
+  });
 
   useEffect(() => {
     getData();
