@@ -27,9 +27,8 @@ export default function AddDepartmentModal({
       setLoading(true)
       fetch('/' + Roles.SuperAdmin + '/api/departments/check?name=' + name)
         .then(response => response.json())
-        .then(({ result }) => setExists(result))
-        .catch(console.log)
-        .finally(() => setLoading(false))
+        .then(({ result }) => { setExists(result); setLoading(false); })
+        .catch((e) => { console.log(e); setLoading(false) })
     }
   }, [name])
   useEffect(() => {

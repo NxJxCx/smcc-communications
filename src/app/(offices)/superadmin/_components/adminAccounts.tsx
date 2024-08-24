@@ -160,9 +160,9 @@ export default function AdminAccountsPage() {
       const response = await fetch('/' + Roles.SuperAdmin + '/api/admins')
       const { result } = await response.json();
       setData(result)
+      setLoading(false)
     } catch (e) {
       console.log(e)
-    } finally {
       setLoading(false)
     }
   }, [data]);

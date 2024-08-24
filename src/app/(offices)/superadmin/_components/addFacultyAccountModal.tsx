@@ -28,9 +28,8 @@ export default function AddFacultyAccountModal({
       setLoading(true)
       fetch('/' + Roles.SuperAdmin + '/api/faculties/check?employeeId=' + employeeId)
         .then(response => response.json())
-        .then(({ result }) => setExists(result))
-        .catch(console.log)
-        .finally(() => setLoading(false))
+        .then(({ result }) => { setExists(result); setLoading(false); })
+        .catch((e) => { console.log(e); setLoading(false) })
     }
   }, [employeeId])
 

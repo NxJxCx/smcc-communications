@@ -140,9 +140,9 @@ export default function FacultyAccountsPage() {
       const response = await fetch('/' + Roles.SuperAdmin + '/api/faculties')
       const { result } = await response.json();
       setData(result)
+      setLoading(false)
     } catch (e) {
       console.log(e)
-    } finally {
       setLoading(false)
     }
   }, [data])

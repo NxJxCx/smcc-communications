@@ -71,9 +71,9 @@ export default function DepartmentsPage() {
       const response = await fetch('/' + Roles.SuperAdmin + '/api/departments')
       const { result } = await response.json();
       setData(result)
+      setLoading(false)
     } catch (e) {
       console.log(e)
-    } finally {
       setLoading(false)
     }
   }, [data])
