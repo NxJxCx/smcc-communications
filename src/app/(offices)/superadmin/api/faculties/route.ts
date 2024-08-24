@@ -11,12 +11,8 @@ export async function GET(request: NextRequest) {
     const session = await getSession(Roles.SuperAdmin);
     if (!!session) {
       const users = await User.find({ role: Roles.Faculty }).select('-role -readMemos -readLetters -notification').populate('departmentIds photo').exec();
-      users.forEach((user) => {
-        const data = {
-          ...JSON.parse(JSON.stringify(user)),
-        }
-        result.push(data);
-      })
+      const result = JSON.parse(JSON.stringify(users));
+      return NextResponse.json({ result });
     }
   } catch (e) {}
 
