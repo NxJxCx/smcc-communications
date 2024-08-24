@@ -148,10 +148,10 @@ export default function FacultyAccountsPage() {
       .catch(console.log)
       .finally(() => setLoading(false))
   }, [data])
+
   useEffect(() => {
     getData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [getData]);
 
   useEffect(() => {
     return () => {

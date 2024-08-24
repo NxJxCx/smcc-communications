@@ -107,8 +107,7 @@ export default function DepartmentsPage() {
 
   useEffect(() => {
     getData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [getData]);
 
   return (
     <div className="px-8 py-4">
