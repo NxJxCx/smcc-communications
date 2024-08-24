@@ -47,7 +47,7 @@ export async function addDepartment(prevState: ActionResponseType, formData: For
   }
 }
 
-export async function addAdminDepartment(id: string, prevState: ActionResponseType, formData: FormData): Promise<ActionResponseType>
+export async function addAccountDepartment(id: string, prevState: ActionResponseType, formData: FormData): Promise<ActionResponseType>
 {
   try {
     const session = await getSession(role)

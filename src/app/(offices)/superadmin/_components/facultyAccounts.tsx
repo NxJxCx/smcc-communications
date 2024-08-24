@@ -5,9 +5,10 @@ import type { TableColumnProps } from "@/lib/types";
 import clsx from "clsx";
 import { AddIcon, Avatar, CrossIcon, EditIcon, PlusIcon, RemoveIcon, UpdatedIcon, WarningSignIcon } from "evergreen-ui";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import AddFacultyAccountModal from "./addFacultyAccountModal";
 import type { AccountsColumns } from './types';
+import AddFacultyDepartmentModal from "./addFacultyDepartmentModal";
 
 const objectURLS = new Map<string, string>();
 
@@ -115,6 +116,11 @@ export default function FacultyAccountsPage() {
   const [data, setData] = useState<AccountsColumns[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [deptOpen, setDeptOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selectedDepartmentNames = useMemo(() => (
+    data?.find((d) => d?._id === selectedId)?.map((d: AccountsColumns) => d?.departmentIds?.map((dept) => dept?.name) || [])
+  ), [selectedId, data])
 
   const pathname = usePathname();
 
@@ -177,6 +183,7 @@ export default function FacultyAccountsPage() {
         (<button key={"addfaculty1"} type="button" onClick={() => setOpen(true)} className="bg-slate-100 text-blue-500 border border-blue-500 font-[600] px-4 py-2 rounded-md hover:bg-blue-500 hover:text-white" ><PlusIcon display="inline" marginRight={4} size={12} />Add Department</button>),
       ]} />
       <AddFacultyAccountModal open={open} onClose={() => setOpen(false)} onRefresh={() => getData()} />
+      <AddFacultyDepartmentModal id={selectedId} departments={selectedDepartmentNames} open={deptOpen} onClose={() => setDeptOpen(false)} onRefresh={() => getData()} />
     </div>
   )
 }

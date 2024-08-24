@@ -8,7 +8,7 @@ import { toaster } from "evergreen-ui";
 import { useEffect, useRef, useState } from "react";
 import { useFormState } from "react-dom";
 
-export default function AddAdminDepartmentModal({
+export default function AddFacultyDepartmentModal({
   id,
   departments,
   open,
@@ -45,7 +45,7 @@ export default function AddAdminDepartmentModal({
   }, [state, pending])
 
   return (
-    <OCSModal title="Add Admin Department" open={open} onClose={onClose}>
+    <OCSModal title="Add Faculty Department" open={open} onClose={onClose}>
       <div className="p-4">
         <form action={action} ref={formRef} className="flex flex-col">
           { id && (
