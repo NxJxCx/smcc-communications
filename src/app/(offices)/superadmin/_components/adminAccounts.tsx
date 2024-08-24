@@ -72,7 +72,7 @@ function getAdminAccountsColumns({ onRemoveDepartment, onAddDepartment, onUpdate
       label: 'Has Registered E-Signature', field: "hasRegisteredESignature", sortable: true, align: 'center',
       render: (row: AccountsColumns) => (
         <div className="flex justify-center items-center">
-          {!row.hasRegisteredSignature ? <span className="text-green-700 flex flex-nowrap gap-x-1"><ConfirmIcon size={15} color="green" /> YES</span> : <span className="text-red-500 flex flex-nowrap"><SmallCrossIcon color="red" /> NO</span>}
+          {row.hasRegisteredSignature ? <span className="text-green-700 flex flex-nowrap gap-x-1"><ConfirmIcon size={15} color="green" /> YES</span> : <span className="text-red-500 flex flex-nowrap"><SmallCrossIcon color="red" /> NO</span>}
         </div>
       )
     },
