@@ -121,8 +121,8 @@ export default function DepartmentsPage() {
       <OCSTable loading={loading} columns={departmentColumns} data={data} searchable toolbars={[
         (<button key={"adddep1"} type="button" onClick={() => setOpen(true)} className="bg-slate-100 text-blue-500 border border-blue-500 font-[600] px-4 py-2 rounded-md hover:bg-blue-500 hover:text-white" ><PlusIcon display="inline" marginRight={4} size={12} />Add Department</button>),
       ]} />
-      <AddDepartmentModal open={open} onClose={() => setOpen(false)} onRefresh={() => getData()} />
-      <UpdateDepartmentModal oldData={selectedDepartmentName} open={!!selectedUpdateId} onClose={() => setSelectedUpdateId("")} onRefresh={() => getData()} />
+      <AddDepartmentModal open={open} onClose={() => setOpen(false)} onRefresh={() => setTimeout(() => getData(), 500)} />
+      <UpdateDepartmentModal oldData={selectedDepartmentName} open={!!selectedUpdateId} onClose={() => setSelectedUpdateId("")} onRefresh={() => setTimeout(() => getData(), 500)} />
     </div>
   )
 }
