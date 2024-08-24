@@ -123,7 +123,7 @@ export async function addUserAccount(userRole: Roles, prevState: ActionResponseT
   }
 }
 
-export async function removeAdminDepartment({ id, departmentId }: { id: string, departmentId: string }): Promise<ActionResponseType>
+export async function removeAccountDepartment({ id, departmentId }: { id: string, departmentId: string }): Promise<ActionResponseType>
 {
   try {
     const session = await getSession(role)

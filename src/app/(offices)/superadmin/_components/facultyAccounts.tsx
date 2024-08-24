@@ -1,14 +1,16 @@
 'use client';
+import { removeAccountDepartment } from "@/actions/superadmin";
 import OCSTable from "@/components/table";
 import { DepartmentDocument, Roles } from "@/lib/modelInterfaces";
 import type { TableColumnProps } from "@/lib/types";
 import clsx from "clsx";
-import { AddIcon, Avatar, CrossIcon, EditIcon, PlusIcon, RemoveIcon, UpdatedIcon, WarningSignIcon } from "evergreen-ui";
+import { AddIcon, Avatar, CrossIcon, EditIcon, PlusIcon, RemoveIcon, toaster, UpdatedIcon, WarningSignIcon } from "evergreen-ui";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Swal from "sweetalert2";
 import AddFacultyAccountModal from "./addFacultyAccountModal";
-import type { AccountsColumns } from './types';
 import AddFacultyDepartmentModal from "./addFacultyDepartmentModal";
+import type { AccountsColumns } from './types';
 
 const objectURLS = new Map<string, string>();
 
@@ -118,11 +120,16 @@ export default function FacultyAccountsPage() {
   const [open, setOpen] = useState(false);
   const [deptOpen, setDeptOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const selectedDepartmentNames = useMemo(() => (
-    data?.find((d) => d?._id === selectedId)?.map((d: AccountsColumns) => d?.departmentIds?.map((dept) => dept?.name) || [])
-  ), [selectedId, data])
 
   const pathname = usePathname();
+
+  const selectedDepartmentNames = useMemo(() => {
+    if (!data) return [];
+    const dt = data.find((d) => d?._id === selectedId)
+    if (!dt) return [];
+    return dt.departmentIds?.map((dept) => dept?.name || "") || []
+  }, [selectedId, data])
+
 
   const onUpdate = useCallback((id: string) => {
     console.log(`Updating: ${id}`);
@@ -133,12 +140,35 @@ export default function FacultyAccountsPage() {
   }, []);
 
   const onAddDepartment = useCallback((id: string) => {
-    console.log(`Add department: ${id}`);
+    setSelectedId(id);
+    setDeptOpen(true);
   }, []);
 
   const onRemoveDepartment = useCallback((id: string, departmentId: string) => {
-    console.log(`Removing department: ${departmentId} from ${id}`);
-  }, []);
+    Swal.fire({
+      title: 'Remove Department from Employee ID ' + data.find((d) => d._id == id)?.employeeId + '?',
+      text: data.find((d) => d._id === id)?.departmentIds?.find((d) => d._id == departmentId)?.name,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, remove it!'
+    })
+      .then(({ isConfirmed }) => {
+        if (isConfirmed) {
+          const removeDept = removeAccountDepartment.bind(null, { id, departmentId });
+          removeDept()
+            .then(({ success, error } ) => {
+              if (error) {
+                toaster.danger(error);
+              } else {
+                toaster.success(success)
+              }
+            })
+            .catch(console.log)
+        }
+      })
+  }, [data]);
 
   const facultyColumns = getFacultyAccountsColumns({
     onUpdate,

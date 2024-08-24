@@ -1,5 +1,5 @@
-'use client';;
-import { removeAdminDepartment } from "@/actions/superadmin";
+'use client';
+import { removeAccountDepartment } from "@/actions/superadmin";
 import OCSTable from "@/components/table";
 import { DepartmentDocument, Roles } from "@/lib/modelInterfaces";
 import type { TableColumnProps } from "@/lib/types";
@@ -140,11 +140,14 @@ export default function AdminAccountsPage() {
   const [open, setOpen] = useState(false);
   const [deptOpen, setDeptOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const selectedDepartmentNames = useMemo(() => (
-    data?.find((d) => d?._id === selectedId)?.map((d: AccountsColumns) => d?.departmentIds?.map((dept) => dept?.name) || [])
-  ), [selectedId, data])
-
   const pathname = usePathname();
+
+  const selectedDepartmentNames = useMemo(() => {
+    if (!data) return [];
+    const dt = data.find((d) => d?._id === selectedId)
+    if (!dt) return [];
+    return dt.departmentIds?.map((dept) => dept?.name || "") || []
+  }, [selectedId, data]);
 
   const onUpdate = useCallback((id: string) => {
   }, []);
@@ -169,7 +172,7 @@ export default function AdminAccountsPage() {
     })
       .then(({ isConfirmed }) => {
         if (isConfirmed) {
-          const removeDept = removeAdminDepartment.bind(null, { id, departmentId });
+          const removeDept = removeAccountDepartment.bind(null, { id, departmentId });
           removeDept()
             .then(({ success, error } ) => {
               if (error) {
