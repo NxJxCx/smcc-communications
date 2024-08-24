@@ -99,7 +99,7 @@ export default function DepartmentsPage() {
             toaster.danger(error)
           } else if (success) {
             toaster.success(success)
-            getData()
+            setTimeout(() => getData(), 500)
           }
         }
       })

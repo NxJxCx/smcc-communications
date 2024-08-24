@@ -170,7 +170,7 @@ export default function FacultyAccountsPage() {
                 toaster.danger(error);
               } else {
                 toaster.success(success)
-                getData()
+                setTimeout(() => getData(), 500)
               }
             })
             .catch(console.log)
@@ -202,7 +202,7 @@ export default function FacultyAccountsPage() {
                 toaster.danger(error);
               } else {
                 toaster.success(success)
-                getData()
+                setTimeout(() => getData(), 500)
               }
             })
             .catch(console.log)

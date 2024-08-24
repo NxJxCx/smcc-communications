@@ -190,7 +190,7 @@ export default function AdminAccountsPage() {
                 toaster.danger(error);
               } else {
                 toaster.success(success)
-                getData()
+                setTimeout(() => getData(), 500)
               }
             })
             .catch(console.log)
@@ -222,7 +222,7 @@ export default function AdminAccountsPage() {
                 toaster.danger(error);
               } else {
                 toaster.success(success)
-                getData();
+                setTimeout(() => getData(), 500)
               }
             })
             .catch(console.log)
