@@ -63,15 +63,19 @@ export default function DepartmentsPage() {
 
   const pathname = usePathname();
 
-  const getData = useCallback(() => {
+  const getData = useCallback(async () => {
     if (data.length === 0) {
-      setLoading(true);
+      setLoading(true)
     }
-    fetch('/' + Roles.SuperAdmin + '/api/departments')
-      .then((response) => response.json())
-      .then(({ result }) => setData(result))
-      .catch(console.log)
-      .finally(() => setLoading(false))
+    try {
+      const response = await fetch('/' + Roles.SuperAdmin + '/api/departments')
+      const { result } = await response.json();
+      setData(result)
+    } catch (e) {
+      console.log(e)
+    } finally {
+      setLoading(false)
+    }
   }, [data])
 
   const onUpdate = useCallback((id: string) => {

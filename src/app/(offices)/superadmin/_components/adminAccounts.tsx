@@ -140,20 +140,19 @@ export default function AdminAccountsPage() {
   const [open, setOpen] = useState(false);
   const [deptOpen, setDeptOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const selectedDepartmentNames = useMemo(() => data?.find((d) => d._id === selectedId)?.map((d: AccountsColumns) => d.departmentIds?.map((dept) => dept.name) || []), [selectedId, data])
+  const selectedDepartmentNames = useMemo(() => (
+    data?.find((d) => d?._id === selectedId)?.map((d: AccountsColumns) => d?.departmentIds?.map((dept) => dept?.name) || [])
+  ), [selectedId, data])
 
   const pathname = usePathname();
 
   const onUpdate = useCallback((id: string) => {
-    console.log(`Updating: ${id}`);
   }, []);
 
   const onToggleActive = useCallback((id: string) => {
-    console.log(`Activate/Deactivate: ${id}`);
   }, []);
 
   const onAddDepartment = useCallback((id: string) => {
-    console.log(`Add department: ${id}`);
     setSelectedId(id);
     setDeptOpen(true);
   }, []);
@@ -191,16 +190,20 @@ export default function AdminAccountsPage() {
     onRemoveDepartment,
   });
 
-  const getData = useCallback(() => {
+  const getData = useCallback(async () => {
     if (data.length === 0) {
-      setLoading(true);
+      setLoading(true)
     }
-    fetch('/' + Roles.SuperAdmin + '/api/admins')
-      .then((response) => response.json())
-      .then(({ result }) => setData(result))
-      .catch(console.log)
-      .finally(() => setLoading(false))
-  }, [data])
+    try {
+      const response = await fetch('/' + Roles.SuperAdmin + '/api/admins')
+      const { result } = await response.json();
+      setData(result)
+    } catch (e) {
+      console.log(e)
+    } finally {
+      setLoading(false)
+    }
+  }, [data]);
 
   useEffect(() => {
     getData();

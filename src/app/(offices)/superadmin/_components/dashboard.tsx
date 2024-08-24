@@ -17,11 +17,14 @@ export default function DashboardPage() {
 
   const pathname = usePathname();
 
-  const getData = useCallback(() => {
-    fetch('/' + Roles.SuperAdmin + '/api/dashboard')
-      .then((response) => response.json())
-      .then(({ result }) => setData(result))
-      .catch(console.log)
+  const getData = useCallback(async () => {
+    try {
+      const response = await fetch('/' + Roles.SuperAdmin + '/api/dashboard')
+      const { result } = await response.json()
+      setData(result)
+    } catch (e) {
+      console.log(e)
+    }
   }, []);
 
   useEffect(() => {
