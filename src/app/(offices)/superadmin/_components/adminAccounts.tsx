@@ -11,6 +11,7 @@ import {
   CrossIcon,
   EditIcon,
   PlusIcon,
+  RefreshIcon,
   RemoveIcon,
   SmallCrossIcon,
   toaster,
@@ -255,7 +256,10 @@ export default function AdminAccountsPage() {
     <div className="px-8 py-4">
       <h1 className="text-[25px] font-[600] mb-4">Admin Account Management</h1>
       <OCSTable loading={loading} columns={adminColumns} data={data} searchable toolbars={[
-        (<button key={"addadmin1"} type="button" onClick={() => setOpen(true)} className="bg-slate-100 text-blue-500 border border-blue-500 font-[600] px-4 py-2 rounded-md hover:bg-blue-500 hover:text-white" ><PlusIcon display="inline" marginRight={4} size={12} />Add Admin Account</button>),
+        (<div key={"adminstoolbar1"} className="flex flex-nowrap gap-x-2 justify-end items-center">
+          <button type="button" onClick={() => setOpen(true)} className="bg-slate-100 text-blue-500 border border-blue-500 font-[600] px-4 py-2 rounded-md hover:bg-blue-500 hover:text-white" ><PlusIcon display="inline" marginRight={4} size={12} />Add Admin Account</button>
+          <button type="button" onClick={() => getData()} className="bg-slate-100 text-blue-500 border border-blue-500 font-[600] px-4 py-2 rounded-md hover:bg-blue-500 hover:text-white" ><RefreshIcon display="inline" marginRight={4} size={12} />Refresh</button>
+        </div>),
       ]} />
       <AddAdminAccountModal open={open} onClose={() => setOpen(false)} onRefresh={() => setTimeout(() => getData(), 500)} />
       <AddAdminDepartmentModal id={selectedId} departments={selectedDepartmentNames} open={deptOpen} onClose={() => setDeptOpen(false)} onRefresh={() => setTimeout(() => getData(), 500)} />

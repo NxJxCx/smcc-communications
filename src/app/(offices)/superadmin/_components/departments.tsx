@@ -4,7 +4,7 @@ import OCSTable from "@/components/table";
 import { Roles } from "@/lib/modelInterfaces";
 import type { TableColumnProps } from "@/lib/types";
 import clsx from "clsx";
-import { EditIcon, PlusIcon, RemoveIcon, toaster } from "evergreen-ui";
+import { EditIcon, PlusIcon, RefreshIcon, RemoveIcon, toaster } from "evergreen-ui";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
@@ -119,7 +119,10 @@ export default function DepartmentsPage() {
     <div className="px-8 py-4">
       <h1 className="text-[25px] font-[600] mb-4">Departments</h1>
       <OCSTable loading={loading} columns={departmentColumns} data={data} searchable toolbars={[
-        (<button key={"adddep1"} type="button" onClick={() => setOpen(true)} className="bg-slate-100 text-blue-500 border border-blue-500 font-[600] px-4 py-2 rounded-md hover:bg-blue-500 hover:text-white" ><PlusIcon display="inline" marginRight={4} size={12} />Add Department</button>),
+        (<div key={"deptoolbar1"} className="flex flex-nowrap gap-x-2 justify-end items-center">
+          <button type="button" onClick={() => setOpen(true)} className="bg-slate-100 text-blue-500 border border-blue-500 font-[600] px-4 py-2 rounded-md hover:bg-blue-500 hover:text-white" ><PlusIcon display="inline" marginRight={4} size={12} />Add Department</button>
+          <button type="button" onClick={() => getData()} className="bg-slate-100 text-blue-500 border border-blue-500 font-[600] px-4 py-2 rounded-md hover:bg-blue-500 hover:text-white" ><RefreshIcon display="inline" marginRight={4} size={12} />Refresh</button>
+        </div>),
       ]} />
       <AddDepartmentModal open={open} onClose={() => setOpen(false)} onRefresh={() => setTimeout(() => getData(), 500)} />
       <UpdateDepartmentModal oldData={selectedDepartmentName} open={!!selectedUpdateId} onClose={() => setSelectedUpdateId("")} onRefresh={() => setTimeout(() => getData(), 500)} />
