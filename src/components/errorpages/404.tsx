@@ -15,10 +15,10 @@ export default function NotFoundPage() {
               {"Sorry we couldn't find the page you're looking for"}
             </p>
             <div className="flex flex-nowrap">
-              <button onClick={() => router.back()} className="px-5 py-3 text-sm font-medium leading-5 shadow-2xl text-white transition-all duration-400 border border-transparent rounded-lg focus:outline-none bg-blue-800 active:bg-red-600 hover:bg-red-700">
+              <button type="button" onClick={() => router.back()} className="px-5 py-3 text-sm font-medium leading-5 shadow-2xl text-white transition-all duration-400 border border-transparent rounded-lg focus:outline-none bg-blue-800 active:bg-red-600 hover:bg-red-700">
                 Back
               </button>
-              <button onClick={() => router.replace("/")} className="ml-4 px-5 py-3 text-sm font-medium leading-5 shadow-2xl text-white transition-all duration-400 border border-transparent rounded-lg focus:outline-none bg-blue-800 active:bg-red-600 hover:bg-red-700">
+              <button type="button" onClick={() => router.replace("/")} className="ml-4 px-5 py-3 text-sm font-medium leading-5 shadow-2xl text-white transition-all duration-400 border border-transparent rounded-lg focus:outline-none bg-blue-800 active:bg-red-600 hover:bg-red-700">
                 <span className="flex flex-nowrap items-center"><HomeIcon size={15} marginRight={8} /> Home</span>
               </button>
             </div>
