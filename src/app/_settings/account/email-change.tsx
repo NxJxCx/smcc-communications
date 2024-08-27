@@ -1,5 +1,7 @@
-'use client';;
-import { UserSessionProp } from "@/lib/types";
+'use client';
+import { UserDocument } from "@/lib/modelInterfaces";
+
+;
 
 export default function AccountSettingsEmailForm({
   data,
@@ -8,7 +10,7 @@ export default function AccountSettingsEmailForm({
   onSuccess = (setReset: () => void) => {},
   ...props
 } : {
-  data: UserSessionProp|null,
+  data: UserDocument & { fullname: string }|null,
   isVerificationSent: boolean,
   onVerificationSent: () => void,
   onSuccess: (setReset: () => void) => void,
