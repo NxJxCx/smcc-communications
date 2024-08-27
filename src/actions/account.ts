@@ -70,3 +70,43 @@ export async function uploadProfilePhoto(role: Roles, id: string, prevState: Act
     error: "Failed to upload photo"
   }
 }
+
+export async function updateProfileAccount(role: Roles, id: string, formData: FormData): Promise<ActionResponseType>
+{
+  const dataForm = Object.entries({
+    prefixName: formData.get('prefixName'),
+    firstName: formData.get('firstName'),
+    middleName: formData.get('middleName'),
+    lastName: formData.get('lastName'),
+    suffixName: formData.get('suffixName'),
+    email: formData.get('email'),
+    password: formData.get('password'),
+  }).filter(([key, value]) => (key !== 'password') || (key === 'password' && !!value));
+
+  try {
+    await connectDB()
+    const session = await getSession(role)
+    if (!session) {
+      return {
+        error: 'Invalid session'
+      }
+    }
+    const data = {
+      $set: { ...Object.fromEntries(dataForm) }
+    }
+
+    const updated = await User.findByIdAndUpdate(id, data, { new: true, upsert: false, runValidators: true  })
+
+    if (!!updated) {
+      return {
+        success: 'Profile updated successfully'
+      }
+    }
+  } catch (e) {
+    console.log(e)
+  }
+
+  return {
+    error: "Failed to update profile"
+  }
+}

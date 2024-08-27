@@ -23,10 +23,6 @@ const superAdminSidebarNavList: SidebarNavigation[] = [
     url: '/superadmin/faculty',
   },
   {
-    name: 'Notifications',
-    url: '/superadmin/notifications',
-  },
-  {
     name: 'Account',
     url: '/superadmin/account',
   },
