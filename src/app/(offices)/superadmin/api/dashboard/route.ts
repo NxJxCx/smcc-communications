@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
   try {
     await connectDB()
     const session = await getSession(Roles.SuperAdmin);
-    if (!!session) {
+    if (!!session?.user) {
       result.departmentsCount = await Department.countDocuments().exec();
       result.adminAccountsCount = await User.find({ role: Roles.Admin }).countDocuments().exec();
       result.facultyAccountsCount = await User.find({ role: Roles.Faculty }).countDocuments().exec();

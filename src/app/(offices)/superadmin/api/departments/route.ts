@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   try {
     await connectDB()
     const session = await getSession(Roles.SuperAdmin);
-    if (!!session) {
+    if (!!session?.user) {
       const departments = await Department.find({});
       const result = JSON.parse(JSON.stringify(departments)).map((department: DepartmentDocument) => ({
         _id: department._id,

@@ -1,9 +1,18 @@
-'use client';
+'use client';;
 import LoadingComponent from '@/components/loading';
 import { Roles } from '@/lib/modelInterfaces';
-import { usePathname } from 'next/navigation';
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { DashboardDataProps } from "./types";
+
+async function getData(setData: (data: DashboardDataProps) => void) {
+  try {
+    const response = await fetch('/' + Roles.SuperAdmin + '/api/dashboard')
+    const { result } = await response.json()
+    setData(result)
+  } catch (e) {
+    console.log(e)
+  }
+}
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardDataProps>({
@@ -15,22 +24,9 @@ export default function DashboardPage() {
     totalLettersCount: <LoadingComponent />,
   });
 
-  const pathname = usePathname();
-
-  const getData = useCallback(async () => {
-    try {
-      const response = await fetch('/' + Roles.SuperAdmin + '/api/dashboard')
-      const { result } = await response.json()
-      setData(result)
-    } catch (e) {
-      console.log(e)
-    }
-  }, []);
-
   useEffect(() => {
-    getData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
+    getData(setData);
+  }, []);
 
   return (
     <div className="px-8 py-4">

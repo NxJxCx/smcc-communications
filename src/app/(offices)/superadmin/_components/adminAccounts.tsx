@@ -1,4 +1,4 @@
-'use client';
+'use client';;
 import { removeAccountDepartment, toogleActiveAccount } from "@/actions/superadmin";
 import OCSTable from "@/components/table";
 import { DepartmentDocument, Roles } from "@/lib/modelInterfaces";
@@ -18,7 +18,6 @@ import {
   UpdatedIcon,
   WarningSignIcon,
 } from "evergreen-ui";
-import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
 import AddAdminAccountModal from "./addAdminAccountModal";
@@ -136,6 +135,19 @@ function getAdminAccountsColumns({ onRemoveDepartment, onAddDepartment, onUpdate
   ]
 }
 
+async function getData(setData: (data: AccountsColumns[]) => void, setLoading: (loading: boolean) => void) {
+  setLoading(true)
+  try {
+    const response = await fetch('/' + Roles.SuperAdmin + '/api/admins')
+    const { result } = await response.json();
+    setData(result)
+    setLoading(false)
+  } catch (e) {
+    console.log(e)
+    setLoading(false)
+  }
+}
+
 export default function AdminAccountsPage() {
   const [data, setData] = useState<AccountsColumns[]>([]);
   const [loading, setLoading] = useState(true);
@@ -144,29 +156,12 @@ export default function AdminAccountsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedUpdate, setSelectedUpdate] = useState<AccountsColumns|undefined>();
 
-  const pathname = usePathname();
-
   const selectedDepartmentNames = useMemo(() => {
     if (!data) return [];
     const dt = data.find((d) => d?._id === selectedId)
     if (!dt) return [];
     return dt.departmentIds?.map((dept) => dept?.name || "") || []
   }, [selectedId, data]);
-
-  const getData = useCallback(async () => {
-    if (data.length === 0) {
-      setLoading(true)
-    }
-    try {
-      const response = await fetch('/' + Roles.SuperAdmin + '/api/admins')
-      const { result } = await response.json();
-      setData(result)
-      setLoading(false)
-    } catch (e) {
-      console.log(e)
-      setLoading(false)
-    }
-  }, [data]);
 
   const onUpdate = useCallback((id: string) => {
     setSelectedUpdate(data.find((d) => d._id === id));
@@ -191,13 +186,13 @@ export default function AdminAccountsPage() {
                 toaster.danger(error);
               } else {
                 toaster.success(success)
-                setTimeout(() => getData(), 500)
+                setTimeout(() => getData(setData, setLoading), 500)
               }
             })
             .catch(console.log)
         }
       })
-  }, [data, getData]);
+  }, [data]);
 
   const onAddDepartment = useCallback((id: string) => {
     setSelectedId(id);
@@ -223,13 +218,13 @@ export default function AdminAccountsPage() {
                 toaster.danger(error);
               } else {
                 toaster.success(success)
-                setTimeout(() => getData(), 500)
+                setTimeout(() => getData(setData, setLoading), 500)
               }
             })
             .catch(console.log)
         }
       })
-  }, [data, getData]);
+  }, [data]);
 
   const adminColumns = getAdminAccountsColumns({
     onUpdate,
@@ -239,9 +234,8 @@ export default function AdminAccountsPage() {
   });
 
   useEffect(() => {
-    getData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
+    getData(setData, setLoading);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -258,12 +252,12 @@ export default function AdminAccountsPage() {
       <OCSTable loading={loading} columns={adminColumns} data={data} searchable toolbars={[
         (<div key={"adminstoolbar1"} className="flex flex-nowrap gap-x-2 justify-end items-center">
           <button type="button" onClick={() => setOpen(true)} className="bg-slate-100 text-blue-500 border border-blue-500 font-[600] px-4 py-2 rounded-md hover:bg-blue-500 hover:text-white" ><PlusIcon display="inline" marginRight={4} size={12} />Add Admin Account</button>
-          <button type="button" onClick={() => getData()} className="bg-slate-100 text-blue-500 border border-blue-500 font-[600] px-4 py-2 rounded-md hover:bg-blue-500 hover:text-white" ><RefreshIcon display="inline" marginRight={4} size={12} />Refresh</button>
+          <button type="button" onClick={() => getData(setData, setLoading)} className="bg-slate-100 text-blue-500 border border-blue-500 font-[600] px-4 py-2 rounded-md hover:bg-blue-500 hover:text-white" ><RefreshIcon display="inline" marginRight={4} size={12} />Refresh</button>
         </div>),
       ]} />
-      <AddAdminAccountModal open={open} onClose={() => setOpen(false)} onRefresh={() => setTimeout(() => getData(), 500)} />
-      <AddAdminDepartmentModal id={selectedId} departments={selectedDepartmentNames} open={deptOpen} onClose={() => setDeptOpen(false)} onRefresh={() => setTimeout(() => getData(), 500)} />
-      <UpdateAccountModal oldData={selectedUpdate} open={!!selectedUpdate} onClose={() => setSelectedUpdate(undefined)} onRefresh={() => setTimeout(() => getData(), 500)} />
+      <AddAdminAccountModal open={open} onClose={() => setOpen(false)} onRefresh={() => setTimeout(() => getData(setData, setLoading), 500)} />
+      <AddAdminDepartmentModal id={selectedId} departments={selectedDepartmentNames} open={deptOpen} onClose={() => setDeptOpen(false)} onRefresh={() => setTimeout(() => getData(setData, setLoading), 500)} />
+      <UpdateAccountModal oldData={selectedUpdate} open={!!selectedUpdate} onClose={() => setSelectedUpdate(undefined)} onRefresh={() => setTimeout(() => getData(setData, setLoading), 500)} />
     </div>
   )
 }

@@ -31,11 +31,10 @@ export async function decrypt(session: string | undefined = ''): Promise<Session
 export async function generateSessionPayload(role: Roles, userId: string, expHours: number = 8) {
   await connectDB();
   try {
-    const user = await User.findOne({ role, _id: userId }).select('-_id -password -departmentIds -readMemos -readLetters -deactivated -notification').exec()
+    const user = await User.findOne({ role, _id: userId }).select('-password -departmentIds -readMemos -readLetters -deactivated -notification').exec()
     if (user) {
       return {
         user: {
-          userId,
           fullName: [user.prefixName, user.firstName, user.middleName?.[0] ? user.middleName[0] + "." : '', user.lastName, user.suffixName].filter((v) => !!v).join(" "),
           ...JSON.parse(JSON.stringify(user))
         },

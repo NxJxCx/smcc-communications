@@ -1,6 +1,6 @@
 import { JWTPayload } from 'jose';
 import { z } from 'zod';
-import { Roles } from './modelInterfaces';
+import { Roles, UserDocument } from './modelInterfaces';
 
 export interface TableColumnProps {
   label: string
@@ -77,25 +77,9 @@ export type ResponseFormState =
   }
 | undefined
 
-export interface UserSessionProp {
-  userId: string;
-  employeeId: string
-  email: string;
-  fullName: string;
-  role: Roles;
-  prefixName?: string
-  suffixName?: string
-  firstName: string;
-  middleName?: string;
-  lastName: string;
-  photo: Buffer|string;
-  deactivated: boolean;
-  createdAt: Date|string;
-  updatedAt: Date|string;
-}
 
 export interface SessionPayloadProp extends JWTPayload {
-  user: UserSessionProp
+  user: UserDocument
   expiresAt: Date|string
 }
 

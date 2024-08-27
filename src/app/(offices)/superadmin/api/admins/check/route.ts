@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   try {
     await connectDB()
     const session = await getSession(Roles.SuperAdmin);
-    if (!!session) {
+    if (!!session?.user) {
       const employeeId = request.nextUrl.searchParams.get('employeeId');
       const user = await User.findOne({ employeeId }).countDocuments().exec();
       return NextResponse.json({ result: user > 0 })

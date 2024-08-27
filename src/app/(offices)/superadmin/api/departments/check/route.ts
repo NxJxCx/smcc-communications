@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   try {
     await connectDB()
     const session = await getSession(Roles.SuperAdmin);
-    if (!!session) {
+    if (!!session?.user) {
       const name = request.nextUrl.searchParams.get('name');
       const department = await Department.findOne({ name }).countDocuments().exec();
       return NextResponse.json({ result: department > 0 })
