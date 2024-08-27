@@ -18,10 +18,10 @@ export default function LoginForm({
   const router = useRouter()
   useEffect(() => {
     if (!pending && state?.success) {
-      toaster.success(state.message, { description: "Redirecting to home page...", duration: 3000, id: "login" })
+      toaster.success(state.message, { description: "Redirecting to home page...", duration: 3, id: "login" })
       refresh()
     } else if (!pending && state?.errors) {
-      toaster.danger(state.message, { duration: 3000, id: "login" })
+      toaster.danger(state.message, { duration: 3, id: "login" })
     }
   }, [state, pending, refresh])
 

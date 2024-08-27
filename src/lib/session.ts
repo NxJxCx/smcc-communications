@@ -92,8 +92,8 @@ export async function destroySession(role: Roles) {
 
 export async function updateSession(role: Roles): Promise<boolean> {
   const session = await getSession(role);
-  if (session) {
-    const result = await createSession(role, session.user.userId)
+  if (session?.user) {
+    const result = await createSession(role, session.user._id)
     return result;
   }
   return false;

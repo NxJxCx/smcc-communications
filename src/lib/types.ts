@@ -79,7 +79,7 @@ export type ResponseFormState =
 
 
 export interface SessionPayloadProp extends JWTPayload {
-  user: UserDocument
+  user: UserDocument & { fullName: string; }
   expiresAt: Date|string
 }
 

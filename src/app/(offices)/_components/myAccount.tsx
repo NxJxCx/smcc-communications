@@ -1,14 +1,12 @@
-'use client'
-
-import { uploadProfilePhoto } from '@/actions/account'
-import { ActionResponseType } from "@/actions/superadmin"
-import LoadingComponent from "@/components/loading"
-import { PhotoFileDocument, Roles, UserDocument } from "@/lib/modelInterfaces"
-import { useSession } from "@/lib/useSession"
-import { Image, toaster, UploadIcon } from "evergreen-ui"
-import { usePathname } from 'next/navigation'
-import { useEffect, useMemo, useRef, useState } from "react"
-import { useFormState } from "react-dom"
+'use client';
+import { uploadProfilePhoto } from '@/actions/account';
+import { ActionResponseType } from "@/actions/superadmin";
+import LoadingComponent from "@/components/loading";
+import { PhotoFileDocument, Roles, UserDocument } from "@/lib/modelInterfaces";
+import { useSession } from "@/lib/useSession";
+import { Image, toaster, UploadIcon } from "evergreen-ui";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useFormState } from "react-dom";
 
 function photoBufferToPhoto(buffer: Buffer, type: string) {
   if (buffer.length > 0) {
@@ -35,13 +33,11 @@ export default function MyAccountSettings({
 }: {
   role: Roles
 }) {
-  const { data: sessionData, status } = useSession({
+  const { data: sessionData, status, refresh, update } = useSession({
     redirect: true
   })
   const [data, setData] = useState<UserDocument>()
   const [photoImage, setPhotoImage] = useState<string>("")
-
-  const pathname = usePathname();
 
   const photoActionForm = useMemo(() => uploadProfilePhoto.bind(null, role, status === "authenticated" ? sessionData!.user._id || '' : ''), [sessionData, status, role])
   const [photoState, photoAction, photoPending] = useFormState<ActionResponseType, FormData>(photoActionForm, {})
@@ -51,11 +47,13 @@ export default function MyAccountSettings({
 
   useEffect(() => {
     if (!photoPending && photoState.success) {
-      toaster.success(photoState.success, { duration: 3000 })
+      toaster.success(photoState.success, { duration: 3 })
       photoRef.current?.reset()
       setTimeout(() => getData(role, setData), 500)
+      setTimeout(() => refresh(), 500)
+      setTimeout(() => update(), 500)
     } else if (!photoPending && photoState.error) {
-      toaster.danger(photoState.error, { duration: 3000 })
+      toaster.danger(photoState.error, { duration: 3 })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [photoState, photoPending])
@@ -63,8 +61,7 @@ export default function MyAccountSettings({
 
   useEffect(() => {
     getData(role, setData)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname])
+  }, [role])
 
   useEffect(() => {
     if (!!(data?.photo as PhotoFileDocument)?.file) {
