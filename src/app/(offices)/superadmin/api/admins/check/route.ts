@@ -1,13 +1,13 @@
 'use server';;
-import { DepartmentColumns } from "@/app/(offices)/superadmin/_components/types";
+import connectDB from "@/lib/database";
 import { Roles } from "@/lib/modelInterfaces";
 import User from "@/lib/models/User";
 import { getSession } from "@/lib/session";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
-  const result: DepartmentColumns[] = [];
   try {
+    await connectDB()
     const session = await getSession(Roles.SuperAdmin);
     if (!!session) {
       const employeeId = request.nextUrl.searchParams.get('employeeId');
@@ -16,5 +16,5 @@ export async function GET(request: NextRequest) {
     }
   } catch (e) {}
 
-  return NextResponse.json({ result });
+  return NextResponse.json({ result: false }, { status: 401 });
 }

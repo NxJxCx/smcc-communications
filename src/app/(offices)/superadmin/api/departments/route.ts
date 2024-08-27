@@ -1,4 +1,5 @@
 'use server';;
+import connectDB from "@/lib/database";
 import { DepartmentDocument, Roles } from "@/lib/modelInterfaces";
 import Department from "@/lib/models/Department";
 import { getSession } from "@/lib/session";
@@ -6,6 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   try {
+    await connectDB()
     const session = await getSession(Roles.SuperAdmin);
     if (!!session) {
       const departments = await Department.find({});

@@ -1,5 +1,6 @@
 'use server'
 
+import connectDB from "@/lib/database";
 import { Roles } from "@/lib/modelInterfaces";
 import Department from "@/lib/models/Department";
 import ESignature from "@/lib/models/ESignature";
@@ -19,6 +20,7 @@ export async function GET(request: NextRequest) {
     totalLettersCount: 0,
   };
   try {
+    await connectDB()
     const session = await getSession(Roles.SuperAdmin);
     if (!!session) {
       result.departmentsCount = await Department.countDocuments().exec();
