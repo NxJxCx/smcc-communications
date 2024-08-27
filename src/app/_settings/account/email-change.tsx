@@ -10,7 +10,7 @@ export default function AccountSettingsEmailForm({
   onSuccess = (setReset: () => void) => {},
   ...props
 } : {
-  data: UserDocument & { fullname: string }|null,
+  data: UserDocument & { fullName: string }|null,
   isVerificationSent: boolean,
   onVerificationSent: () => void,
   onSuccess: (setReset: () => void) => void,

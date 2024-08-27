@@ -1,12 +1,15 @@
-'use client';;
-import { UserSessionProp } from "@/lib/types";
+'use client';
+import { UserDocument } from "@/lib/modelInterfaces";
+
+;
+
 
 export default function AccountSettingsPhoneForm({
   data,
   onSuccess = (setReset: () => void) => {},
   ...props
 } : {
-  data: UserSessionProp|null,
+  data: UserDocument & { fullName: string }|null,
   onSuccess: (setReset: () => void) => void,
 } & React.HTMLAttributes<HTMLFormElement>) {
   // const [contactNo, setContactNo] = useState<string|undefined>(data?.contactNo?.substring(3))
