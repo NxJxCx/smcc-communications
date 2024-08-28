@@ -10,11 +10,15 @@ const MemoSchema = new Schema({
     ref: 'Template',
     required: [true, 'Template ID is required'],
   },
+  content: {
+    type: String,
+    required: [true, 'Memo Content is required'],
+  },
   preparedBy: {
     type: Schema.Types.ObjectId,
     ref: 'User',
     validate: {
-      validator: async function(val: any) {
+      validator: async function (val: any) {
         const user = await User.findById(val);
         if (!!user && user.role === Roles.Admin) {
           const department = await Department.findOne({
@@ -43,8 +47,8 @@ const MemoSchema = new Schema({
     }],
   }
 },
-{
-  timestamps: true
-})
+  {
+    timestamps: true
+  })
 
 export default models?.Memo || model<MemoDocument & Document>('Memo', MemoSchema)
