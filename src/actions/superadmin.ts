@@ -1,7 +1,8 @@
-'use server'
-
+'use server';
+import connectDB from "@/lib/database";
 import { Roles } from "@/lib/modelInterfaces";
 import Department from "@/lib/models/Department";
+import ESignature from "@/lib/models/ESignature";
 import User from "@/lib/models/User";
 import { getSession } from "@/lib/session";
 
@@ -13,6 +14,7 @@ export interface ActionResponseType {
 
 export async function addDepartment(prevState: ActionResponseType, formData: FormData): Promise<ActionResponseType>
 {
+  await connectDB()
   try {
     const session = await getSession(role)
     if (!session) {
@@ -49,6 +51,7 @@ export async function addDepartment(prevState: ActionResponseType, formData: For
 
 export async function addAccountDepartment(id: string, prevState: ActionResponseType, formData: FormData): Promise<ActionResponseType>
 {
+  await connectDB()
   try {
     const session = await getSession(role)
     if (!session) {
@@ -84,6 +87,7 @@ export async function addAccountDepartment(id: string, prevState: ActionResponse
 
 export async function addUserAccount(userRole: Roles, prevState: ActionResponseType, formData: FormData): Promise<ActionResponseType>
 {
+  await connectDB()
   try {
     const session = await getSession(role)
     if (!session) {
@@ -126,6 +130,7 @@ export async function addUserAccount(userRole: Roles, prevState: ActionResponseT
 
 export async function removeAccountDepartment({ id, departmentId }: { id: string, departmentId: string }): Promise<ActionResponseType>
 {
+  await connectDB()
   try {
     const session = await getSession(role)
     if (!session) {
@@ -152,6 +157,7 @@ export async function removeAccountDepartment({ id, departmentId }: { id: string
 
 export async function updateDepartment(id: string|undefined, prevState: ActionResponseType, formData: FormData): Promise<ActionResponseType>
 {
+  await connectDB()
   try {
     const session = await getSession(role)
     if (!session) {
@@ -192,6 +198,7 @@ export async function updateDepartment(id: string|undefined, prevState: ActionRe
 
 export async function updateAccount(id: string|undefined, prevState: ActionResponseType, formData: FormData): Promise<ActionResponseType>
 {
+  await connectDB()
   try {
     const session = await getSession(role)
     if (!session) {
@@ -223,6 +230,7 @@ export async function updateAccount(id: string|undefined, prevState: ActionRespo
 
 export async function dissolveDepartment(id: string|undefined): Promise<ActionResponseType>
 {
+  await connectDB()
   try {
     const session = await getSession(role)
     if (!session) {
@@ -246,9 +254,9 @@ export async function dissolveDepartment(id: string|undefined): Promise<ActionRe
   }
 }
 
-
 export async function toogleActiveAccount(id: string): Promise<ActionResponseType>
 {
+  await connectDB()
   try {
     const session = await getSession(role)
     if (!session) {
@@ -273,5 +281,45 @@ export async function toogleActiveAccount(id: string): Promise<ActionResponseTyp
   } catch (e) {}
   return {
     error: 'Failed to dissolve department'
+  }
+}
+
+export async function saveESignature(id: string|undefined, eSignatureDataURL?: string): Promise<ActionResponseType>
+{
+  await connectDB()
+  try {
+    const session = await getSession(role)
+    if (!session) {
+      return {
+        error: 'Invalid Session'
+      }
+    }
+    if (!id) {
+      return {
+        error: 'Invalid Account ID'
+      }
+    }
+    if (!eSignatureDataURL) {
+      return {
+        error: 'Invalid e-Signature'
+      }
+    }
+    const account = await User.findById(id).exec();
+    if (!!account) {
+      const esignature = await ESignature.create({
+        adminId: account._id.toHexString(),
+        signature: eSignatureDataURL,
+      })
+      if (!!esignature) {
+        return {
+          success: 'e-Signature saved successfully'
+        }
+      }
+    }
+  } catch (e) {
+    console.log(e)
+  }
+  return {
+    error: 'Failed to save e-signature'
   }
 }

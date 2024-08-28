@@ -23,6 +23,10 @@ const superAdminSidebarNavList: SidebarNavigation[] = [
     url: '/superadmin/faculty',
   },
   {
+    name: 'E-Signature Registration',
+    url: '/superadmin/admin/esignature',
+  },
+  {
     name: 'Account',
     url: '/superadmin/account',
   },

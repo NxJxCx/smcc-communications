@@ -1,5 +1,6 @@
 'use client';;
 import { removeAccountDepartment, toogleActiveAccount } from "@/actions/superadmin";
+import OCSModal from "@/components/ocsModal";
 import OCSTable from "@/components/table";
 import { DepartmentDocument, Roles } from "@/lib/modelInterfaces";
 import type { TableColumnProps } from "@/lib/types";
@@ -10,6 +11,7 @@ import {
   ConfirmIcon,
   CrossIcon,
   EditIcon,
+  Image,
   PlusIcon,
   RefreshIcon,
   RemoveIcon,
@@ -37,7 +39,7 @@ function getPhotoURL(id?: string, photoBuffer?: Buffer, type?: string): string |
   return objectURL;
 }
 
-function getAdminAccountsColumns({ onRemoveDepartment, onAddDepartment, onUpdate, onToggleActive }: Readonly<{ onUpdate: (id: string) => void, onToggleActive: (id: string, activate: boolean) => void, onAddDepartment: (id: string) => void, onRemoveDepartment: (id: string, departmentId: string) => void }>): TableColumnProps[]
+function getAdminAccountsColumns({ onRemoveDepartment, onAddDepartment, onUpdate, onToggleActive, onViewSignature }: Readonly<{ onUpdate: (id: string) => void, onToggleActive: (id: string, activate: boolean) => void, onAddDepartment: (id: string) => void, onRemoveDepartment: (id: string, departmentId: string) => void, onViewSignature: (user: AccountsColumns) => void }>): TableColumnProps[]
 {
   return [
     {
@@ -73,7 +75,7 @@ function getAdminAccountsColumns({ onRemoveDepartment, onAddDepartment, onUpdate
       label: 'Has Registered E-Signature', field: "hasRegisteredESignature", sortable: true, searchMap: { true: 'yes', false: 'no' }, align: 'center',
       render: (row: AccountsColumns) => (
         <div className="flex justify-center items-center">
-          {row.hasRegisteredSignature ? <span className="text-green-700 flex flex-nowrap gap-x-1"><ConfirmIcon size={15} color="green" /> YES</span> : <span className="text-red-500 flex flex-nowrap"><SmallCrossIcon color="red" /> NO</span>}
+          {row.hasRegisteredSignature ? <button type="button" onClick={() => onViewSignature(row)} className="text-green-700 flex flex-nowrap gap-x-1"><ConfirmIcon size={15} color="green" /> YES</button> : <span className="text-red-500 flex flex-nowrap"><SmallCrossIcon color="red" /> NO</span>}
         </div>
       )
     },
@@ -156,6 +158,10 @@ export default function AdminAccountsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedUpdate, setSelectedUpdate] = useState<AccountsColumns|undefined>();
 
+  const getFullName = useCallback((admin?: AccountsColumns) => {
+    return !!admin ? ((admin.prefixName || "") + " " + admin.firstName + " " + (admin.middleName ? admin.middleName[0].toUpperCase() + ". " : "") + admin.lastName + (admin.suffixName ? ", " + admin.suffixName : "")).trim() : ""
+  }, [])
+
   const selectedDepartmentNames = useMemo(() => {
     if (!data) return [];
     const dt = data.find((d) => d?._id === selectedId)
@@ -226,11 +232,24 @@ export default function AdminAccountsPage() {
       })
   }, [data]);
 
+  const [openViewSignature, setOpenViewSignature] = useState<{ employeeId: string, fullName: string, url?: string } | undefined>();
+
+  const onViewSignature = useCallback((user: AccountsColumns) => {
+    const url = new URL('/' + Roles.SuperAdmin + '/api/admins/esignature', window.location.origin);
+    url.searchParams.set('id', user._id);
+    fetch(url)
+      .then(response => response.json())
+      .then(({ result }) => !!result ? ({ employeeId: user.employeeId, fullName: getFullName(user), url: result.signature }) : undefined)
+      .then(d => setOpenViewSignature(d))
+      .catch(console.log)
+  }, [getFullName])
+
   const adminColumns = getAdminAccountsColumns({
     onUpdate,
     onToggleActive,
     onAddDepartment,
     onRemoveDepartment,
+    onViewSignature,
   });
 
   useEffect(() => {
@@ -258,6 +277,11 @@ export default function AdminAccountsPage() {
       <AddAdminAccountModal open={open} onClose={() => setOpen(false)} onRefresh={() => setTimeout(() => getData(setData, setLoading), 500)} />
       <AddAdminDepartmentModal id={selectedId} departments={selectedDepartmentNames} open={deptOpen} onClose={() => setDeptOpen(false)} onRefresh={() => setTimeout(() => getData(setData, setLoading), 500)} />
       <UpdateAccountModal oldData={selectedUpdate} open={!!selectedUpdate} onClose={() => setSelectedUpdate(undefined)} onRefresh={() => setTimeout(() => getData(setData, setLoading), 500)} />
+      <OCSModal title={"E-Signature of " + openViewSignature?.fullName + " (ID: " + openViewSignature?.employeeId + ")"} open={!!openViewSignature} onClose={() => { URL.revokeObjectURL(openViewSignature?.url || ''); setOpenViewSignature(undefined); }}>
+        <div className="bg-white border">
+          <Image src={openViewSignature?.url} alt="E-Signature"/>
+        </div>
+      </OCSModal>
     </div>
   )
 }

@@ -20,7 +20,7 @@ const ESignatureSchema = new Schema({
     }
   },
   signature: {
-    type: Buffer,
+    type: String,
     required: [true, 'Signature is required']
   }
 },
