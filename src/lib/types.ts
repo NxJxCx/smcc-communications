@@ -8,6 +8,7 @@ export interface TableColumnProps {
   align?: 'left' | 'center' | 'right'
   sortable?: boolean
   searchable?: boolean
+  searchMap?: Record<any, any>
   render?: (row: any) => JSX.Element|string
 }
 

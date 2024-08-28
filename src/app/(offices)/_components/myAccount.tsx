@@ -78,10 +78,12 @@ export default function MyAccountSettings({
       const photo = photoBufferToPhoto(Buffer.from(file.file), file.mimeType)
       setPhotoImage(photo)
       return () => {
-        if (photo) {
+        if (photo && photo.startsWith('blob:')) {
           URL.revokeObjectURL(photo)
         }
       }
+    } else {
+      setPhotoImage("/photo-profile-default.jpg")
     }
   }, [data])
 

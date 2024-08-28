@@ -13,13 +13,11 @@ import {
 } from "@/lib/types";
 
 export async function login(role: Roles, state: LoginFormState, formData: FormData): Promise<LoginFormState | undefined> {
-  console.log("validating login form")
   const validatedFields = LoginFormSchema.safeParse({
     role,
     employeeId: formData.get('employeeId'),
     password: formData.get('password'),
   })
-
   if (!validatedFields.success) {
     console.log(validatedFields.error)
     return {
@@ -40,7 +38,6 @@ export async function login(role: Roles, state: LoginFormState, formData: FormDa
     // Account Deactivated
     if (user.deactivated) return { errors: { credentials: [] }, message: 'This account has been deactivated' }
     // do session
-    console.log("Creating credentials")
     await createSession(role, user._id.toHexString());
   } catch (err) {
     console.log("ERROR:", err)

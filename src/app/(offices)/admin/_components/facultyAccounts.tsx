@@ -4,24 +4,11 @@ import OCSTable from "@/components/table";
 import { DepartmentDocument, Roles } from "@/lib/modelInterfaces";
 import type { TableColumnProps } from "@/lib/types";
 import clsx from "clsx";
-import {
-  AddIcon,
-  Avatar,
-  ConfirmIcon,
-  CrossIcon,
-  EditIcon,
-  PlusIcon,
-  RefreshIcon,
-  RemoveIcon,
-  SmallCrossIcon,
-  toaster,
-  UpdatedIcon,
-  WarningSignIcon,
-} from "evergreen-ui";
+import { AddIcon, Avatar, CrossIcon, EditIcon, PlusIcon, RefreshIcon, RemoveIcon, toaster, UpdatedIcon, WarningSignIcon } from "evergreen-ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
-import AddAdminAccountModal from "./addAdminAccountModal";
-import AddAdminDepartmentModal from "./addAdminDepartmentModal";
+import AddFacultyAccountModal from "./addFacultyAccountModal";
+import AddFacultyDepartmentModal from "./addFacultyDepartmentModal";
 import type { AccountsColumns } from './types';
 import UpdateAccountModal from "./updateAccountModal";
 
@@ -37,7 +24,7 @@ function getPhotoURL(id?: string, photoBuffer?: Buffer, type?: string): string |
   return objectURL;
 }
 
-function getAdminAccountsColumns({ onRemoveDepartment, onAddDepartment, onUpdate, onToggleActive }: Readonly<{ onUpdate: (id: string) => void, onToggleActive: (id: string, activate: boolean) => void, onAddDepartment: (id: string) => void, onRemoveDepartment: (id: string, departmentId: string) => void }>): TableColumnProps[]
+function getFacultyAccountsColumns({ onRemoveDepartment, onAddDepartment, onUpdate, onToggleActive }: Readonly<{ onUpdate: (id: string) => void, onToggleActive: (id: string, activate: boolean) => void, onAddDepartment: (id: string) => void, onRemoveDepartment: (id: string, departmentId: string) => void }>): TableColumnProps[]
 {
   return [
     {
@@ -70,14 +57,6 @@ function getAdminAccountsColumns({ onRemoveDepartment, onAddDepartment, onUpdate
       label: 'Email Address', field: "email", sortable: true, searchable: true,
     },
     {
-      label: 'Has Registered E-Signature', field: "hasRegisteredESignature", sortable: true, searchMap: { true: 'yes', false: 'no' }, align: 'center',
-      render: (row: AccountsColumns) => (
-        <div className="flex justify-center items-center">
-          {row.hasRegisteredSignature ? <span className="text-green-700 flex flex-nowrap gap-x-1"><ConfirmIcon size={15} color="green" /> YES</span> : <span className="text-red-500 flex flex-nowrap"><SmallCrossIcon color="red" /> NO</span>}
-        </div>
-      )
-    },
-    {
       label: "Departments", field: "departments", align: 'center',
       render: (row: AccountsColumns) => (
         <div className="flex flex-col justify-start items-start min-w-32 gap-y-1">
@@ -96,14 +75,14 @@ function getAdminAccountsColumns({ onRemoveDepartment, onAddDepartment, onUpdate
           ))}
           {
             row.departmentIds.length === 0 && (
-              <button type="button" title="No Assigned Departments" className="mx-auto text-yellow-500 drop-shadow"><WarningSignIcon size={25} /></button>
+              <div className="mx-auto text-yellow-500 drop-shadow"><WarningSignIcon size={25} /></div>
             )
           }
           </div>
       ),
     },
     {
-      label: "Status", field: "deactivated", sortable: true, searchable: true, searchMap: { true: "Deactivated", false: "Active" },
+      label: "Status", field: "deactivated", sortable: true, searchable: true,
       render: (row: AccountsColumns) => (
         <div className={
           clsx(
@@ -112,7 +91,7 @@ function getAdminAccountsColumns({ onRemoveDepartment, onAddDepartment, onUpdate
             !!row.deactivated && "bg-gray-400 text-white",
           )}
         >
-          {row.deactivated ? "Deactivated" : "Active"}
+          {row.deactivated? "Deactivated" : "Active"}
         </div>
       ),
     },
@@ -138,7 +117,7 @@ function getAdminAccountsColumns({ onRemoveDepartment, onAddDepartment, onUpdate
 async function getData(setData: (data: AccountsColumns[]) => void, setLoading: (loading: boolean) => void) {
   setLoading(true)
   try {
-    const response = await fetch('/' + Roles.SuperAdmin + '/api/admins')
+    const response = await fetch('/' + Roles.SuperAdmin + '/api/faculties')
     const { result } = await response.json();
     setData(result)
     setLoading(false)
@@ -148,7 +127,7 @@ async function getData(setData: (data: AccountsColumns[]) => void, setLoading: (
   }
 }
 
-export default function AdminAccountsPage() {
+export default function FacultyAccountsPage() {
   const [data, setData] = useState<AccountsColumns[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -170,7 +149,7 @@ export default function AdminAccountsPage() {
   const onToggleActive = useCallback((id: string, activate: boolean) => {
     Swal.fire({
       title: (activate ? 'Activate' : 'Deactivate') + ' Account?',
-      text: "Employee ID " + data.find((d) => d._id === id)?.employeeId,
+      text: data.find((d) => d._id === id)?.employeeId,
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: activate ? '#168d26' : '#d33',
@@ -202,11 +181,11 @@ export default function AdminAccountsPage() {
   const onRemoveDepartment = useCallback((id: string, departmentId: string) => {
     Swal.fire({
       title: 'Remove Department from Employee ID ' + data.find((d) => d._id == id)?.employeeId + '?',
-      text: data.find((d) => d._id === id)?.departmentIds?.find((d) => d._id == departmentId)?.name,
+      text: "Employee ID " + data.find((d) => d._id === id)?.departmentIds?.find((d) => d._id == departmentId)?.name,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#888',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
       confirmButtonText: 'Yes, remove it!'
     })
       .then(({ isConfirmed }) => {
@@ -226,7 +205,7 @@ export default function AdminAccountsPage() {
       })
   }, [data]);
 
-  const adminColumns = getAdminAccountsColumns({
+  const facultyColumns = getFacultyAccountsColumns({
     onUpdate,
     onToggleActive,
     onAddDepartment,
@@ -248,15 +227,15 @@ export default function AdminAccountsPage() {
 
   return (
     <div className="px-8 py-4">
-      <h1 className="text-[25px] font-[600] mb-4">Admin Account Management</h1>
-      <OCSTable loading={loading} columns={adminColumns} data={data} searchable toolbars={[
-        (<div key={"adminstoolbar1"} className="flex flex-nowrap gap-x-2 justify-end items-center">
-          <button type="button" onClick={() => setOpen(true)} className="bg-slate-100 text-blue-500 border border-blue-500 font-[600] px-4 py-2 rounded-md hover:bg-blue-500 hover:text-white" ><PlusIcon display="inline" marginRight={4} size={12} />Add Admin Account</button>
+      <h1 className="text-[25px] font-[600] mb-4">Faculty Account Management</h1>
+      <OCSTable loading={loading} columns={facultyColumns} data={data} searchable toolbars={[
+        (<div key={"deptoolbar1"} className="flex flex-nowrap gap-x-2 justify-end items-center">
+          <button key={"addfaculty1"} type="button" onClick={() => setOpen(true)} className="bg-slate-100 text-blue-500 border border-blue-500 font-[600] px-4 py-2 rounded-md hover:bg-blue-500 hover:text-white" ><PlusIcon display="inline" marginRight={4} size={12} />Add Department</button>
           <button type="button" onClick={() => getData(setData, setLoading)} className="bg-slate-100 text-blue-500 border border-blue-500 font-[600] px-4 py-2 rounded-md hover:bg-blue-500 hover:text-white" ><RefreshIcon display="inline" marginRight={4} size={12} />Refresh</button>
-        </div>),
+        </div>)
       ]} />
-      <AddAdminAccountModal open={open} onClose={() => setOpen(false)} onRefresh={() => setTimeout(() => getData(setData, setLoading), 500)} />
-      <AddAdminDepartmentModal id={selectedId} departments={selectedDepartmentNames} open={deptOpen} onClose={() => setDeptOpen(false)} onRefresh={() => setTimeout(() => getData(setData, setLoading), 500)} />
+      <AddFacultyAccountModal open={open} onClose={() => setOpen(false)} onRefresh={() => setTimeout(() => getData(setData, setLoading), 500)} />
+      <AddFacultyDepartmentModal id={selectedId} departments={selectedDepartmentNames} open={deptOpen} onClose={() => setDeptOpen(false)} onRefresh={() => setTimeout(() => getData(setData, setLoading), 500)} />
       <UpdateAccountModal oldData={selectedUpdate} open={!!selectedUpdate} onClose={() => setSelectedUpdate(undefined)} onRefresh={() => setTimeout(() => getData(setData, setLoading), 500)} />
     </div>
   )

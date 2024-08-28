@@ -29,20 +29,21 @@ export default function OCSTable({ data = [], columns = [], loading = false, sor
     Object.keys(item).some((key) => {
       const col = columns.find((col) => col.field === key)
       return col?.searchable ? (
-        (typeof item[key] === "string" || typeof item[key] === "number") && item[key].toString().trimStart().toString().toLowerCase().includes(search.trimStart().toLowerCase())
-        || item[key] instanceof Date && item[key].toISOString().toLowerCase().includes(search.trimStart().toLowerCase())
-        || item[key] instanceof Date && item[key].toLocaleDateString('en-PH', { month: '2-digit', day: '2-digit', year: 'numeric' }).includes(search.trimStart().toLowerCase())
-        || search.trimStart().startsWith('>') && typeof item[key] === "number" && item[key] > parseFloat(search.trimStart().slice(1))
-        || search.trimStart().startsWith('<') && typeof item[key] === "number" && item[key] < parseFloat(search.trimStart().slice(1))
-        || search.trimStart().startsWith('>=') && typeof item[key] === "number" && item[key] >= parseFloat(search.trimStart().slice(2))
-        || search.trimStart().startsWith('<=') && typeof item[key] === "number" && item[key] <= parseFloat(search.trimStart().slice(2))
-        || search.trimStart().startsWith('!=') && item[key].toString().trimStart().toLowerCase() !== search.trimStart().slice(2).toLowerCase()
-        || !!col.label && typeof item[key] === "number" && search.toLowerCase().startsWith(col.label.toLowerCase()) && search.slice(col.label.length).trimStart().startsWith('>') && item[key] > parseFloat(search.slice(col.label.length).trimStart().substring(1))
-        || !!col.label && typeof item[key] === "number" && search.toLowerCase().startsWith(col.label.toLowerCase()) && search.slice(col.label.length).trimStart().startsWith('<') && item[key] < parseFloat(search.slice(col.label.length).trimStart().substring(1))
-        || !!col.label && typeof item[key] === "number" && search.toLowerCase().startsWith(col.label.toLowerCase()) && search.slice(col.label.length).trimStart().startsWith('>=') && item[key] >= parseFloat(search.slice(col.label.length).trimStart().substring(2))
-        || !!col.label && typeof item[key] === "number" && search.toLowerCase().startsWith(col.label.toLowerCase()) && search.slice(col.label.length).trimStart().startsWith('<=') && item[key] <= parseFloat(search.slice(col.label.length).trimStart().substring(2))
-        || !!col.label && search.trimStart().toLowerCase().startsWith(col.label.toLowerCase()) && search.trimStart().slice(col.label.length).trimStart().startsWith('!=') && item[key].toString().trimStart().toLowerCase() != search.trimStart().slice(col.label.length).trimStart().substring(2).trimStart().toLowerCase()
-        || !!col.label && search.trimStart().toLowerCase().startsWith(col.label.toLowerCase()) && search.trimStart().slice(col.label.length).trimStart().startsWith('==') && item[key].toString().trimStart().toLowerCase() == search.trimStart().slice(col.label.length).trimStart().substring(2).trimStart().toLowerCase()
+        ((typeof item[key] === "string" || typeof item[key] === "number") && ((col.searchMap && Object.hasOwn(col.searchMap, item[key]?.toString() || '')) ? col.searchMap[item[key]]?.toString().toLowerCase().includes(search.trimStart().toLowerCase()) : item[key].toString().trimStart().toString().toLowerCase().includes(search.trimStart().toLowerCase())))
+        || (typeof item[key] === "boolean" && ((col.searchMap && Object.hasOwn(col.searchMap, item[key] ? "true" : "false")) ? col.searchMap[item[key] ? "true" : "false"]?.toString().toLowerCase().includes(search.trimStart().toLowerCase()) : item[key] === Boolean(search.trimStart().toLowerCase())))
+        || (item[key] instanceof Date && item[key].toISOString().toLowerCase().includes(search.trimStart().toLowerCase()))
+        || (item[key] instanceof Date && item[key].toLocaleDateString('en-PH', { month: '2-digit', day: '2-digit', year: 'numeric' }).includes(search.trimStart().toLowerCase()))
+        || (search.trimStart().startsWith('>') && typeof item[key] === "number" && item[key] > parseFloat(search.trimStart().slice(1)))
+        || (search.trimStart().startsWith('<') && typeof item[key] === "number" && item[key] < parseFloat(search.trimStart().slice(1)))
+        || (search.trimStart().startsWith('>=') && typeof item[key] === "number" && item[key] >= parseFloat(search.trimStart().slice(2)))
+        || (search.trimStart().startsWith('<=') && typeof item[key] === "number" && item[key] <= parseFloat(search.trimStart().slice(2)))
+        || (search.trimStart().startsWith('!=') && item[key].toString().trimStart().toLowerCase() !== search.trimStart().slice(2).toLowerCase())
+        || (!!col.label && typeof item[key] === "number" && search.toLowerCase().startsWith(col.label.toLowerCase()) && search.slice(col.label.length).trimStart().startsWith('>') && item[key] > parseFloat(search.slice(col.label.length).trimStart().substring(1)))
+        || (!!col.label && typeof item[key] === "number" && search.toLowerCase().startsWith(col.label.toLowerCase()) && search.slice(col.label.length).trimStart().startsWith('<') && item[key] < parseFloat(search.slice(col.label.length).trimStart().substring(1)))
+        || (!!col.label && typeof item[key] === "number" && search.toLowerCase().startsWith(col.label.toLowerCase()) && search.slice(col.label.length).trimStart().startsWith('>=') && item[key] >= parseFloat(search.slice(col.label.length).trimStart().substring(2)))
+        || (!!col.label && typeof item[key] === "number" && search.toLowerCase().startsWith(col.label.toLowerCase()) && search.slice(col.label.length).trimStart().startsWith('<=') && item[key] <= parseFloat(search.slice(col.label.length).trimStart().substring(2)))
+        || (!!col.label && search.trimStart().toLowerCase().startsWith(col.label.toLowerCase()) && search.trimStart().slice(col.label.length).trimStart().startsWith('!=') && item[key].toString().trimStart().toLowerCase() != search.trimStart().slice(col.label.length).trimStart().substring(2).trimStart().toLowerCase())
+        || (!!col.label && search.trimStart().toLowerCase().startsWith(col.label.toLowerCase()) && search.trimStart().slice(col.label.length).trimStart().startsWith('==') && item[key].toString().trimStart().toLowerCase() == search.trimStart().slice(col.label.length).trimStart().substring(2).trimStart().toLowerCase())
       ): false;
     }
   ))), [columns, data, search])
@@ -54,7 +55,7 @@ export default function OCSTable({ data = [], columns = [], loading = false, sor
       return sortDirection === "asc"? a[sortBy] - b[sortBy] : b[sortBy] - a[sortBy];
     }
     if (typeof (a[sortBy]) === "boolean" && typeof (b[sortBy]) === "boolean") {
-      return a[sortBy] ? -1 : 1;
+      return (sortDirection === "asc" ? -1 : 1) * (a[sortBy] === true ? -1 : 1);
     }
     return 0;
   }), [filteredData, sortBy, sortDirection]);
