@@ -265,6 +265,14 @@ export default function AdminAccountsPage() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!!openViewSignature) {
+      document.addEventListener('contextmenu', event => event.preventDefault());
+    } else {
+      document.removeEventListener('contextmenu', event => event.preventDefault());
+    }
+  }, [openViewSignature])
+
   return (
     <div className="px-8 py-4">
       <h1 className="text-[25px] font-[600] mb-4">Admin Account Management</h1>

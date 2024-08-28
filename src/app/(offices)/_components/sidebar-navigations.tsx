@@ -27,6 +27,14 @@ const superAdminSidebarNavList: SidebarNavigation[] = [
     url: '/superadmin/admin/esignature',
   },
   {
+    name: 'Memo Templates',
+    url: '/superadmin/memo',
+  },
+  {
+    name: 'Letter Templates',
+    url: '/superadmin/letter',
+  },
+  {
     name: 'Account',
     url: '/superadmin/account',
   },
