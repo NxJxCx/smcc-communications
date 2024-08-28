@@ -12,6 +12,7 @@ export default function AddAdminSignature() {
 
   const handleSave = useCallback(() => {
     const signatureBase64String = signaturePadRef.current?.toDataURL()
+    setSignatureBase64String(signatureBase64String)
   }, [signaturePadRef])
 
   const [signatureBase64String, setSignatureBase64String] = useState<string>('')
