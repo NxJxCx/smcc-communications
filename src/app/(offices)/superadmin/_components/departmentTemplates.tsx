@@ -1,8 +1,14 @@
 'use client'
 
-import LoadingComponent from "@/components/loading"
-import { DepartmentDocument, DocumentType, Roles, TemplateDocument } from "@/lib/modelInterfaces"
-import { useEffect, useMemo, useState } from "react"
+import LoadingComponent from "@/components/loading";
+import OCSModal from "@/components/ocsModal";
+import { DepartmentDocument, DocumentType, Roles, TemplateDocument } from "@/lib/modelInterfaces";
+import clsx from "clsx";
+import { PlusIcon } from "evergreen-ui";
+import { useEffect, useMemo, useState } from "react";
+import AddTemplate from "./addTemplate";
+import EditTemplate from "./editTemplate";
+import ThumbnailItem from "./thumbnailItem";
 
 export default function DepartmentTemplates({
   doctype
@@ -19,43 +25,61 @@ export default function DepartmentTemplates({
     url.searchParams.set('doctype', doctype)
     fetch(url)
       .then(res => res.json())
-      .then(({ result })=> { setDepartments(result); setLoading(false) })
+      .then(({ result }) => { setDepartments(result); setLoading(false) })
       .catch((e) => { console.log(e); setLoading(false) })
   }, [doctype])
 
   const templates = useMemo(() => !!selectedDepartment ? (doctype === DocumentType.Memo ? selectedDepartment.memoTemplates as TemplateDocument[] : selectedDepartment.letterTemplates as TemplateDocument[]) : [], [selectedDepartment, doctype])
 
-  return (
-  <div className="w-full">
-    <h1 className="w-fit mx-auto text-2xl mt-4 font-[500]">Department {doctype === DocumentType.Memo ? "Memorandum" : "Letter"} Templates</h1>
-    {!!selectedDepartment && (<>
-      <div className="border border-gray-300 bg-white p-4 rounded-xl mt-4 mx-4">
-        <h2 className="text-2xl font-[500]">{selectedDepartment.name}</h2>
-        <p className="text-gray-600">Number of {doctype === DocumentType.Memo? "Memorandums" : "Letters"}: {selectedDepartment[doctype === DocumentType.Memo?'memoTemplates' : 'letterTemplates'].length}</p>
-      </div>
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateDocument>()
+  const [openEditTemplate, setOpenEditTemplate] = useState<boolean>(false)
+  const [openAddTemplate, setOpenAddTemplate] = useState<boolean>(false)
+
+  return (<>
+    <div className="w-full">
+      <h1 className="w-fit mx-auto text-2xl mt-4 font-[500]">Department {doctype === DocumentType.Memo ? "Memorandum" : "Letter"} Templates</h1>
+      {!!selectedDepartment && (<>
+        <div className="border border-gray-300 bg-white p-4 rounded-xl mt-4 mx-4">
+          <h2 className="text-2xl font-[500]">{selectedDepartment.name}</h2>
+          <p className="text-gray-600">Number of {doctype === DocumentType.Memo ? "Memorandums" : "Letters"}: {selectedDepartment[doctype === DocumentType.Memo ? 'memoTemplates' : 'letterTemplates'].length}</p>
+          <button type="button" onClick={() => setOpenAddTemplate(true)} className="px-2 py-1 border rounded bg-sky-500 text-black my-2"><PlusIcon display="inline" /> Add Template</button>
+        </div>
       </>
-    )}
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8 border rounded-xl mt-4 mx-4">
-      { loading && <div className="col-span-2 min-h-[200px]"><LoadingComponent /></div>}
-      { !loading && !selectedDepartment && departments?.length === 0 && <p className="text-center text-gray-600">No Departments</p>}
-      { !loading && !selectedDepartment && departments?.map((department: DepartmentDocument) => (
-        <div key={department._id}>
-          <button type="button" onClick={() => setSelectedDepartment(department)} title={department.name} className="shadow-lg border border-gray-300 bg-white p-4 rounded-xl cursor-pointer hover:border-gray-400 flex flex-col items-start justify-center text-center">
-            <div className="w-full">{doctype === DocumentType.Memo ? department.memoTemplates.length : department.letterTemplates.length} Templates</div>
-            <div className="w-full font-semibold">{department.name}</div>
-          </button>
+      )}
+      {!openAddTemplate && !openEditTemplate && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8 border rounded-xl mt-4 mx-4">
+          {loading && <div className="col-span-2 min-h-[200px]"><LoadingComponent /></div>}
+          {!loading && !selectedDepartment && departments?.length === 0 && <p className="text-center text-gray-600">No Departments</p>}
+          {!loading && !selectedDepartment && departments?.map((department: DepartmentDocument) => (
+            <div key={department._id}>
+              <button type="button" onClick={() => setSelectedDepartment(department)} title={department.name} className="shadow-lg border border-gray-300 bg-white p-4 rounded-xl cursor-pointer hover:border-gray-400 flex flex-col items-start justify-center text-center">
+                <div className="w-full">{doctype === DocumentType.Memo ? department.memoTemplates.length : department.letterTemplates.length} Templates</div>
+                <div className="w-full font-semibold">{department.name}</div>
+              </button>
+            </div>
+          ))}
+          {!loading && !!selectedDepartment && templates.length === 0 && <p className="text-center text-gray-600">No Templates</p>}
+          {!loading && !!selectedDepartment && templates.map((template: TemplateDocument) => (
+            <ThumbnailItem key={template._id} thumbnailSrc={"thumbnail-document.png"} onClick={() => setSelectedTemplate(template)} label={template.title} createdAt={template.createdAt} updatedAt={template.updatedAt} />
+          ))}
         </div>
-      ))}
-      { !loading && !!selectedDepartment && templates.length === 0 && <p className="text-center text-gray-600">No Templates</p>}
-      { !loading && !!selectedDepartment && templates.map((template: TemplateDocument) => (
-        <div key={template._id}>
-          {/* <button type="button" title={template.header} className="shadow-lg border border-gray-300 bg-white p-4 rounded-xl cursor-pointer hover:border-gray-400 flex flex-col items-start justify-center text-center">
-            <div className="w-full">{doctype === DocumentType.Memo ? department.memoTemplates.length : department.letterTemplates.length} Templates</div>
-            <div className="w-full font-semibold">{department.name}</div>
-          </button> */}
-        </div>
-      ))}
+      )}
+      {!openEditTemplate && !!selectedTemplate && openEditTemplate && (
+        <EditTemplate template={selectedTemplate} doctype={doctype} onSave={(templateId: string) => { console.log("saved", templateId); setOpenEditTemplate(false); }} />
+      )}
+      { openEditTemplate && selectedDepartment && (
+        <AddTemplate department={selectedDepartment} doctype={doctype} onAdd={(templateId: string) => { console.log("saved", templateId); setOpenAddTemplate(false); }} />
+      )}
     </div>
-  </div>
-  )
+    <OCSModal title={selectedTemplate?.title} open={!!selectedTemplate && !openEditTemplate} onClose={() => setSelectedTemplate(undefined)}>
+      <div className={clsx("min-w-[" + (8.5 * 96) + "]", "max-w-[" + (8.5 * 96) + "]", "min-h-[" + (1 * 96) + "]")}>
+        {selectedTemplate?.content}
+      </div>
+      <hr className="border w-full h-[1px] my-2" />
+      <div className="w-full flex justify-end items-center gap-x-2">
+        <button type="button" onClick={() => setOpenEditTemplate(true)}>Edit</button>
+        <button type="button" onClick={() => setSelectedTemplate(undefined)}>Close</button>
+      </div>
+    </OCSModal>
+  </>)
 }

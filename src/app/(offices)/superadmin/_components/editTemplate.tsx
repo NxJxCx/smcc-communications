@@ -1,16 +1,14 @@
 'use client';;
 import LoadingComponent from '@/components/loading';
-import { DepartmentDocument, DocumentType } from '@/lib/modelInterfaces';
+import { DocumentType, TemplateDocument } from '@/lib/modelInterfaces';
 import { useSession } from '@/lib/useSession';
 import { Editor } from '@tinymce/tinymce-react';
 import clsx from 'clsx';
-import { toaster } from 'evergreen-ui';
-import { useCallback, useMemo, useRef, useState } from 'react';
-import Swal from 'sweetalert2';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 const tinyMCE_API_KEY = process.env.NEXT_PUBLIC_TINYMCE_API_KEY
 
-export default function AddTemplate({ department, doctype, onAdd }: { department?: DepartmentDocument, doctype: DocumentType, onAdd: (templateId: string) => void }) {
+export default function EditTemplate({ template, doctype, onSave }: { template?: TemplateDocument, doctype: DocumentType, onSave: (templateId: string) => void }) {
   const { status } = useSession({ redirect: false })
   const ppi = 96
   const size = useMemo<{width:number, height:number}>(() => ({
@@ -19,7 +17,7 @@ export default function AddTemplate({ department, doctype, onAdd }: { department
   }), []);
 
   const editorRef = useRef<any>(null);
-  const [content, setContent] = useState<any>();
+  const [content, setContent] = useState<any>(template?.content);
   const onEditContent = useCallback((content: any) => {
     setContent(content);
   }, [])
@@ -54,37 +52,31 @@ export default function AddTemplate({ department, doctype, onAdd }: { department
     input.click();
   };
 
-  const onSaveAsTemplate = useCallback(function (api: any, ...props: any) {
-    console.log(props)
-    const content = editorRef.current?.getContent();
-    Swal.fire({
-      title: 'Enter ' + (doctype === DocumentType.Memo ? 'Memorandum' : 'Letter') + ' template title:',
-      input: 'text',
-      showCancelButton: true,
-      confirmButtonText: 'Save',
-      cancelButtonText: 'Cancel',
-      showLoaderOnConfirm: true,
-    }).then(({ isConfirmed, value }) => {
-      if (!isConfirmed) {
-        toaster.warning('Please enter a template title.')
-      } else {
-        // TODO: Save memo template with the specific department selected to the database
-        onAdd && onAdd("")
-      }
-    })
-  }, [doctype, onAdd, /* department?._id */])
+  const onSaveAsTemplate = useCallback(function (api: any) {
+    if (!!template?._id) {
+      const content = editorRef.current?.getContent();
+      // TODO: Save memo template with the specific department selected to the database
+      onSave && onSave(template._id as string)
+    }
+  }, [onSave, template?._id, /* doctype */])
 
   const onAddSignatory = useCallback(function (api: any, ...props: any) {
     console.log(props)
     const content = editorRef.current?.getContent();
   }, [])
 
+  useEffect(() => {
+    if (!!template?.content) {
+      setContent(template?.content);
+    }
+  }, [template])
+
   if (status === 'loading') return <LoadingComponent />;
 
   return (
     <div className="text-center">
       <h2 className="text-2xl font-[600]">
-        {doctype === DocumentType.Memo ? 'Memorandum' : 'Letter'} Template for {department?.name || "(unknown department)"}
+        {doctype === DocumentType.Memo ? 'Memorandum' : 'Letter'} Template for {template?.title || "(unknown template)"}
       </h2>
       <div className={clsx("flex items-start justify-center", "min-w-[" + size.width + "px]", "max-w-[" + size.width + "px]"  , "min-h-[" + size.height + "px]")}>
         <Editor
