@@ -45,6 +45,19 @@ export default function DepartmentTemplates({
     setOpenAddTemplate(false)
   }, [])
 
+  const parseHTML = (htmlString?: string) => {
+    return !!htmlString ? (
+      <div style={{
+        width: 11 * 96,
+        height: 11 * 96,
+        maxHeight: "80vh",
+        overflow: "auto",
+      }} className="border bg-gray-200 py-4">
+        <div dangerouslySetInnerHTML={{ __html: htmlString }} style={{ maxWidth: 8.5 * 96, minHeight: 11 * 96 }} className="border bg-white shadow mx-auto"/>
+      </div>
+    ) : undefined
+  }
+
   return (<>
     <div className="w-full">
       <h1 className="w-fit mx-auto text-2xl mt-4 font-[500]">Department {doctype === DocumentType.Memo ? "Memorandum" : "Letter"} Templates</h1>
@@ -71,7 +84,7 @@ export default function DepartmentTemplates({
           ))}
           {!loading && !!selectedDepartment && templates.length === 0 && <p className="text-center text-gray-600">No Templates</p>}
           {!loading && !!selectedDepartment && templates.map((template: TemplateDocument) => (
-            <ThumbnailItem key={template._id} thumbnailSrc={"thumbnail-document.png"} onClick={() => setSelectedTemplate(template)} label={template.title} createdAt={template.createdAt} updatedAt={template.updatedAt} />
+            <ThumbnailItem key={template._id} thumbnailSrc={"/thumbnail-document.png"} onClick={() => setSelectedTemplate(template)} label={template.title} createdAt={template.createdAt} updatedAt={template.updatedAt} />
           ))}
         </div>
       )}
@@ -83,13 +96,13 @@ export default function DepartmentTemplates({
       )}
     </div>
     <OCSModal title={selectedTemplate?.title} open={!!selectedTemplate && !openEditTemplate} onClose={() => setSelectedTemplate(undefined)}>
-      <div className={clsx("min-w-[" + (8.5 * 96) + "]", "max-w-[" + (8.5 * 96) + "]", "min-h-[" + (1 * 96) + "]")}>
-        {selectedTemplate?.content}
+      <div className={clsx("min-w-[" + (8.5 * 96) + "px]", "max-w-[" + (8.5 * 96) + "px]", "min-h-[" + (1 * 96) + "px]")}>
+        {parseHTML(selectedTemplate?.content)}
       </div>
       <hr className="border w-full h-[1px] my-2" />
-      <div className="w-full flex justify-end items-center gap-x-2">
-        <button type="button" onClick={() => setOpenEditTemplate(true)}>Edit</button>
-        <button type="button" onClick={() => setSelectedTemplate(undefined)}>Close</button>
+      <div className="w-full flex justify-end items-center gap-x-3 pr-2">
+        <button type="button" className="rounded-lg bg-yellow-300 hover:bg-yellow-100 text-black px-3 py-1" onClick={() => setOpenEditTemplate(true)}>Edit</button>
+        <button type="button" className="rounded-lg bg-gray-300 hover:bg-yellow-100 text-black px-3 py-1" onClick={() => setSelectedTemplate(undefined)}>Close</button>
       </div>
     </OCSModal>
   </>)
