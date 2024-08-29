@@ -7,7 +7,8 @@ import User from './User';
 const LetterSchema = new Schema({
   templateId: {
     type: Schema.Types.ObjectId,
-    ref: 'Template'
+    ref: 'Template',
+    required: [true, 'Template ID is required'],
   },
   content: {
     type: String,

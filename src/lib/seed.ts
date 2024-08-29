@@ -1,5 +1,12 @@
 import 'server-only';
 import { Roles } from './modelInterfaces';
+import Department from './models/Department';
+import DocFile from './models/DocFile';
+import ESignature from './models/ESignature';
+import Letter from './models/Letter';
+import Memo from './models/Memo';
+import PhotoFile from './models/PhotoFile';
+import Template from './models/Template';
 import User from './models/User';
 export async function seed() {
   try {
@@ -46,5 +53,26 @@ export async function seed() {
         lastName: 'Admin',
       })
     }
+  } catch (e) {}
+  try {
+    await PhotoFile.countDocuments()
+  } catch (e) {}
+  try {
+    await Department.countDocuments()
+  } catch (e) {}
+  try {
+    await ESignature.countDocuments()
+  } catch (e) {}
+  try {
+    await Template.countDocuments()
+  } catch (e) {}
+  try {
+    await Memo.countDocuments()
+  } catch (e) {}
+  try {
+    await Letter.countDocuments()
+  } catch (e) {}
+  try {
+    await DocFile.countDocuments()
   } catch (e) {}
 }

@@ -1,4 +1,5 @@
-import AddMemoTemplate from "@/app/(offices)/superadmin/_components/addMemoTemplate";
+import DepartmentTemplates from "@/app/(offices)/superadmin/_components/departmentTemplates";
+import { DocumentType } from "@/lib/modelInterfaces";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -6,9 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return (
-    <div className="w-full">
-      <AddMemoTemplate />
-    </div>
-  )
+  return <DepartmentTemplates doctype={DocumentType.Memo} />
 }

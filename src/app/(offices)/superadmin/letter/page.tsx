@@ -1,14 +1,11 @@
-import AddLetterTemplate from "@/app/(offices)/superadmin/_components/addLetterTemplate";
+import DepartmentTemplates from "@/app/(offices)/superadmin/_components/departmentTemplates";
+import { DocumentType } from "@/lib/modelInterfaces";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Memorandum Templates"
+  title: "Letter Templates"
 };
 
 export default function Page() {
-  return (
-    <div className="w-full">
-      <AddLetterTemplate />
-    </div>
-  )
+  return <DepartmentTemplates doctype={DocumentType.Letter} />
 }

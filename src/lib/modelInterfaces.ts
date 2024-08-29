@@ -61,8 +61,8 @@ export enum DocumentType {
 }
 
 export interface TemplateDocument extends Documents {
+  title: string
   documentType: DocumentType
-  header: string|HeaderDocument
   content: string
   signatures: string[]|ESignatureDocument[]
   validity: Date|string
@@ -88,12 +88,14 @@ export interface SignatureApprovals {
 
 export interface MemoDocument extends Documents {
   templateId: TemplateDocument|string
+  content: string
   preparedBy: UserDocument|string
   signatureApprovals: SignatureApprovals[]
 }
 
 export interface LetterDocument extends Documents {
   templateId: TemplateDocument|string
+  content: string
   preparedBy: UserDocument|string
   signatureApprovals: SignatureApprovals[]
 }

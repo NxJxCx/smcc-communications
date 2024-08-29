@@ -3,6 +3,10 @@ import 'server-only';
 import { DocumentType, type TemplateDocument } from '../modelInterfaces';
 
 const TemplateSchema = new Schema({
+  title: {
+    type: String,
+    required: [true, 'Template Title is required'],
+  },
   documentType: {
     type: String,
     enum: DocumentType,
