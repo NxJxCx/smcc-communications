@@ -4,8 +4,8 @@ import LoadingComponent from "@/components/loading";
 import OCSModal from "@/components/ocsModal";
 import { DepartmentDocument, DocumentType, Roles, TemplateDocument } from "@/lib/modelInterfaces";
 import clsx from "clsx";
-import { PlusIcon } from "evergreen-ui";
-import { useEffect, useMemo, useState } from "react";
+import { KeyEscapeIcon, PlusIcon } from "evergreen-ui";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import AddTemplate from "./addTemplate";
 import EditTemplate from "./editTemplate";
 import ThumbnailItem from "./thumbnailItem";
@@ -35,6 +35,16 @@ export default function DepartmentTemplates({
   const [openEditTemplate, setOpenEditTemplate] = useState<boolean>(false)
   const [openAddTemplate, setOpenAddTemplate] = useState<boolean>(false)
 
+  const onBack = useCallback(() => {
+    setSelectedDepartment(undefined)
+    setOpenEditTemplate(false)
+    setOpenAddTemplate(false)
+  }, [])
+
+  const onAddCancel = useCallback(() => {
+    setOpenAddTemplate(false)
+  }, [])
+
   return (<>
     <div className="w-full">
       <h1 className="w-fit mx-auto text-2xl mt-4 font-[500]">Department {doctype === DocumentType.Memo ? "Memorandum" : "Letter"} Templates</h1>
@@ -42,6 +52,7 @@ export default function DepartmentTemplates({
         <div className="border border-gray-300 bg-white p-4 rounded-xl mt-4 mx-4">
           <h2 className="text-2xl font-[500]">{selectedDepartment.name}</h2>
           <p className="text-gray-600">Number of {doctype === DocumentType.Memo ? "Memorandums" : "Letters"}: {selectedDepartment[doctype === DocumentType.Memo ? 'memoTemplates' : 'letterTemplates'].length}</p>
+          <button type="button" onClick={() => onBack()} className="px-2 py-1 border rounded bg-gray-300 text-black my-2 mr-2"><KeyEscapeIcon display="inline" /> Back</button>
           <button type="button" onClick={() => setOpenAddTemplate(true)} className="px-2 py-1 border rounded bg-sky-500 text-black my-2"><PlusIcon display="inline" /> Add Template</button>
         </div>
       </>
@@ -51,7 +62,7 @@ export default function DepartmentTemplates({
           {loading && <div className="col-span-2 min-h-[200px]"><LoadingComponent /></div>}
           {!loading && !selectedDepartment && departments?.length === 0 && <p className="text-center text-gray-600">No Departments</p>}
           {!loading && !selectedDepartment && departments?.map((department: DepartmentDocument) => (
-            <div key={department._id}>
+            <div key={department._id} className="mx-auto">
               <button type="button" onClick={() => setSelectedDepartment(department)} title={department.name} className="shadow-lg border border-gray-300 bg-white p-4 rounded-xl cursor-pointer hover:border-gray-400 flex flex-col items-start justify-center text-center">
                 <div className="w-full">{doctype === DocumentType.Memo ? department.memoTemplates.length : department.letterTemplates.length} Templates</div>
                 <div className="w-full font-semibold">{department.name}</div>
@@ -67,8 +78,8 @@ export default function DepartmentTemplates({
       {!openEditTemplate && !!selectedTemplate && openEditTemplate && (
         <EditTemplate template={selectedTemplate} doctype={doctype} onSave={(templateId: string) => { console.log("saved", templateId); setOpenEditTemplate(false); }} />
       )}
-      { openEditTemplate && selectedDepartment && (
-        <AddTemplate department={selectedDepartment} doctype={doctype} onAdd={(templateId: string) => { console.log("saved", templateId); setOpenAddTemplate(false); }} />
+      { openAddTemplate && !!selectedDepartment && (
+        <AddTemplate department={selectedDepartment} doctype={doctype} onAdd={(templateId: string) => { console.log("saved", templateId); setOpenAddTemplate(false); }} onCancel={onAddCancel} />
       )}
     </div>
     <OCSModal title={selectedTemplate?.title} open={!!selectedTemplate && !openEditTemplate} onClose={() => setSelectedTemplate(undefined)}>

@@ -1,8 +1,9 @@
 'use server';
 import connectDB from "@/lib/database";
-import { Roles } from "@/lib/modelInterfaces";
+import { DocumentType, Roles } from "@/lib/modelInterfaces";
 import Department from "@/lib/models/Department";
 import ESignature from "@/lib/models/ESignature";
+import Template from "@/lib/models/Template";
 import User from "@/lib/models/User";
 import { getSession } from "@/lib/session";
 
@@ -321,5 +322,78 @@ export async function saveESignature(id: string|undefined, eSignatureDataURL?: s
   }
   return {
     error: 'Failed to save e-signature'
+  }
+}
+
+export async function saveTemplate(departmentId: string, doctype: DocumentType, eSignatures: string[], formData: FormData): Promise<ActionResponseType & { templateId?: string }>
+{
+  await connectDB()
+  try {
+    const session = await getSession(Roles.SuperAdmin)
+    if (!!session?.user) {
+      const department = await Department.findById(departmentId).exec()
+      if (!department) {
+        return {
+          error: 'Department not found'
+        }
+      }
+      const content = formData.get('content')
+      const title = formData.get('title')
+      const validity = new Date()
+      validity.setFullYear(validity.getFullYear() + 1)
+      if (!content) {
+        return {
+          error: 'Template should not be empty'
+        }
+      }
+      if (doctype === DocumentType.Memo) {
+        const template = await Template.create({
+          title,
+          documentType: doctype,
+          content: content,
+          signatures: eSignatures,
+          validity: validity,
+          createdBy: session.user._id.toHexString(),
+        })
+        if (!!template?._id) {
+          department.memoTemplates.push(template._id.toHexString())
+          const updated = await department.save({ new: true, upsert: false, runValidation: true })
+          if (!!updated) {
+            return {
+              success: 'Template Successfully Updated',
+              templateId: template._id.toHexString()
+            }
+          }
+        }
+      } else if (doctype === DocumentType.Letter) {
+        const template = await Template.create({
+          title,
+          documentType: doctype,
+          content: content,
+          signatures: eSignatures,
+          validity: validity,
+          createdBy: session.user._id.toHexString(),
+        })
+        if (!!template?._id) {
+          department.letterTemplates.push(template._id.toHexString())
+          const updated = await department.save({ new: true, upsert: false, runValidation: true })
+          if (!!updated) {
+            return {
+              success: 'Template Successfully Updated',
+              templateId: template._id.toHexString()
+            }
+          }
+        }
+      } else {
+        return {
+          error: 'Invalid document type'
+        }
+      }
+    }
+  } catch (e) {
+    console.log(e)
+  }
+  return {
+    error: 'Failed to save template'
   }
 }

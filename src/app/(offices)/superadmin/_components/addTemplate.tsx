@@ -1,16 +1,17 @@
 'use client';;
+import { saveTemplate } from '@/actions/superadmin';
 import LoadingComponent from '@/components/loading';
 import { DepartmentDocument, DocumentType } from '@/lib/modelInterfaces';
 import { useSession } from '@/lib/useSession';
 import { Editor } from '@tinymce/tinymce-react';
 import clsx from 'clsx';
-import { toaster } from 'evergreen-ui';
+import { CrossIcon, toaster } from 'evergreen-ui';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import Swal from 'sweetalert2';
 
 const tinyMCE_API_KEY = process.env.NEXT_PUBLIC_TINYMCE_API_KEY
 
-export default function AddTemplate({ department, doctype, onAdd }: { department?: DepartmentDocument, doctype: DocumentType, onAdd: (templateId: string) => void }) {
+export default function AddTemplate({ department, doctype, onAdd, onCancel }: { department?: DepartmentDocument, doctype: DocumentType, onAdd: (templateId: string) => void, onCancel: () => void }) {
   const { status } = useSession({ redirect: false })
   const ppi = 96
   const size = useMemo<{width:number, height:number}>(() => ({
@@ -19,6 +20,7 @@ export default function AddTemplate({ department, doctype, onAdd }: { department
   }), []);
 
   const editorRef = useRef<any>(null);
+  const [eSignatures, setESignatures] = useState<string[]>([]);
   const [content, setContent] = useState<any>();
   const onEditContent = useCallback((content: any) => {
     setContent(content);
@@ -64,15 +66,25 @@ export default function AddTemplate({ department, doctype, onAdd }: { department
       confirmButtonText: 'Save',
       cancelButtonText: 'Cancel',
       showLoaderOnConfirm: true,
-    }).then(({ isConfirmed, value }) => {
+    }).then(async ({ isConfirmed, value }) => {
       if (!isConfirmed) {
         toaster.warning('Please enter a template title.')
       } else {
         // TODO: Save memo template with the specific department selected to the database
-        onAdd && onAdd("")
+        const saveMyTemplate = saveTemplate.bind(null, department?._id || '', doctype, eSignatures)
+        const formData = new FormData()
+        formData.append('title', value)
+        formData.append('content', content)
+        const { success, templateId, error } = await saveMyTemplate(formData)
+        if (error) {
+          toaster.danger(error)
+        } else if (success) {
+          toaster.success(success)
+          onAdd && onAdd(templateId as string)
+        }
       }
     })
-  }, [doctype, onAdd, /* department?._id */])
+  }, [doctype, onAdd, department?._id, eSignatures])
 
   const onAddSignatory = useCallback(function (api: any, ...props: any) {
     console.log(props)
@@ -82,9 +94,10 @@ export default function AddTemplate({ department, doctype, onAdd }: { department
   if (status === 'loading') return <LoadingComponent />;
 
   return (
-    <div className="text-center">
-      <h2 className="text-2xl font-[600]">
-        {doctype === DocumentType.Memo ? 'Memorandum' : 'Letter'} Template for {department?.name || "(unknown department)"}
+    <div className="text-center mt-4">
+      <h2 className="text-2xl font-[600] mb-2">
+        Add {doctype === DocumentType.Memo ? 'Memorandum' : 'Letter'} Template
+        <button type="button" onClick={() => onCancel()} className="px-2 py-1 rounded bg-gray-300 text-black ml-4 font-normal text-sm"><CrossIcon display="inline" /> Cancel</button>
       </h2>
       <div className={clsx("flex items-start justify-center", "min-w-[" + size.width + "px]", "max-w-[" + size.width + "px]"  , "min-h-[" + size.height + "px]")}>
         <Editor
