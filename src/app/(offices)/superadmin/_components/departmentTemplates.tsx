@@ -1,8 +1,8 @@
-'use client'
-
+'use client';
 import LoadingComponent from "@/components/loading";
 import OCSModal from "@/components/ocsModal";
-import { DepartmentDocument, DocumentType, Roles, TemplateDocument } from "@/lib/modelInterfaces";
+import ParseHTMLTemplate from "@/components/parseHTML";
+import { DepartmentDocument, DocumentType, ESignatureDocument, Roles, TemplateDocument } from "@/lib/modelInterfaces";
 import clsx from "clsx";
 import { KeyEscapeIcon, PlusIcon } from "evergreen-ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -19,7 +19,7 @@ export default function DepartmentTemplates({
   const [departments, setDepartments] = useState<DepartmentDocument[]>([])
   const [selectedDepartment, setSelectedDepartment] = useState<DepartmentDocument>()
 
-  useEffect(() => {
+  const getDepartmentData = useCallback(() => {
     setLoading(true)
     const url = new URL('/' + Roles.SuperAdmin + '/api/template/departments', window.location.origin)
     url.searchParams.set('doctype', doctype)
@@ -27,6 +27,11 @@ export default function DepartmentTemplates({
       .then(res => res.json())
       .then(({ result }) => { setDepartments(result); setLoading(false) })
       .catch((e) => { console.log(e); setLoading(false) })
+  }, [doctype])
+
+  useEffect(() => {
+    getDepartmentData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [doctype])
 
   const templates = useMemo(() => !!selectedDepartment ? (doctype === DocumentType.Memo ? selectedDepartment.memoTemplates as TemplateDocument[] : selectedDepartment.letterTemplates as TemplateDocument[]) : [], [selectedDepartment, doctype])
@@ -45,18 +50,15 @@ export default function DepartmentTemplates({
     setOpenAddTemplate(false)
   }, [])
 
-  const parseHTML = (htmlString?: string) => {
-    return !!htmlString ? (
-      <div style={{
-        width: 11 * 96,
-        height: 11 * 96,
-        maxHeight: "80vh",
-        overflow: "auto",
-      }} className="border bg-gray-200 py-4">
-        <div dangerouslySetInnerHTML={{ __html: htmlString }} style={{ maxWidth: 8.5 * 96, minHeight: 11 * 96 }} className="border bg-white shadow mx-auto"/>
-      </div>
-    ) : undefined
-  }
+  const [signatoriesList, setSignatoriesList] = useState<ESignatureDocument[]>([])
+
+  useEffect(() => {
+    const url = new URL('/' + Roles.SuperAdmin + '/api/signatories', window.location.origin);
+    fetch(url)
+      .then(res => res.json())
+      .then(({ result }) => setSignatoriesList(result))
+      .catch(console.log)
+  }, [])
 
   return (<>
     <div className="w-full">
@@ -92,12 +94,12 @@ export default function DepartmentTemplates({
         <EditTemplate template={selectedTemplate} doctype={doctype} onSave={(templateId: string) => { console.log("saved", templateId); setOpenEditTemplate(false); }} />
       )}
       { openAddTemplate && !!selectedDepartment && (
-        <AddTemplate department={selectedDepartment} doctype={doctype} onAdd={(templateId: string) => { console.log("saved", templateId); setOpenAddTemplate(false); }} onCancel={onAddCancel} />
+        <AddTemplate department={selectedDepartment} doctype={doctype} signatoriesList={signatoriesList} onAdd={(templateId: string) => { console.log("saved", templateId); setTimeout(() => getDepartmentData(), 100); setSelectedDepartment(undefined); setOpenAddTemplate(false); }} onCancel={onAddCancel} />
       )}
     </div>
     <OCSModal title={selectedTemplate?.title} open={!!selectedTemplate && !openEditTemplate} onClose={() => setSelectedTemplate(undefined)}>
       <div className={clsx("min-w-[" + (8.5 * 96) + "px]", "max-w-[" + (8.5 * 96) + "px]", "min-h-[" + (1 * 96) + "px]")}>
-        {parseHTML(selectedTemplate?.content)}
+        {<ParseHTMLTemplate htmlString={selectedTemplate?.content || ''} showApprovedSignatories />}
       </div>
       <hr className="border w-full h-[1px] my-2" />
       <div className="w-full flex justify-end items-center gap-x-3 pr-2">

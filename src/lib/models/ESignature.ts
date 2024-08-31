@@ -7,6 +7,7 @@ import User from './User';
 const ESignatureSchema = new Schema({
   adminId: {
     type: Schema.Types.ObjectId,
+    ref: 'User',
     required: [true, 'Admin ID is required'],
     validate: {
       validator: async function(val: any) {

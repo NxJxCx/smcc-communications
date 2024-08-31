@@ -1,7 +1,8 @@
 'use client';;
 import { saveTemplate } from '@/actions/superadmin';
+import jsxToString from '@/components/JSXToString';
 import LoadingComponent from '@/components/loading';
-import { DepartmentDocument, DocumentType } from '@/lib/modelInterfaces';
+import { DepartmentDocument, DocumentType, ESignatureDocument, UserDocument } from '@/lib/modelInterfaces';
 import { useSession } from '@/lib/useSession';
 import { Editor } from '@tinymce/tinymce-react';
 import clsx from 'clsx';
@@ -11,7 +12,7 @@ import Swal from 'sweetalert2';
 
 const tinyMCE_API_KEY = process.env.NEXT_PUBLIC_TINYMCE_API_KEY
 
-export default function AddTemplate({ department, doctype, onAdd, onCancel }: { department?: DepartmentDocument, doctype: DocumentType, onAdd: (templateId: string) => void, onCancel: () => void }) {
+export default function AddTemplate({ department, doctype, signatoriesList, onAdd, onCancel }: { department?: DepartmentDocument, doctype: DocumentType, signatoriesList: ESignatureDocument[], onAdd: (templateId: string) => void, onCancel: () => void }) {
   const { status } = useSession({ redirect: false })
   const ppi = 96
   const size = useMemo<{width:number, height:number}>(() => ({
@@ -22,6 +23,7 @@ export default function AddTemplate({ department, doctype, onAdd, onCancel }: { 
   const editorRef = useRef<any>(null);
   const [eSignatures, setESignatures] = useState<string[]>([]);
   const [content, setContent] = useState<any>();
+
   const onEditContent = useCallback((content: any) => {
     setContent(content);
   }, [])
@@ -59,17 +61,20 @@ export default function AddTemplate({ department, doctype, onAdd, onCancel }: { 
   const onSaveAsTemplate = useCallback(function (api: any, ...props: any) {
     console.log(props)
     const content = editorRef.current?.getContent();
+    console.log(content)
     Swal.fire({
       title: 'Enter ' + (doctype === DocumentType.Memo ? 'Memorandum' : 'Letter') + ' template title:',
       input: 'text',
       showCancelButton: true,
       confirmButtonText: 'Save',
       cancelButtonText: 'Cancel',
-      showLoaderOnConfirm: true,
+      showLoaderOnConfirm: false,
     }).then(async ({ isConfirmed, value }) => {
-      if (!isConfirmed) {
-        toaster.warning('Please enter a template title.')
-      } else {
+      if (isConfirmed) {
+        if (!value) {
+          toaster.danger('Please enter a template title')
+          return;
+        }
         // TODO: Save memo template with the specific department selected to the database
         const saveMyTemplate = saveTemplate.bind(null, department?._id || '', doctype, eSignatures)
         const formData = new FormData()
@@ -86,10 +91,68 @@ export default function AddTemplate({ department, doctype, onAdd, onCancel }: { 
     })
   }, [doctype, onAdd, department?._id, eSignatures])
 
-  const onAddSignatory = useCallback(function (api: any, ...props: any) {
-    console.log(props)
-    const content = editorRef.current?.getContent();
+  const getFullName = useCallback((user?: UserDocument): string => {
+    const fn = (user?.prefixName || '') + ' ' + user?.firstName + ' ' + (!!user?.middleName ? user?.middleName[0].toUpperCase() + '. ' : '') + user?.lastName + (user?.suffixName? ', ' + user?.suffixName : '')
+    return fn.trim()
   }, [])
+
+  const onAddSignatory = useCallback(function (api: any, ...props: any) {
+    const inputOptions: { [x: string]: string } = signatoriesList.reduce((init, signatory) => ({ ...init, [signatory?._id as string]: getFullName(signatory.adminId as UserDocument) }), ({}))
+    Swal.fire({
+      title: 'Add Signatory',
+      input: 'select',
+      inputOptions,
+      inputPlaceholder: 'Select signatory',
+      showCancelButton: true,
+      confirmButtonText: 'Add',
+      cancelButtonText: 'Cancel',
+      showLoaderOnConfirm: false,
+    })
+    .then(({ isConfirmed, value }) => {
+      if (isConfirmed) {
+        editorRef.current?.insertContent(
+          jsxToString(
+              <table
+                style={{
+                  borderCollapse: "collapse",
+                  width: "fit",
+                  border: "0px solid black",
+                }}
+                data-signatory-id={value}
+                data-type="signatory"
+              >
+                <tbody>
+                  <tr
+                    style={{
+                      maxHeight: "20px",
+                    }}
+                  >
+                    <td style={{
+                      textAlign: "center",
+                      fontWeight: "bold",
+                      maxHeight: "20px",
+                      borderBottom: "1px solid black",
+                      textTransform: 'uppercase',
+                      position: "relative"
+                    }}
+                    data-type="signatory-name">
+                      {inputOptions[value]}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={{
+                      textAlign: "center"
+                    }}>
+                      [Position]
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+          )
+        );
+      }
+    })
+  }, [getFullName, signatoriesList])
 
   if (status === 'loading') return <LoadingComponent />;
 
@@ -110,7 +173,7 @@ export default function AddTemplate({ department, doctype, onAdd, onCancel }: { 
             'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
             'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount',
             'image', 'editimage']}
-          toolbar={'undo redo | fontfamily fontsize lineheight image table | saveAsTemplate | ' +
+          toolbar={'undo redo | fontfamily fontsize lineheight image table | addAdminSignatory saveAsTemplate | ' +
               'bold italic underline forecolor backcolor | alignleft aligncenter ' +
               'alignright alignjustify | bullist numlist outdent indent | ' +
               'removeformat | help'}
@@ -130,7 +193,7 @@ export default function AddTemplate({ department, doctype, onAdd, onCancel }: { 
                 onAction: onAddSignatory,
               });
             },
-            content_style: `body { font-family:Arial,Helvetica,sans-serif; font-size:12pt; line-height: 1.0; }`,
+            content_style: `body { font-family:Arial,Helvetica,sans-serif; font-size:12pt; line-height: 1.0; margin: 12.2mm; }`,
             image_title: true,
             automatic_uploads: true,
             file_picker_types: 'image',

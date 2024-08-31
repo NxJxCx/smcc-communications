@@ -64,7 +64,6 @@ export interface TemplateDocument extends Documents {
   title: string
   documentType: DocumentType
   content: string
-  signatures: string[]|ESignatureDocument[]
   validity: Date|string
   createdBy: UserDocument|string
 }

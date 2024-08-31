@@ -16,13 +16,6 @@ const TemplateSchema = new Schema({
     type: String,
     required: [true, 'Template Content is required'],
   },
-  signatures: {
-    type: [{
-      type: Schema.Types.ObjectId,
-      ref: 'ESignature'
-    }],
-    default: [],
-  },
   validity: {
     type: Date,
     required: [true, 'Validity is required'],
