@@ -98,14 +98,16 @@ export default function HeaderComponent() {
                 )
               }>
                 <Menu>
-                  <Menu.Group>
-                    <Menu.Item
-                      icon={NotificationsIcon}
-                      onClick={() => setIsShown(false)}
-                    >
-                      Notifications ({notifications.filter(notification =>!notification.read).length})
-                    </Menu.Item>
-                  </Menu.Group>
+                  {session?.user?.role !== Roles.SuperAdmin && (
+                    <Menu.Group>
+                      <Menu.Item
+                        icon={NotificationsIcon}
+                        onClick={() => setIsShown(false)}
+                      >
+                        Notifications ({notifications.filter(notification =>!notification.read).length})
+                      </Menu.Item>
+                    </Menu.Group>
+                  )}
                   <Menu.Group>
                     <Menu.Item
                       icon={LogOutIcon}
