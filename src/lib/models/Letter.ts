@@ -5,10 +5,14 @@ import Department from './Department';
 import User from './User';
 
 const LetterSchema = new Schema({
-  templateId: {
+  departmentId: {
     type: Schema.Types.ObjectId,
-    ref: 'Template',
-    required: [true, 'Template ID is required'],
+    ref: 'Department',
+    required: [true, 'Department ID is required'],
+  },
+  title: {
+    type: String,
+    required: [true, 'Letter Title is required'],
   },
   content: {
     type: String,

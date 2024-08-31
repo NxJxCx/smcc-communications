@@ -352,7 +352,6 @@ export async function saveTemplate(departmentId: string, doctype: DocumentType, 
           documentType: doctype,
           content: content,
           validity: validity,
-          createdBy: session.userId,
         })
         if (!!template?._id) {
           department.memoTemplates.push(template._id.toHexString())
@@ -370,7 +369,6 @@ export async function saveTemplate(departmentId: string, doctype: DocumentType, 
           documentType: doctype,
           content: content,
           validity: validity,
-          createdBy: session.userId,
         })
         if (!!template?._id) {
           department.letterTemplates.push(template._id.toHexString())

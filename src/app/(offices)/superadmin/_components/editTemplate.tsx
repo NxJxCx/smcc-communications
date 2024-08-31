@@ -4,11 +4,11 @@ import LoadingComponent from '@/components/loading';
 import OCSTinyMCE from '@/components/OCSTinyMCE';
 import { DocumentType, ESignatureDocument, TemplateDocument } from '@/lib/modelInterfaces';
 import { useSession } from '@/lib/useSession';
-import { toaster } from 'evergreen-ui';
+import { CrossIcon, toaster } from 'evergreen-ui';
 import { useCallback, useMemo, useRef } from 'react';
 import Swal from 'sweetalert2';
 
-export default function EditTemplate({ template, doctype, signatoriesList, onSave }: { template?: TemplateDocument, doctype: DocumentType, signatoriesList: ESignatureDocument[], onSave: (templateId: string) => void }) {
+export default function EditTemplate({ template, doctype, signatoriesList, onSave, onCancel, }: { template?: TemplateDocument, doctype: DocumentType, signatoriesList: ESignatureDocument[], onSave: (templateId: string) => void, onCancel: () => void }) {
   const { status } = useSession({ redirect: false })
   const ppi = 96
   const size = useMemo<{width:number, height:number}>(() => ({
@@ -49,7 +49,8 @@ export default function EditTemplate({ template, doctype, signatoriesList, onSav
   return (
     <div className="text-center">
       <h2 className="text-2xl font-[600]">
-        {doctype === DocumentType.Memo ? 'Memorandum' : 'Letter'} Template for {template?.title || "(unknown template)"}
+        Edit {doctype === DocumentType.Memo ? 'Memorandum' : 'Letter'} Template for {template?.title || "(unknown template)"}
+        <button type="button" onClick={() => onCancel()} className="px-2 py-1 rounded bg-gray-300 text-black ml-4 font-normal text-sm"><CrossIcon display="inline" /> Cancel</button>
       </h2>
       <OCSTinyMCE editorRef={editorRef} signatoriesList={signatoriesList} initialContentData={template?.content} onSave={onSaveAsTemplate} />
     </div>

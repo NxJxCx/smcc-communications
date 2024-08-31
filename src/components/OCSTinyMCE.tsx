@@ -1,16 +1,20 @@
 'use client'
 
 import { ESignatureDocument, UserDocument } from "@/lib/modelInterfaces";
+import { useSession } from "@/lib/useSession";
 import { Editor } from "@tinymce/tinymce-react";
 import clsx from "clsx";
 import { MutableRefObject, useCallback, useMemo, useState } from "react";
 import Swal from "sweetalert2";
 import jsxToString from "./JSXToString";
+import { getSignatureIdsFromContent } from "./getSignatureIdsFromContent";
 
 
 const tinyMCE_API_KEY = process.env.NEXT_PUBLIC_TINYMCE_API_KEY
 
-export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentData, onAddSignatory, onSave }: Readonly<{ editorRef: MutableRefObject<any>, signatoriesList: ESignatureDocument[], initialContentData?: string, onAddSignatory?: () => void, onSave: (editor: any, content: string) => void }>) {
+export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentData, withPreparedBy = false, onAddSignatory, onSave }: Readonly<{ editorRef: MutableRefObject<any>, signatoriesList: ESignatureDocument[], initialContentData?: string, withPreparedBy?: boolean, onAddSignatory?: () => void, onSave: (editor: any, content: string) => void }>) {
+  const { data: sessionData } = useSession({ redirect: false })
+
   const ppi = 96
   const size = useMemo<{width:number, height:number}>(() => ({
     width: 8.5 * ppi,
@@ -28,7 +32,12 @@ export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentD
   }, [editorRef, onSave])
 
   const onAddSignatories = useCallback(function () {
-    const inputOptions: { [x: string]: string } = signatoriesList.reduce((init, signatory) => ({ ...init, [signatory?._id as string]: getFullName(signatory.adminId as UserDocument) }), ({}))
+    const content = editorRef.current?.getContent();
+    const signatures = getSignatureIdsFromContent(content);
+    console.log(signatoriesList)
+    console.log(content)
+    console.log(signatures)
+    const inputOptions: { [x: string]: string } = signatoriesList.reduce((init, signatory) => signatures.includes(signatory?._id as string) ? ({...init}) : ({ ...init, [signatory?._id as string]: getFullName(signatory.adminId as UserDocument) }), ({}))
     Swal.fire({
       title: 'Add Signatory',
       input: 'select',
@@ -86,6 +95,52 @@ export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentD
     })
   }, [getFullName, signatoriesList, editorRef, onAddSignatory])
 
+  const onAddPreparedBy = useCallback(function () {
+    const signatory = signatoriesList.find(s => (s.adminId as UserDocument)._id === sessionData?.user?._id)
+    if (!!signatory) {
+      editorRef.current?.insertContent(
+        jsxToString(
+            <table
+              style={{
+                borderCollapse: "collapse",
+                width: "fit",
+                border: "0px solid black",
+              }}
+              data-signatory-id={signatory._id}
+              data-type="prepared-by"
+            >
+              <tbody>
+                <tr
+                  style={{
+                    maxHeight: "20px",
+                  }}
+                >
+                  <td style={{
+                    textAlign: "center",
+                    fontWeight: "bold",
+                    maxHeight: "20px",
+                    borderBottom: "1px solid black",
+                    textTransform: 'uppercase',
+                    position: "relative"
+                  }}
+                  data-type="prepared-by-name">
+                    {getFullName(signatory.adminId as UserDocument)}
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{
+                    textAlign: "center"
+                  }}>
+                    [Position]
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+        )
+      );
+    }
+  }, [editorRef, getFullName, signatoriesList, sessionData?.user?._id])
+
   const handleFilePicker = (cb: any, value: any, meta: any) => {
     const input = document.createElement('input');
     input.setAttribute('type', 'file');
@@ -122,7 +177,7 @@ export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentD
           'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
           'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount',
           'image', 'editimage']}
-        toolbar={'undo redo | fontfamily fontsize lineheight image table | addAdminSignatory saveAsTemplate | ' +
+        toolbar={'undo redo | fontfamily fontsize lineheight image table | addAdminSignatory ' + (withPreparedBy ? 'addPreparedBy ' : '') + 'saveAsTemplate | ' +
             'bold italic underline forecolor backcolor | alignleft aligncenter ' +
             'alignright alignjustify | bullist numlist outdent indent | ' +
             'removeformat | help'}
@@ -137,10 +192,17 @@ export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentD
               onAction: onSaveAsTemplate,
             });
             editor.ui.registry.addButton("addAdminSignatory", {
-              icon: 'add',
+              icon: 'edit-block',
               tooltip: 'Add Signatory',
               onAction: onAddSignatories,
             });
+            if (withPreparedBy) {
+              editor.ui.registry.addButton("addPreparedBy", {
+                icon: 'checkmark',
+                tooltip: 'Add Prepared By',
+                onAction: onAddPreparedBy,
+              });
+            }
           },
           content_style: `body { font-family:Arial,Helvetica,sans-serif; font-size:12pt; line-height: 1.0; margin: 12.2mm; }`,
           image_title: true,

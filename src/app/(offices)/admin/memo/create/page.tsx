@@ -1,5 +1,6 @@
-import CreateMemoPage from "@/app/(offices)/admin/_components/createMemo";
+import CreateMemoLetterFromTemplate from "@/app/(offices)/admin/_components/createMemoLetter";
+import { DocumentType } from "@/lib/modelInterfaces";
 
 export default function Page() {
-  return <CreateMemoPage />
+  return <CreateMemoLetterFromTemplate doctype={DocumentType.Memo} />
 }

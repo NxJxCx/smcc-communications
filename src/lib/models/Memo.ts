@@ -5,14 +5,18 @@ import Department from './Department';
 import User from './User';
 
 const MemoSchema = new Schema({
-  templateId: {
+  departmentId: {
     type: Schema.Types.ObjectId,
-    ref: 'Template',
-    required: [true, 'Template ID is required'],
+    ref: 'Department',
+    required: [true, 'Department ID is required'],
+  },
+  title: {
+    type: String,
+    required: [true, 'Memorandum Title is required'],
   },
   content: {
     type: String,
-    required: [true, 'Memo Content is required'],
+    required: [true, 'Memorandum Content is required'],
   },
   preparedBy: {
     type: Schema.Types.ObjectId,
@@ -22,7 +26,7 @@ const MemoSchema = new Schema({
         const user = await User.findById(val);
         if (!!user && user.role === Roles.Admin) {
           const department = await Department.findOne({
-            memoTemplates: (this as any).templateId,
+            _id: (this as any).departmentId,
             isDissolved: false,
           });
           return !!department;

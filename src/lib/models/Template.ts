@@ -19,10 +19,6 @@ const TemplateSchema = new Schema({
   validity: {
     type: Date,
     required: [true, 'Validity is required'],
-  },
-  createdBy: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
   }
 },
 {

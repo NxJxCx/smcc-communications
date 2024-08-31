@@ -68,16 +68,9 @@ export interface TemplateDocument extends Documents {
   createdBy: UserDocument|string
 }
 
-export interface HeaderDocument extends Documents {
-  file: Buffer
-  mimeType: string
-  size: number
-  departmentId: DepartmentDocument|string
-}
-
 export interface ESignatureDocument extends Documents {
   adminId: UserDocument|string
-  signature: Buffer
+  signature: string
 }
 
 export interface SignatureApprovals {
@@ -86,14 +79,12 @@ export interface SignatureApprovals {
 }
 
 export interface MemoDocument extends Documents {
-  templateId: TemplateDocument|string
   content: string
   preparedBy: UserDocument|string
   signatureApprovals: SignatureApprovals[]
 }
 
 export interface LetterDocument extends Documents {
-  templateId: TemplateDocument|string
   content: string
   preparedBy: UserDocument|string
   signatureApprovals: SignatureApprovals[]
