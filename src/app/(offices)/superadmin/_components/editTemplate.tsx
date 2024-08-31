@@ -1,14 +1,14 @@
 'use client';;
+import { updateTemplate } from '@/actions/superadmin';
 import LoadingComponent from '@/components/loading';
-import { DocumentType, TemplateDocument } from '@/lib/modelInterfaces';
+import OCSTinyMCE from '@/components/OCSTinyMCE';
+import { DocumentType, ESignatureDocument, TemplateDocument } from '@/lib/modelInterfaces';
 import { useSession } from '@/lib/useSession';
-import { Editor } from '@tinymce/tinymce-react';
-import clsx from 'clsx';
+import { toaster } from 'evergreen-ui';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Swal from 'sweetalert2';
 
-const tinyMCE_API_KEY = process.env.NEXT_PUBLIC_TINYMCE_API_KEY
-
-export default function EditTemplate({ template, doctype, onSave }: { template?: TemplateDocument, doctype: DocumentType, onSave: (templateId: string) => void }) {
+export default function EditTemplate({ template, doctype, signatoriesList, onSave }: { template?: TemplateDocument, doctype: DocumentType, signatoriesList: ESignatureDocument[], onSave: (templateId: string) => void }) {
   const { status } = useSession({ redirect: false })
   const ppi = 96
   const size = useMemo<{width:number, height:number}>(() => ({
@@ -18,15 +18,6 @@ export default function EditTemplate({ template, doctype, onSave }: { template?:
 
   const editorRef = useRef<any>(null);
   const [content, setContent] = useState<any>(template?.content);
-  const onEditContent = useCallback((content: any) => {
-    setContent(content);
-  }, [])
-
-  const save = () => {
-    if (editorRef.current) {
-      console.log(editorRef.current.getContent());
-    }
-  };
 
   const handleFilePicker = (cb: any, value: any, meta: any) => {
     const input = document.createElement('input');
@@ -52,18 +43,33 @@ export default function EditTemplate({ template, doctype, onSave }: { template?:
     input.click();
   };
 
-  const onSaveAsTemplate = useCallback(function (api: any) {
+  const onSaveAsTemplate = useCallback(function (editor: any, content: string) {
     if (!!template?._id) {
-      const content = editorRef.current?.getContent();
       // TODO: Save memo template with the specific department selected to the database
+      Swal.fire({
+        icon: 'question',
+        title: 'Save changes to existing template?',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Save',
+        cancelButtonText: 'Cancel',
+        showLoaderOnConfirm: false,
+      }).then(async ({ isConfirmed }) => {
+        if (isConfirmed) {
+          const saveMyTemplate = updateTemplate.bind(null, template?._id || '', doctype)
+          const formData = new FormData()
+          formData.append('content', content)
+          const { success, error } = await saveMyTemplate(formData)
+          if (error) {
+            toaster.danger(error)
+          } else if (success) {
+            toaster.success(success)
+            onSave && onSave(template._id as string)
+          }
+        }
+      })
       onSave && onSave(template._id as string)
     }
-  }, [onSave, template?._id, /* doctype */])
-
-  const onAddSignatory = useCallback(function (api: any, ...props: any) {
-    console.log(props)
-    const content = editorRef.current?.getContent();
-  }, [])
+  }, [onSave, template?._id, doctype])
 
   useEffect(() => {
     if (!!template?.content) {
@@ -78,45 +84,7 @@ export default function EditTemplate({ template, doctype, onSave }: { template?:
       <h2 className="text-2xl font-[600]">
         {doctype === DocumentType.Memo ? 'Memorandum' : 'Letter'} Template for {template?.title || "(unknown template)"}
       </h2>
-      <div className={clsx("flex items-start justify-center", "min-w-[" + size.width + "px]", "max-w-[" + size.width + "px]"  , "min-h-[" + size.height + "px]")}>
-        <Editor
-          apiKey={tinyMCE_API_KEY}
-          onInit={(_evt, editor) => editorRef.current = editor}
-          value={content}
-          onEditorChange={onEditContent}
-          plugins={[
-            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-            'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-            'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount',
-            'image', 'editimage']}
-          toolbar={'undo redo | fontfamily fontsize lineheight image table | saveAsTemplate | ' +
-              'bold italic underline forecolor backcolor | alignleft aligncenter ' +
-              'alignright alignjustify | bullist numlist outdent indent | ' +
-              'removeformat | help'}
-          init={{
-            height: size.height, // 11 inches
-            width: size.width, // 8.5 inches
-            menubar: false,
-            setup: function (editor) {
-              editor.ui.registry.addButton("saveAsTemplate", {
-                icon: 'save',
-                tooltip: 'Save as Template',
-                onAction: onSaveAsTemplate,
-              });
-              editor.ui.registry.addButton("addAdminSignatory", {
-                icon: 'add',
-                tooltip: 'Add Signatory',
-                onAction: onAddSignatory,
-              });
-            },
-            content_style: `body { font-family:Arial,Helvetica,sans-serif; font-size:12pt; line-height: 1.0; }`,
-            image_title: true,
-            automatic_uploads: true,
-            file_picker_types: 'image',
-            file_picker_callback: handleFilePicker,
-          }}
-        />
-      </div>
+      <OCSTinyMCE editorRef={editorRef} signatoriesList={signatoriesList} contentData={content} onContentData={setContent} onSave={onSaveAsTemplate} />
     </div>
   );
 }

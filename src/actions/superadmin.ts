@@ -325,7 +325,7 @@ export async function saveESignature(id: string|undefined, eSignatureDataURL?: s
   }
 }
 
-export async function saveTemplate(departmentId: string, doctype: DocumentType, eSignatures: string[], formData: FormData): Promise<ActionResponseType & { templateId?: string }>
+export async function saveTemplate(departmentId: string, doctype: DocumentType, formData: FormData): Promise<ActionResponseType & { templateId?: string }>
 {
   await connectDB()
   try {
@@ -351,7 +351,6 @@ export async function saveTemplate(departmentId: string, doctype: DocumentType, 
           title,
           documentType: doctype,
           content: content,
-          signatures: eSignatures,
           validity: validity,
           createdBy: session.userId,
         })
@@ -370,7 +369,6 @@ export async function saveTemplate(departmentId: string, doctype: DocumentType, 
           title,
           documentType: doctype,
           content: content,
-          signatures: eSignatures,
           validity: validity,
           createdBy: session.userId,
         })
@@ -379,7 +377,7 @@ export async function saveTemplate(departmentId: string, doctype: DocumentType, 
           const updated = await department.save({ new: true, upsert: false, runValidation: true })
           if (!!updated) {
             return {
-              success: 'Template Successfully Updated',
+              success: 'Template Successfully Saved',
               templateId: template._id.toHexString()
             }
           }
@@ -395,5 +393,40 @@ export async function saveTemplate(departmentId: string, doctype: DocumentType, 
   }
   return {
     error: 'Failed to save template'
+  }
+}
+
+
+export async function updateTemplate(templateId: string, doctype: DocumentType, formData: FormData): Promise<ActionResponseType>
+{
+  await connectDB()
+  try {
+    const session = await getSession(Roles.SuperAdmin)
+    if (!!session?.user) {
+      const template = await Template.findOne({ _id: templateId, documentType: doctype }).exec()
+      if (!template) {
+        return {
+          error: 'Template not found'
+        }
+      }
+      const content = formData.get('content')
+      if (!content) {
+        return {
+          error: 'Template should not be empty'
+        }
+      }
+      template.content = content
+      const updated = await template.save({ new: true, upsert: false, runValidation: true })
+      if (!!updated) {
+        return {
+          success: 'Template Successfully Updated',
+        }
+      }
+    }
+  } catch (e) {
+    console.log(e)
+  }
+  return {
+    error: 'Failed to update template'
   }
 }
