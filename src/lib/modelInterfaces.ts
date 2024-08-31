@@ -74,7 +74,7 @@ export interface ESignatureDocument extends Documents {
 }
 
 export interface SignatureApprovals {
-  signatureApprovals: UserDocument|string
+  signature_id: ESignatureDocument|string
   approvedDate: Date|null
 }
 
