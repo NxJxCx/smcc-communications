@@ -42,7 +42,6 @@ export default function AddTemplate({ department, doctype, signatoriesList, onAd
     })
   }, [doctype, onAdd, department?._id])
 
-
   if (status === 'loading') return <LoadingComponent />;
 
   return (

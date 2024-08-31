@@ -3,20 +3,20 @@
 import { ESignatureDocument, UserDocument } from "@/lib/modelInterfaces";
 import { Editor } from "@tinymce/tinymce-react";
 import clsx from "clsx";
-import { MutableRefObject, useCallback, useEffect, useMemo, useState } from "react";
+import { MutableRefObject, useCallback, useMemo, useState } from "react";
 import Swal from "sweetalert2";
 import jsxToString from "./JSXToString";
 
 
 const tinyMCE_API_KEY = process.env.NEXT_PUBLIC_TINYMCE_API_KEY
 
-export default function OCSTinyMCE({ editorRef, signatoriesList, contentData, onAddSignatory, onSave, onContentData }: Readonly<{ editorRef: MutableRefObject<any>, signatoriesList: ESignatureDocument[], contentData?: string, onAddSignatory?: () => void, onSave: (editor: any, content: string) => void, onContentData?: (content: string) => void }>) {
+export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentData, onAddSignatory, onSave }: Readonly<{ editorRef: MutableRefObject<any>, signatoriesList: ESignatureDocument[], initialContentData?: string, onAddSignatory?: () => void, onSave: (editor: any, content: string) => void }>) {
   const ppi = 96
   const size = useMemo<{width:number, height:number}>(() => ({
     width: 8.5 * ppi,
     height: 11 * ppi,
   }), []);
-  const [content, setContent] = useState<string>(contentData || '');
+  const [content, setContent] = useState<string>(initialContentData || '');
 
   const getFullName = useCallback((user?: UserDocument): string => {
     const fn = (user?.prefixName || '') + ' ' + user?.firstName + ' ' + (!!user?.middleName ? user?.middleName[0].toUpperCase() + '. ' : '') + user?.lastName + (user?.suffixName? ', ' + user?.suffixName : '')
@@ -109,17 +109,6 @@ export default function OCSTinyMCE({ editorRef, signatoriesList, contentData, on
 
     input.click();
   };
-
-  useEffect(() => {
-    if (!!contentData) {
-      setContent(contentData)
-    }
-  }, [contentData])
-
-  useEffect(() => {
-    onContentData && onContentData(content)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [content])
 
   return (
     <div className={clsx("flex items-start justify-center", "min-w-[" + size.width + "px]", "max-w-[" + size.width + "px]"  , "min-h-[" + size.height + "px]")}>

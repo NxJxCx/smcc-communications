@@ -42,6 +42,7 @@ export default function DepartmentTemplates({
 
   const onBack = useCallback(() => {
     setSelectedDepartment(undefined)
+    setSelectedTemplate(undefined)
     setOpenEditTemplate(false)
     setOpenAddTemplate(false)
   }, [])
@@ -90,14 +91,14 @@ export default function DepartmentTemplates({
           ))}
         </div>
       )}
-      {!openEditTemplate && !!selectedTemplate && openEditTemplate && (
-        <EditTemplate template={selectedTemplate} doctype={doctype} onSave={(templateId: string) => { console.log("saved", templateId); setOpenEditTemplate(false); }} />
+      {openEditTemplate && !openAddTemplate && !!selectedTemplate && (
+        <EditTemplate template={selectedTemplate} doctype={doctype} signatoriesList={signatoriesList} onSave={(templateId: string) => { console.log("saved", templateId); setTimeout(() => getDepartmentData(), 100); setOpenEditTemplate(false); }} />
       )}
       { openAddTemplate && !!selectedDepartment && (
         <AddTemplate department={selectedDepartment} doctype={doctype} signatoriesList={signatoriesList} onAdd={(templateId: string) => { console.log("saved", templateId); setTimeout(() => getDepartmentData(), 100); setSelectedDepartment(undefined); setOpenAddTemplate(false); }} onCancel={onAddCancel} />
       )}
     </div>
-    <OCSModal title={selectedTemplate?.title} open={!!selectedTemplate && !openEditTemplate} onClose={() => setSelectedTemplate(undefined)}>
+    <OCSModal title={selectedTemplate?.title} open={!!selectedTemplate && !openEditTemplate} onClose={() => !openEditTemplate && setSelectedTemplate(undefined)}>
       <div className={clsx("min-w-[" + (8.5 * 96) + "px]", "max-w-[" + (8.5 * 96) + "px]", "min-h-[" + (1 * 96) + "px]")}>
         {<ParseHTMLTemplate htmlString={selectedTemplate?.content || ''} showApprovedSignatories />}
       </div>
