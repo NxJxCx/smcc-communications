@@ -1,4 +1,4 @@
-'use client';;
+'use client'
 import { saveMemorandumLetter } from '@/actions/admin';
 import { getSignatureIdsFromContent } from '@/components/getSignatureIdsFromContent';
 import LoadingComponent from '@/components/loading';

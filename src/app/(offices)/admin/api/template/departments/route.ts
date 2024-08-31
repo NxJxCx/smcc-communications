@@ -1,4 +1,4 @@
-'use server';;
+'use server'
 import connectDB from "@/lib/database";
 import { DocumentType, Roles } from "@/lib/modelInterfaces";
 import Department from "@/lib/models/Department";
