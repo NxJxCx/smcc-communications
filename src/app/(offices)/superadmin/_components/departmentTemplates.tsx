@@ -41,11 +41,12 @@ export default function DepartmentTemplates({
   const [openAddTemplate, setOpenAddTemplate] = useState<boolean>(false)
 
   const onBack = useCallback(() => {
+    getDepartmentData();
     setSelectedDepartment(undefined)
     setSelectedTemplate(undefined)
     setOpenEditTemplate(false)
     setOpenAddTemplate(false)
-  }, [])
+  }, [getDepartmentData])
 
   const onAddCancel = useCallback(() => {
     setOpenAddTemplate(false)
@@ -92,10 +93,10 @@ export default function DepartmentTemplates({
         </div>
       )}
       {openEditTemplate && !openAddTemplate && !!selectedTemplate && (
-        <EditTemplate template={selectedTemplate} doctype={doctype} signatoriesList={signatoriesList} onSave={(templateId: string) => { console.log("saved", templateId); setTimeout(() => getDepartmentData(), 100); setOpenEditTemplate(false); }} />
+        <EditTemplate template={selectedTemplate} doctype={doctype} signatoriesList={signatoriesList} onSave={(templateId: string) => onBack()} />
       )}
       { openAddTemplate && !!selectedDepartment && (
-        <AddTemplate department={selectedDepartment} doctype={doctype} signatoriesList={signatoriesList} onAdd={(templateId: string) => { console.log("saved", templateId); setTimeout(() => getDepartmentData(), 100); setSelectedDepartment(undefined); setOpenAddTemplate(false); }} onCancel={onAddCancel} />
+        <AddTemplate department={selectedDepartment} doctype={doctype} signatoriesList={signatoriesList} onAdd={(templateId: string) => onBack()} onCancel={onAddCancel} />
       )}
     </div>
     <OCSModal title={selectedTemplate?.title} open={!!selectedTemplate && !openEditTemplate} onClose={() => !openEditTemplate && setSelectedTemplate(undefined)}>
