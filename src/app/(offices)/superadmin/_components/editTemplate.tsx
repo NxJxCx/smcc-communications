@@ -5,7 +5,7 @@ import OCSTinyMCE from '@/components/OCSTinyMCE';
 import { DocumentType, ESignatureDocument, TemplateDocument } from '@/lib/modelInterfaces';
 import { useSession } from '@/lib/useSession';
 import { toaster } from 'evergreen-ui';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import Swal from 'sweetalert2';
 
 export default function EditTemplate({ template, doctype, signatoriesList, onSave }: { template?: TemplateDocument, doctype: DocumentType, signatoriesList: ESignatureDocument[], onSave: (templateId: string) => void }) {
@@ -41,7 +41,6 @@ export default function EditTemplate({ template, doctype, signatoriesList, onSav
           }
         }
       })
-      onSave && onSave(template._id as string)
     }
   }, [onSave, template?._id, doctype])
 
