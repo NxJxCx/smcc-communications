@@ -41,11 +41,6 @@ export default function CreateMemoPage() {
     setContent(content);
   }, [])
 
-  const save = () => {
-    if (editorRef.current) {
-      console.log(editorRef.current.getContent());
-    }
-  };
   const handleEditorInit = (evt: any, editor: any) => {
     // Custom initialization or event handling can be added here if needed
   };

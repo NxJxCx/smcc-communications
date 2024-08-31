@@ -17,7 +17,6 @@ export default function LoginForm({
   const [state, formAction, pending] = useFormState(loginAction, undefined)
   const router = useRouter()
   useEffect(() => {
-    console.log(state)
     if (!pending && state?.success) {
       toaster.success(state.message, { description: "Redirecting to home page...", duration: 3, id: "login" })
       refresh()
