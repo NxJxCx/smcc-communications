@@ -13,7 +13,7 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
   const [loading, setLoading] = useState(true);
   const [selectedMemo, setSelectedMemo] = useState<(MemoDocument|LetterDocument) & { isPreparedByMe: boolean }>();
   const getData = useCallback(() => {
-    const url = new URL('/' + Roles.Admin + '/api/memo/approved', window.location.origin)
+    const url = new URL('/' + Roles.Faculty + '/api/memo', window.location.origin)
     url.searchParams.set('doctype', doctype)
     setLoading(true)
     fetch(url)
@@ -62,7 +62,7 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
     const url = new URL('/print', window.location.origin)
     url.searchParams.set('doc', doctype)
     url.searchParams.set('id', selectedMemo?._id!)
-    url.searchParams.set('role', Roles.Admin)
+    url.searchParams.set('role', Roles.Faculty)
     url.searchParams.set('title', selectedMemo?.title!)
     const docWindow = window.open(url, '_blank', 'width=1000,height=1000, menubar=no, toolbar=no, scrollbars=yes, location=no, status=no');
     if (docWindow) {
@@ -96,12 +96,12 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
     </div>
     <OCSModal title={selectedMemo?.title} open={!!selectedMemo} onClose={onBack}>
       <div className={clsx("min-w-[" + (8.5 * 96) + "px]", "max-w-[" + (8.5 * 96) + "px]", "min-h-[" + (1 * 96) + "px]")}>
-        {<ParseHTMLTemplate role={Roles.Admin} htmlString={selectedMemo?.content || ''} memoLetterId={selectedMemo?._id} showApprovedSignatories />}
+        {<ParseHTMLTemplate role={Roles.Faculty} htmlString={selectedMemo?.content || ''} memoLetterId={selectedMemo?._id} showApprovedSignatories />}
       </div>
       <hr className="border w-full h-[1px] my-2" />
       <div className="w-full flex justify-end items-center gap-x-3 pr-2">
         <button type="button" className="rounded-lg bg-blue-300 hover:bg-blue-100 text-black px-3 py-1 ml-4" onClick={onPrint}><PrintIcon display="inline" /> Print</button>
-        <button type="button" className="rounded-lg bg-gray-300 hover:bg-yellow-100 text-black px-3 py-1" onClick={onBack}>Close</button>
+        <button type="button" className="rounded-lg bg-gray-300 hover:bg-yellow-100 text-black px-3 py-1 mr-4" onClick={onBack}>Close</button>
       </div>
     </OCSModal>
   </>)

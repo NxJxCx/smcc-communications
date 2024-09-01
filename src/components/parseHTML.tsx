@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import jsxToString from "./JSXToString";
 import LoadingComponent from "./loading";
 
-export default function ParseHTMLTemplate({ role, htmlString, showApprovedSignatories = false, memoLetterId }: { role: Roles, htmlString: string, showApprovedSignatories?: boolean, memoLetterId?: string }) {
+export default function ParseHTMLTemplate({ role, htmlString, showApprovedSignatories = false, memoLetterId, print = false }: { role: Roles, htmlString: string, showApprovedSignatories?: boolean, memoLetterId?: string, print?: boolean }) {
   const [htmlFinal, setHTMLFinal] = useState<string|undefined>();
   const [loading, setLoading] = useState<boolean>(true)
 
@@ -23,22 +23,24 @@ export default function ParseHTMLTemplate({ role, htmlString, showApprovedSignat
         .then(response => response.json())
         .then(({ result }) => {
           // get prepared by signature
-          const parser = new DOMParser();
-          const pbname = preparedByElem!.querySelector("td[data-type='prepared-by-name']")
-          if (!pbname?.classList.contains('relative')) {
-            pbname?.classList.add("relative")
-          }
-          if (pbname?.firstElementChild?.getAttribute('data-is-signature') === "true") {
-            const img = pbname?.firstElementChild?.firstElementChild
-            img?.setAttribute('src', result.signature || '')
-          } else {
-            const absoluteSignature = jsxToString(
-              <div className="absolute w-full left-0 bottom-1/4 z-50" data-is-signature="true">
-                <Image src={result.signature || ''} alt="preparedBy" className="max-h-[50px] mx-auto" />
-              </div>
-            )
-            const parsed = parser.parseFromString(absoluteSignature, "text/html")
-            pbname?.prepend(parsed.body.children[0])
+          if (!!result) {
+            const parser = new DOMParser();
+            const pbname = preparedByElem!.querySelector("td[data-type='prepared-by-name']")
+            if (!pbname?.classList.contains('relative')) {
+              pbname?.classList.add("relative")
+            }
+            if (pbname?.firstElementChild?.getAttribute('data-is-signature') === "true") {
+              const img = pbname.firstElementChild.firstElementChild
+              img?.setAttribute('src', result.signature || '')
+            } else {
+              const absoluteSignature = jsxToString(
+                <div className="absolute w-full left-0 bottom-1/4 z-50" data-is-signature="true">
+                  <Image src={result.signature || ''} alt="preparedBy" className="max-h-[50px] mx-auto" />
+                </div>
+              )
+              const parsed = parser.parseFromString(absoluteSignature, "text/html")
+              pbname?.prepend(parsed.body.children[0])
+            }
           }
           resolve(doc.documentElement.innerHTML)
         })
@@ -84,7 +86,7 @@ export default function ParseHTMLTemplate({ role, htmlString, showApprovedSignat
                   sname?.classList.add("relative")
                 }
                 if (sname?.firstElementChild?.getAttribute('data-is-signature') === "true") {
-                  const img = sname?.firstElementChild?.firstElementChild
+                  const img = sname.firstElementChild.firstElementChild
                   img?.setAttribute('src', signature.signature || '')
                 } else {
                   const absoluteSignature = jsxToString(
@@ -123,7 +125,7 @@ export default function ParseHTMLTemplate({ role, htmlString, showApprovedSignat
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [htmlString])
 
-  return !!htmlString ? (
+  return !!htmlString && !print ? (
     <div style={{
       width: 11 * 96,
       height: 11 * 96,
@@ -142,5 +144,9 @@ export default function ParseHTMLTemplate({ role, htmlString, showApprovedSignat
         <LoadingComponent />
       )}
     </div>
-  ) : undefined
+  ) : (!!htmlString && print ? (
+    <div style={{ maxWidth: 8.5 * 96, minHeight: 11 * 96, backgroundColor: "white" }} className="border shadow mx-auto p-[12.2mm]">
+      <div dangerouslySetInnerHTML={{ __html: htmlFinal || '' }} />
+    </div>
+  ) : undefined)
 }

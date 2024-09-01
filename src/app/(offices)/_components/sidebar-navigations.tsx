@@ -81,16 +81,16 @@ const adminSidebarNavList: any[] = [
 
 const facultySidebarNavList: any[] = [
   {
-    name: 'Recent',
+    name: 'Dashboard',
     url: '/faculty',
   },
   {
     name: 'Memorandoms',
-    url: '/faculty/memos',
+    url: '/faculty/memo',
   },
   {
     name: 'Letters',
-    url: '/faculty/letters',
+    url: '/faculty/letter',
   },
   {
     name: 'Notifications',

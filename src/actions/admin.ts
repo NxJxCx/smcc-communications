@@ -218,8 +218,8 @@ export async function rejectMemorandumLetter(doctype: DocumentType, memoLetterId
           const updated = await memo.save({ new: true, upsert: false, runValidators: true })
           if (!!updated?._id) {
             const title = 'Memorandum Rejected'
-            const message = memo.title + ' for ' + departmentName + ' by'+ session.user.fullName
-            const href = '/' + Roles.Admin + '/memo?id=' + memo._id.toHexString()
+            const message = memo.title + ' for ' + departmentName + ' by '+ session.user.fullName
+            const href = '/' + Roles.Admin + '/memo?id=' + memo._id.toHexString() + '&show=rejected'
             try {
               await addNotification(memo.preparedBy.toHexString(), {
                 title,
@@ -253,8 +253,8 @@ export async function rejectMemorandumLetter(doctype: DocumentType, memoLetterId
           const updated = await letter.save({ new: true, upsert: false, runValidators: true })
           if (!!updated?._id) {
             const title = 'Letter Rejected'
-            const message = letter.title + ' for ' + departmentName + ' by'+ session.user.fullName
-            const href = '/' + Roles.Admin + '/memo?id=' + letter._id.toHexString()
+            const message = letter.title + ' for ' + departmentName + ' by '+ session.user.fullName
+            const href = '/' + Roles.Admin + '/memo?id=' + letter._id.toHexString() + '&show=rejected'
             try {
               await addNotification(letter.preparedBy.toHexString(), {
                 title,

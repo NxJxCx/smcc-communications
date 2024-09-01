@@ -66,7 +66,7 @@ export async function updateReadNotification(role: Roles, notifId: string) {
       }
     }
     const user = await User.updateOne(
-      { _id: session.user.userId, role },
+      { _id: session.user._id, role },
       {
         $set: { "notification.$[elem].read": true }
       },
@@ -77,6 +77,7 @@ export async function updateReadNotification(role: Roles, notifId: string) {
         runValidators: true,
       }
     ).exec();
+    console.log("")
     const success = user.acknowledged && user.modifiedCount > 0
     return {
       success,
@@ -100,7 +101,7 @@ export async function updateReadAllNotification(role: Roles) {
       }
     }
     const user = await User.updateOne(
-      { _id: session.user.userId, role },
+      { _id: session.user._id, role },
       {
         $set: { "notification.$[elem].read": true }
       },

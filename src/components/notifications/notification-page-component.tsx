@@ -1,15 +1,14 @@
 'use client';;
-import BannerWithBreadcrumb from "@/app/(offices)/_components/banner-with-breadcrumb";
 import CardContainer from "@/app/(offices)/_components/card-container";
 import LoadingComponent from "@/components/loading";
 import { NotificationDocument } from "@/lib/modelInterfaces";
 import { useSession } from "@/lib/useSession";
 import clsx from "clsx";
-import { Button, HomeIcon, Pagination, PeopleIcon, Spinner } from "evergreen-ui";
+import { Button, Pagination, Spinner } from "evergreen-ui";
 import NextLink from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-export default function NotificationsPage({ withHeader = true } : { withHeader?: boolean }) {
+export default function NotificationsPage() {
 
   const { data: session, status, notifications, markAsAllRead, markAsRead } = useSession({
     redirect: true,
@@ -72,37 +71,18 @@ export default function NotificationsPage({ withHeader = true } : { withHeader?:
     // eslint-disable-next-line
   }, [authenticated]);
 
-  const breadcrumb = useMemo(() => [
-    {
-      icon: HomeIcon,
-      url: '/' + session?.user.role,
-    },
-    {
-      label: 'Notifications',
-      url: '/' + session?.user.role + '/notifications',
-    },
-  ], [session?.user.role])
-
   if (status === 'loading') {
     return <div className="h-screen w-full"><LoadingComponent /></div>
   }
 
   return status === 'authenticated' && (
-    withHeader ? (
     <>
-      <BannerWithBreadcrumb
-        role={session!.user.role}
-        title="Notifications"
-        icon={PeopleIcon}
-        description="View All Notifications"
-        breadcrumb={breadcrumb}
-      />
       <div className="p-6">
         <CardContainer title={
             <div className="flex justify-between items-center">
               <span>All Notifications</span>
               <span className="text-sm font-normal">
-                ({notifications.length})
+                ({notifications.length} unread)
                 <Button
                   onClick={() => {
                     markAsAllRead()
@@ -110,7 +90,7 @@ export default function NotificationsPage({ withHeader = true } : { withHeader?:
                   }}
                   disabled={notifications.length === 0}
                   appearance="primary"
-                  intent="success"
+                  intent="primary"
                   marginLeft={8}
                 >
                   Mark all as read
@@ -121,7 +101,7 @@ export default function NotificationsPage({ withHeader = true } : { withHeader?:
         >
           <ul>
             {currentPageNotifications.map((notification) => (
-                <li key={notification._id} className="mb-1">
+                <li key={notification._id} className="mb-3">
                   <NextLink
                     href={notification.href}
                     onClick={() => {
@@ -129,15 +109,15 @@ export default function NotificationsPage({ withHeader = true } : { withHeader?:
                       eventSource?.close()
                     }}
                     className={clsx(
-                      "relative flex flex-col justify-start items-start px-2 mb-0.5 pt-2 pb-6 min-h-[80px] rounded border border-green-600",
+                      "relative flex flex-col justify-start items-start px-2 mb-0.5 pt-2 pb-6 min-h-[80px] rounded shadow shadow-blue-500",
                       notification.read
                       ? "text-slate-500"
-                      : "bg-orange-100 text-green-600"
+                      : "bg-sky-50 text-blue-600"
                     )}
                   >
                       <div className="font-bold text-sm">{notification.title}</div>
                       <div className="text-xs text-gray-500">{notification.message}</div>
-                      <span className="absolute left-2 bottom-1 text-xs text-slate-800">{new Date(notification.date as string|Date).toLocaleString()}</span>
+                      <span className="absolute left-2 bottom-1 text-xs text-slate-800">{new Date(notification.date as string|Date).toLocaleString('en-PH', { year: 'numeric', month: 'short', day: 'numeric', hour12: true, hour: 'numeric', minute: 'numeric' })}</span>
                   </NextLink>
                 </li>
               )
@@ -156,7 +136,7 @@ export default function NotificationsPage({ withHeader = true } : { withHeader?:
               <div className="w-full text-center">
                 {/* // message here */}
                 <div className="text-slate-500 text-sm">
-                  No notifications yet
+                  There is nothing here
                 </div>
               </div>
               )
@@ -165,75 +145,5 @@ export default function NotificationsPage({ withHeader = true } : { withHeader?:
         </CardContainer>
       </div>
     </>
-  ) : (
-    <>
-      <div className="p-6">
-        <CardContainer title={
-            <div className="flex justify-between items-center">
-              <span>All Notifications</span>
-              <span className="text-sm font-normal">
-                ({notifications.length})
-                <Button
-                  onClick={() => {
-                    markAsAllRead()
-                    refreshNotif()
-                  }}
-                  disabled={notifications.length === 0}
-                  appearance="primary"
-                  intent="success"
-                  marginLeft={8}
-                >
-                  Mark all as read
-                </Button>
-              </span>
-            </div>
-          }
-        >
-          <ul>
-            {currentPageNotifications.map((notification) => (
-                <li key={notification._id} className="mb-1">
-                  <NextLink
-                    href={notification.href}
-                    onClick={() => {
-                      markAsRead(notification._id as string)
-                      eventSource?.close()
-                    }}
-                    className={clsx(
-                      "relative flex flex-col justify-start items-start px-2 mb-0.5 pt-2 pb-6 min-h-[80px] rounded border border-green-600",
-                      notification.read
-                      ? "text-slate-500"
-                      : "bg-orange-100 text-green-600"
-                    )}
-                  >
-                      <div className="font-bold text-sm">{notification.title}</div>
-                      <div className="text-xs text-gray-500">{notification.message}</div>
-                      <span className="absolute left-2 bottom-1 text-xs text-slate-800">{new Date(notification.date as string|Date).toLocaleString()}</span>
-                  </NextLink>
-                </li>
-              )
-            )}
-          </ul>
-          { hasNotifications ? (
-            <div className="w-full flex justify-center">
-              <Pagination page={page} onPageChange={setPage} totalPages={totalPages} />
-            </div>
-          ) : (
-            isLoading ? (
-              <div className="w-full flex justify-center">
-                <Spinner />
-              </div>
-            ) : (
-              <div className="w-full text-center">
-                {/* // message here */}
-                <div className="text-slate-500 text-sm">
-                  No notifications yet
-                </div>
-              </div>
-              )
-            )
-          }
-        </CardContainer>
-      </div>
-    </>
-  ))
+  )
 }

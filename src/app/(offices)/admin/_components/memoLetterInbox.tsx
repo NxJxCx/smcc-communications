@@ -10,9 +10,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
 import ThumbnailItemWithDepartment from "./thumbnailItemWithDepartment";
 
-export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doctype: DocumentType, searchParam: string }>) {
+export default function MemoLetterInbox({ doctype, searchParam, showRejected = false }: Readonly<{ doctype: DocumentType, searchParam: string, showRejected?: boolean }>) {
   const [data, setData] = useState<(MemoDocument & { isPreparedByMe: boolean; isPending: boolean; isRejected: boolean; })[]|(LetterDocument & { isPreparedByMe: boolean; isPending: boolean; isRejected: boolean; })[]>([]);
-  const [hideRejected, setHideRejected] = useState(true);
+  const [hideRejected, setHideRejected] = useState(!showRejected);
   const [hidePreparedByMe, setHidePreparedByMe] = useState(true);
   const [hidePending, setHidePending] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -24,15 +24,20 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
 
   const filteredData = useMemo(() => {
     let filtered = data;
-    if (hideRejected) {
-      filtered = filtered.filter((doc) => !doc.isRejected)
-    }
-    if (hidePending && !hidePreparedByMe) {
-      filtered = filtered.filter((doc) => !doc.isPending || doc.isPreparedByMe)
-    } else if (!hidePending && hidePreparedByMe) {
-      filtered = filtered.filter((doc) => !doc.isPreparedByMe)
-    } else if (hidePending && hidePreparedByMe) {
-      filtered = filtered.filter((doc) => !doc.isPreparedByMe && !doc.isPending)
+    if (hideRejected && hidePreparedByMe && hidePending) {
+      filtered = filtered.filter((doc) => !doc.isRejected && !doc.isPreparedByMe && !doc.isPending)
+    } else if (hideRejected && hidePending && !hidePreparedByMe) {
+      filtered = filtered.filter((doc) => doc.isPreparedByMe || (!doc.isPreparedByMe && !doc.isRejected && !doc.isPending))
+    } else if (hideRejected && !hidePending && hidePreparedByMe) {
+      filtered = filtered.filter((doc) => (doc.isPending && !doc.isRejected && !doc.isPreparedByMe) || (!doc.isPending && !doc.isRejected && !doc.isPending))
+    } else if (!hideRejected && hidePending && hidePreparedByMe) {
+      filtered = filtered.filter((doc) => doc.isRejected || (!doc.isPending && !doc.isRejected && !doc.isPending))
+    } else if (!hideRejected && hidePending && hidePreparedByMe) {
+      filtered = filtered.filter((doc) => doc.isRejected || (!doc.isPending && !doc.isRejected && !doc.isPending))
+    } else if (!hideRejected && hidePending && !hidePreparedByMe) {
+      filtered = filtered.filter((doc) => doc.isPreparedByMe || doc.isRejected || (!doc.isPreparedByMe && !doc.isRejected && !doc.isPending))
+    } else if (!hideRejected && !hidePending && hidePreparedByMe) {
+      filtered = filtered.filter((doc) => doc.isPending || doc.isRejected || (!doc.isPreparedByMe && !doc.isRejected && !doc.isPending))
     }
     if (search && search.length > 0) {
       filtered = filtered.filter((item) => (

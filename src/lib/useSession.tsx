@@ -45,16 +45,16 @@ export function SessionProvider({ children }: Readonly<{ children: React.ReactNo
 
   const authenticated = useMemo(() => status === 'authenticated', [status])
 
-  // const onMessage = useCallback((ev: MessageEvent) => {
-  //   const notifs = JSON.parse(ev.data)
-  //   setNotifications(notifs)
-  // }, [])
+  const onMessage = useCallback((ev: MessageEvent) => {
+    const notifs = JSON.parse(ev.data)
+    setNotifications(notifs)
+  }, [])
 
-  // const onNotifError = useCallback((ev: Event) => {
-  //   if (!!eventSource?.OPEN) {
-  //     eventSource.close()
-  //   }
-  // }, [eventSource])
+  const onNotifError = useCallback((ev: Event) => {
+    if (!!eventSource?.OPEN) {
+      eventSource.close()
+    }
+  }, [eventSource])
 
   const refreshNotif = useCallback(() => {
     if (!!eventSource?.OPEN) {
@@ -62,15 +62,15 @@ export function SessionProvider({ children }: Readonly<{ children: React.ReactNo
     }
     const url = new URL('/' + role + '/api/stream/notification', window.location.origin)
     url.searchParams.append('unread', '1')
-    // const newEventSource = new EventSource(url, { withCredentials: true });
-    // setEventSource(newEventSource)
+    const newEventSource = new EventSource(url, { withCredentials: true });
+    setEventSource(newEventSource)
 
-    // newEventSource.onmessage = onMessage;
+    newEventSource.onmessage = onMessage;
 
-    // newEventSource.onerror = onNotifError;
+    newEventSource.onerror = onNotifError;
 
-    // return newEventSource
-  }, [eventSource, role, /* onMessage, onNotifError */])
+    return newEventSource
+  }, [eventSource, role, onMessage, onNotifError])
 
   const markAsAllRead = useCallback(async () => {
     // do some all read here

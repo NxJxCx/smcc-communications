@@ -4,7 +4,7 @@ import { destroySession } from "@/lib/session";
 import { useSession } from "@/lib/useSession";
 import clsx from "clsx";
 import { Avatar, ListIcon, LogOutIcon, Menu, NotificationsIcon } from "evergreen-ui";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSidebar } from "./sidebar-context";
 
@@ -33,7 +33,8 @@ async function getPhoto(photoId: string, setPhoto: (photoURL?: string) => void) 
 }
 
 export default function HeaderComponent() {
-  const { data: session, status, notifications, refresh, markAsAllRead, markAsRead } = useSession({ redirect: false })
+  const { data: session, status, notifications, refresh } = useSession({ redirect: false })
+  const router = useRouter()
   const { toggleSidebar } = useSidebar()
   const [isShown, setIsShown] = useState<boolean|undefined>(undefined)
   const role = useMemo(() => session?.user?.role || undefined, [session?.user?.role])
@@ -102,7 +103,7 @@ export default function HeaderComponent() {
                     <Menu.Group>
                       <Menu.Item
                         icon={NotificationsIcon}
-                        onClick={() => setIsShown(false)}
+                        onClick={() => { setIsShown(false); router.push("/" + role + '/notifications'); }}
                       >
                         Notifications ({notifications.filter(notification =>!notification.read).length})
                       </Menu.Item>
