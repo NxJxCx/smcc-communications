@@ -31,7 +31,7 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
     setSelectedMemo(undefined);
   }, [])
 
-  const [search, setSearch] = useState<string>(searchParam)
+  const [search, setSearch] = useState<string>(searchParam || '')
 
   const filteredData = useMemo(() => {
     let filtered = data.toReversed();

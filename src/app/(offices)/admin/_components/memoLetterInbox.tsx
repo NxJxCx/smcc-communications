@@ -17,7 +17,7 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
   const [hidePending, setHidePending] = useState(true);
   const [loading, setLoading] = useState(true);
   const [selectedMemo, setSelectedMemo] = useState<(MemoDocument|LetterDocument) & { isPreparedByMe: boolean; isPending: boolean; isRejected: boolean; }>();
-  const [search, setSearch] = useState<string>(searchParam);
+  const [search, setSearch] = useState<string>(searchParam || '');
   const isRejectedMemo = useMemo(() => selectedMemo && selectedMemo.isRejected, [selectedMemo])
   const isPreparedByMe = useMemo(() => selectedMemo && selectedMemo.isPreparedByMe, [selectedMemo])
   const isPending = useMemo(() => selectedMemo && selectedMemo.isPending, [selectedMemo])
