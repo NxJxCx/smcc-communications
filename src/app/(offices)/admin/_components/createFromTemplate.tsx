@@ -1,5 +1,5 @@
 'use client'
-import { saveMemorandumLetter } from '@/actions/admin';
+import { saveMemorandumLetterTemplate } from '@/actions/admin';
 import { getSignatureIdsFromContent } from '@/components/getSignatureIdsFromContent';
 import LoadingComponent from '@/components/loading';
 import OCSTinyMCE from '@/components/OCSTinyMCE';
@@ -46,7 +46,7 @@ export default function CreateFromTemplate({ departmentId, template, doctype, si
                 return;
               }
               const eSignatures = getSignatureIdsFromContent(content);
-              const saveMyTemplate = saveMemorandumLetter.bind(null, departmentId || '', doctype, eSignatures)
+              const saveMyTemplate = saveMemorandumLetterTemplate.bind(null, departmentId || '', doctype, eSignatures)
               const formData = new FormData()
               formData.append('title', value)
               formData.append('content', content)

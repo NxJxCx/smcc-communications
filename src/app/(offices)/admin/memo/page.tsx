@@ -1,5 +1,6 @@
-import MemorandumList from "@/app/(offices)/admin/_components/memorandumList";
+import MemorandumInbox from '@/app/(offices)/admin/_components/memoLetterInbox';
+import { DocumentType } from "@/lib/modelInterfaces";
 
 export default function Page() {
-  return <MemorandumList />
+  return <MemorandumInbox doctype={DocumentType.Memo} />
 }

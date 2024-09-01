@@ -48,6 +48,10 @@ const MemoSchema = new Schema({
         type: Date,
         default: null
       },
+      rejectedData: {
+        type: Date,
+        default: null
+      }
     }],
   }
 },

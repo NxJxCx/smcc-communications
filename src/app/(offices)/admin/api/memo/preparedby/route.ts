@@ -15,13 +15,13 @@ export async function GET(request: NextRequest) {
     if (!!session?.user) {
       const mlid = request.nextUrl.searchParams.get('mlid');
       const memo = await Memo.findById(mlid).select('preparedBy').exec();
-      if (!!memo) {
-        const result = ESignature.findOne({ adminId: memo.preparedBy }).exec();
+      if (!!memo?._id) {
+        const result = await ESignature.findOne({ adminId: memo.preparedBy.toHexString() }).exec();
         return NextResponse.json({ result })
       }
       const letter = await Letter.findById(mlid).select('preparedBy').populate('signatureApprovals.signature_id').exec();
-      if (!!letter) {
-        const result = ESignature.findOne({ adminId: letter.preparedBy }).exec();
+      if (!!letter?._id) {
+        const result = await ESignature.findOne({ adminId: letter.preparedBy }).exec();
         return NextResponse.json({ result })
       }
     }

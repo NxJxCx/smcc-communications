@@ -1,5 +1,6 @@
-import LetterList from "@/app/(offices)/admin/_components/letterList";
+import LetterInbox from '@/app/(offices)/admin/_components/memoLetterInbox';
+import { DocumentType } from "@/lib/modelInterfaces";
 
 export default function Page() {
-  return <LetterList />
+  return <LetterInbox doctype={DocumentType.Letter} />
 }

@@ -54,11 +54,11 @@ const adminSidebarNavList: any[] = [
     url: '/admin/letter/create',
   },
   {
-    name: 'Memorandom List',
+    name: 'Memorandom Inbox',
     url: '/admin/memo',
   },
   {
-    name: 'Letter List',
+    name: 'Letter Inbox',
     url: '/admin/letter',
   },
   {

@@ -1,5 +1,6 @@
-import ApprovedMemorandumList from "@/app/(offices)/admin/_components/approvedMemos";
+import ApprovedMemorandumList from "@/app/(offices)/admin/_components/approvedMemoLetters";
+import { DocumentType } from "@/lib/modelInterfaces";
 
 export default function Page() {
-  return <ApprovedMemorandumList />
+  return <ApprovedMemorandumList doctype={DocumentType.Memo} />
 }

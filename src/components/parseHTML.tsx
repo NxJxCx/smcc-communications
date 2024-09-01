@@ -1,84 +1,128 @@
 'use client'
 
-import { DocumentType, ESignatureDocument, Roles } from "@/lib/modelInterfaces";
-import Image from "next/image";
+import { ESignatureDocument, Roles } from "@/lib/modelInterfaces";
+import { Image } from "evergreen-ui";
 import { useCallback, useEffect, useState } from "react";
 import jsxToString from "./JSXToString";
+import LoadingComponent from "./loading";
 
-export default function ParseHTMLTemplate({ role, doctype, htmlString, showApprovedSignatories = false, memoLetterId }: { role: Roles, doctype: DocumentType, htmlString: string, showApprovedSignatories?: boolean, memoLetterId?: string }) {
-  const [htmlFinal, setHTMLFinal] = useState<string>(htmlString);
-  const [approvedSignatures, setApprovedSignatures] = useState<ESignatureDocument[]>([])
-  const [preparedBySignature, setPreparedBySignature] = useState<ESignatureDocument>()
+export default function ParseHTMLTemplate({ role, htmlString, showApprovedSignatories = false, memoLetterId }: { role: Roles, htmlString: string, showApprovedSignatories?: boolean, memoLetterId?: string }) {
+  const [htmlFinal, setHTMLFinal] = useState<string|undefined>();
+  const [loading, setLoading] = useState<boolean>(true)
 
-  const getApprovedSignatures = useCallback(async () => {
-    if (showApprovedSignatories && !!memoLetterId) {
-      const url = new URL('/' + role + '/api/' + doctype + '/signatory', window.location.origin)
-      url.searchParams.set('mlid', memoLetterId || '')
-      const response = await fetch(url)
-      if (response.ok) {
-        const { result }: { result: ESignatureDocument[] } = await response.json()
-        if (result !== approvedSignatures) {
-          setApprovedSignatures(result)
-        }
-      }
-    }
-  }, [approvedSignatures, showApprovedSignatories, role, doctype, memoLetterId])
-
-  const getPreparedBySignature = useCallback(async (preparedBy?: string|null) => {
-    if (!!preparedBy && !!memoLetterId) {
-      const url = new URL('/' + role + '/api/' + doctype + '/preparedby', window.location.origin)
-      url.searchParams.set('mlid', memoLetterId || '')
-      const response = await fetch(url)
-      if (response.ok) {
-        const { result }: { result: ESignatureDocument } = await response.json()
-        return result
-      }
-    }
-    return undefined
-  }, [doctype, role, memoLetterId])
-
-  const getData = useCallback(async () => {
+  const getPreparedBySignature = useCallback(async () => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlString, "text/html");
-    // get prepared by signature
-    const preparedBy = doc.querySelector("table[data-type='prepared-by']")
-    if (!!preparedBy && !preparedBySignature) {
-      const signatoryId = preparedBy.getAttribute('data-signatory-id')
-      const signature = await getPreparedBySignature(signatoryId)
-      setPreparedBySignature(signature)
-      const pbname = preparedBy.querySelector("td[data-type='prepared-by-name']")
-      pbname?.classList.add("relative")
-      const absoluteSignature = jsxToString(
-        <Image src={signature?.signature || ''} width={100} height={30} alt="preparedBy" className="absolute left-0 bottom-0 z-50 w-full" />
-      )
-      const parsed = parser.parseFromString(absoluteSignature, "text/html")
-      pbname?.appendChild(parsed.body.children[0])
-    }
-    // get approved signatures
-    if (approvedSignatures.length > 0 && showApprovedSignatories) {
-      const signatories = doc.querySelectorAll("table[data-type='signatory']")
-      await Promise.all(Object.entries(signatories).map(async ([key, signatory]) => {
-        const signatoryId = signatory.getAttribute('data-signatory-id')
-        const signature = approvedSignatures.find((s) => s._id === signatoryId)
-        if (!!signature) {
-          const sname = signatory.querySelector("td[data-type='signatory-name']")
-          sname?.classList.add("relative")
-          const absoluteSignature = jsxToString(
-            <Image src={signature.signature || ''} width={100} height={30} alt="signature" className="absolute left-0 bottom-0 z-50 w-full" />
-          )
-          const parsed = parser.parseFromString(absoluteSignature, "text/html")
-          sname?.appendChild(parsed.body.children[0])
+    return new Promise((resolve: (value?: any) => void, reject: (error?: any) => void) => {
+      const preparedByElem = doc.querySelector("table[data-type='prepared-by']")
+      const preparedBy = preparedByElem?.getAttribute('data-signatory-id')
+      if (!!preparedBy && !!memoLetterId) {
+        const url = new URL('/' + role + '/api/memo/preparedby', window.location.origin)
+        url.searchParams.set('mlid', memoLetterId || '')
+        fetch(url)
+        .then(response => response.json())
+        .then(({ result }) => {
+          // get prepared by signature
+          const parser = new DOMParser();
+          const pbname = preparedByElem!.querySelector("td[data-type='prepared-by-name']")
+          if (!pbname?.classList.contains('relative')) {
+            pbname?.classList.add("relative")
+          }
+          if (pbname?.firstElementChild?.getAttribute('data-is-signature') === "true") {
+            const img = pbname?.firstElementChild?.firstElementChild
+            img?.setAttribute('src', result.signature || '')
+          } else {
+            const absoluteSignature = jsxToString(
+              <div className="absolute w-full left-0 bottom-1/4 z-50" data-is-signature="true">
+                <Image src={result.signature || ''} alt="preparedBy" className="max-h-[50px] mx-auto" />
+              </div>
+            )
+            const parsed = parser.parseFromString(absoluteSignature, "text/html")
+            pbname?.prepend(parsed.body.children[0])
+          }
+          resolve(doc.documentElement.innerHTML)
+        })
+        .catch(reject)
+      } else {
+        resolve(doc.documentElement.innerHTML)
+      }
+    })
+  }, [role, memoLetterId, htmlString])
+
+  const getApprovedSignatures = useCallback(async (htmlDocString: string) => {
+    return new Promise((resolve: (value?:any) => void, reject: (error?: any) => void) => {
+      const parser = new DOMParser();
+      const htmlDoc = parser.parseFromString(htmlDocString, "text/html");
+      if (showApprovedSignatories && !!memoLetterId) {
+        const url = new URL('/' + role + '/api/memo/signatory', window.location.origin)
+        url.searchParams.set('mlid', memoLetterId || '')
+        fetch(url)
+        .then(response => response.json())
+        .then(({ result }) => { resolve({ htmlDocString: htmlDoc.documentElement.innerHTML, approvedSignatories: result }) })
+        .catch(reject)
+      } else {
+        resolve({ htmlDocString: htmlDoc.documentElement.innerHTML, approvedSignatories: [] })
+      }
+    })
+  }, [showApprovedSignatories, role, memoLetterId])
+
+  const getData = useCallback(async ({ htmlDocString, approvedSignatories }: { htmlDocString: string, approvedSignatories: ESignatureDocument[] }) => {
+    return new Promise(async (resolve: (value?: any) => void, reject: (error?: any) => void) => {
+      const parser = new DOMParser();
+      const htmlDoc = parser.parseFromString(htmlDocString, "text/html");
+      // get approved signatures
+      if (approvedSignatories.length > 0 && showApprovedSignatories) {
+        const signatories = htmlDoc?.querySelectorAll("table[data-type='signatory']")
+        if (!!signatories && signatories.length > 0) {
+          try {
+            await Promise.all(Object.entries(signatories).map(async ([index, signatory]) => {
+              const signatoryId = signatory.getAttribute('data-signatory-id')
+              const signature = approvedSignatories.find((s) => s._id === signatoryId)
+              if (!!signature) {
+                const sname = signatory.querySelector("td[data-type='signatory-name']")
+                if (!sname?.classList.contains('relative')) {
+                  sname?.classList.add("relative")
+                }
+                if (sname?.firstElementChild?.getAttribute('data-is-signature') === "true") {
+                  const img = sname?.firstElementChild?.firstElementChild
+                  img?.setAttribute('src', signature.signature || '')
+                } else {
+                  const absoluteSignature = jsxToString(
+                    <div className="absolute w-full left-0 bottom-1/4 z-50" data-is-signature="true">
+                      <Image src={signature.signature || ''} alt="preparedBy" className="max-h-[50px] mx-auto" />
+                    </div>
+                  )
+                  const parsed = parser.parseFromString(absoluteSignature, "text/html")
+                  sname?.prepend(parsed.body.children[0])
+                }
+              }
+            }))
+            resolve(htmlDoc.documentElement.innerHTML)
+          } catch (e) {
+            reject(e)
+          }
+        } else {
+          resolve(htmlDocString)
         }
-      }))
-    }
-    return doc.documentElement.innerHTML;
-  }, [approvedSignatures, htmlString, getPreparedBySignature, preparedBySignature, showApprovedSignatories])
+      } else {
+        resolve(htmlDocString)
+      }
+    })
+  }, [showApprovedSignatories])
 
   useEffect(() => {
-    getApprovedSignatures()
-      .then(() => getData().then((htmlFinalString) => setHTMLFinal(htmlFinalString)))
+    if (!!htmlString) {
+      console.log("loading")
+      setLoading(true)
+      getPreparedBySignature()
+      .then(getApprovedSignatures)
+      .then(getData)
+      .then(async (htmlDoc) => setHTMLFinal(htmlDoc))
+      .then(() => setLoading(false))
+      .catch(console.log)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [htmlString, showApprovedSignatories, memoLetterId])
+  }, [htmlString])
 
   return !!htmlString ? (
     <div style={{
@@ -90,9 +134,14 @@ export default function ParseHTMLTemplate({ role, doctype, htmlString, showAppro
       paddingTop: "16px",
       paddingBottom: "16px",
     }}>
-      <div style={{ maxWidth: 8.5 * 96, minHeight: 11 * 96, backgroundColor: "white" }} className="border shadow mx-auto p-[12.2mm]">
-        <div dangerouslySetInnerHTML={{ __html: htmlFinal }} />
-      </div>
+      { !loading && (
+        <div style={{ maxWidth: 8.5 * 96, minHeight: 11 * 96, backgroundColor: "white" }} className="border shadow mx-auto p-[12.2mm]">
+          <div dangerouslySetInnerHTML={{ __html: htmlFinal || '' }} />
+        </div>
+      )}
+      { loading && (
+        <LoadingComponent />
+      )}
     </div>
   ) : undefined
 }

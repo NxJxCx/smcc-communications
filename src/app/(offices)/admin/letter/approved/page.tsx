@@ -1,5 +1,6 @@
-import ApprovedLetterList from "@/app/(offices)/admin/_components/approvedLetters";
+import ApprovedLetterList from "@/app/(offices)/admin/_components/approvedMemoLetters";
+import { DocumentType } from "@/lib/modelInterfaces";
 
 export default function Page() {
-  return <ApprovedLetterList />
+  return <ApprovedLetterList doctype={DocumentType.Letter} />
 }

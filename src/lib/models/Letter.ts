@@ -48,6 +48,10 @@ const LetterSchema = new Schema({
         type: Date,
         default: null
       },
+      rejectedData: {
+        type: Date,
+        default: null
+      }
     }],
   }
 },

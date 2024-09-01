@@ -76,15 +76,20 @@ export interface ESignatureDocument extends Documents {
 export interface SignatureApprovals {
   signature_id: ESignatureDocument|string
   approvedDate: Date|null
+  rejectedDate: Date|null
 }
 
 export interface MemoDocument extends Documents {
+  departmentId: DepartmentDocument|string
+  title: string
   content: string
   preparedBy: UserDocument|string
   signatureApprovals: SignatureApprovals[]
 }
 
 export interface LetterDocument extends Documents {
+  departmentId: DepartmentDocument|string
+  title: string
   content: string
   preparedBy: UserDocument|string
   signatureApprovals: SignatureApprovals[]

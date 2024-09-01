@@ -14,13 +14,13 @@ export async function GET(request: NextRequest) {
     if (!!session?.user) {
       const mlid = request.nextUrl.searchParams.get('mlid');
       const memo = await Memo.findById(mlid).select('signatureApprovals').populate('signatureApprovals.signature_id').exec();
-      if (!!memo) {
-        const result = (JSON.parse(JSON.stringify(memo)).signatureApprovals as SignatureApprovals[]).map(({ approvedDate }) => !!approvedDate);
+      if (!!memo?._id) {
+        const result = (JSON.parse(JSON.stringify(memo)).signatureApprovals as SignatureApprovals[]).filter(({ approvedDate }) => !!approvedDate).map(({ signature_id, approvedDate }) => signature_id);
         return NextResponse.json({ result })
       }
       const letter = await Letter.findById(mlid).select('signatureApprovals').populate('signatureApprovals.signature_id').exec();
-      if (!!letter) {
-        const result = (JSON.parse(JSON.stringify(memo)).signatureApprovals as SignatureApprovals[]).map(({ approvedDate }) => !!approvedDate);
+      if (!!letter?._id) {
+        const result = (JSON.parse(JSON.stringify(memo)).signatureApprovals as SignatureApprovals[]).filter(({ approvedDate }) => !!approvedDate).map(({ signature_id, approvedDate }) => signature_id);
         return NextResponse.json({ result })
       }
     }
