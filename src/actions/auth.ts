@@ -6,10 +6,8 @@ import { Roles } from "@/lib/modelInterfaces";
 import User from "@/lib/models/User";
 import { createSession, getSession } from "@/lib/session";
 import {
-  ChangePasswordFormSchema,
   LoginFormSchema,
   type LoginFormState,
-  type ResponseFormState,
 } from "@/lib/types";
 
 export async function login(role: Roles, state: LoginFormState, formData: FormData): Promise<LoginFormState | undefined> {
@@ -49,74 +47,6 @@ export async function login(role: Roles, state: LoginFormState, formData: FormDa
   }
 }
 
-export async function changePassword(role: Roles, prevState: ResponseFormState, formData: FormData) {
-  const validatedFields = ChangePasswordFormSchema.safeParse({
-    role,
-    current_password: formData.get('current_password'),
-    new_password: formData.get('new_password'),
-    confirm_password: formData.get('confirm_password'),
-  })
-  if (!validatedFields.success) {
-    return {
-      errors: validatedFields.error.flatten().fieldErrors,
-      message: 'Error'
-    }
-  }
-  await connectDB();
-  try {
-    const session = await getSession(role);
-    if (!session) {
-      return {
-        errors: {
-          session: ['Invalid Session']
-        },
-        message: 'Error'
-      }
-    }
-    const user = await User.findOne({ email: session.user.email,  role }).select('password').exec();
-    if (!user?._id) {
-      return {
-        errors: {
-          session: ['Invalid Session']
-        },
-        message: 'Error'
-      }
-    }
-    const currentPassword = validatedFields.data.current_password;
-    const isCorrectPassword = await compare(currentPassword, user.password);
-    if (!isCorrectPassword) {
-      return {
-        errors: {
-          current_password: ['Incorrect Password']
-        },
-        message: 'Error'
-      }
-    }
-    const newPassword = validatedFields.data.new_password;
-    const confirmPassword = validatedFields.data.confirm_password;
-    if (newPassword !== confirmPassword) {
-      return {
-        errors: {
-          confirm_password: ['Password not matched']
-        }
-      }
-    }
-    // update password
-    const oldPassword = user.password
-    user.password = newPassword
-    const updatedUser = await user.save()
-    return {
-      success: !!updatedUser && updatedUser?.password !== oldPassword
-    }
-  } catch (err: any) {
-    return {
-      message: 'Error',
-      errors: {
-        current_password: [err.message]
-      }
-    }
-  }
-}
 
 export async function fileToBuffer(file: File) {
   if (!file || !file.size) {

@@ -105,9 +105,9 @@ export async function addUserAccount(userRole: Roles, prevState: ActionResponseT
       firstName: formData.get('firstName'),
       middleName: formData.get('middleName') || '',
       lastName: formData.get('lastName'),
+      // password format = [lowercase first letter of first name][uppercase first letter of last name][employee ID]
       password: (formData.get('firstName') as string)[0].toLowerCase() + (formData.get('lastName') as string)[0].toUpperCase() + (formData.get('employeeId') as string),
     }
-    // password format is [lowercase first letter of first name][uppercase first letter of last name][employee ID]
     // check if user already exists
     const user = await User.findOne({ employeeId: data.employeeId }).exec()
     if (user) {
