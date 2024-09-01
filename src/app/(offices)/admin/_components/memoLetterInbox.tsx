@@ -10,30 +10,52 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
 import ThumbnailItemWithDepartment from "./thumbnailItemWithDepartment";
 
-export default function MemoLetterInbox({ doctype }: Readonly<{ doctype: DocumentType }>) {
+export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doctype: DocumentType, searchParam: string }>) {
   const [data, setData] = useState<(MemoDocument & { isPreparedByMe: boolean; isPending: boolean; isRejected: boolean; })[]|(LetterDocument & { isPreparedByMe: boolean; isPending: boolean; isRejected: boolean; })[]>([]);
-  const [showRejected, setShowRejected] = useState(false);
-  const [showPreparedByMe, setShowPreparedByMe] = useState(false);
-  const [showPending, setShowPending] = useState(false);
+  const [hideRejected, setHideRejected] = useState(true);
+  const [hidePreparedByMe, setHidePreparedByMe] = useState(true);
+  const [hidePending, setHidePending] = useState(true);
   const [loading, setLoading] = useState(true);
   const [selectedMemo, setSelectedMemo] = useState<(MemoDocument|LetterDocument) & { isPreparedByMe: boolean; isPending: boolean; isRejected: boolean; }>();
+  const [search, setSearch] = useState<string>(searchParam);
   const isRejectedMemo = useMemo(() => selectedMemo && selectedMemo.isRejected, [selectedMemo])
   const isPreparedByMe = useMemo(() => selectedMemo && selectedMemo.isPreparedByMe, [selectedMemo])
   const isPending = useMemo(() => selectedMemo && selectedMemo.isPending, [selectedMemo])
 
   const filteredData = useMemo(() => {
     let filtered = data;
-    if (!showRejected) {
+    if (hideRejected) {
       filtered = filtered.filter((doc) => !doc.isRejected)
     }
-    if (!showPreparedByMe) {
+    if (hidePending && !hidePreparedByMe) {
+      filtered = filtered.filter((doc) => !doc.isPending || doc.isPreparedByMe)
+    } else if (!hidePending && hidePreparedByMe) {
       filtered = filtered.filter((doc) => !doc.isPreparedByMe)
+    } else if (hidePending && hidePreparedByMe) {
+      filtered = filtered.filter((doc) => !doc.isPreparedByMe && !doc.isPending)
     }
-    if (!showPending) {
-      filtered = filtered.filter((doc) => !doc.isPending)
+    if (search && search.length > 0) {
+      filtered = filtered.filter((item) => (
+        item._id!.toLowerCase() === search.toLowerCase()
+        || item.title.toLowerCase().includes(search.toLowerCase())
+        || (item.departmentId as DepartmentDocument).name.toLowerCase().includes(search.toLowerCase())
+        || (item.departmentId as DepartmentDocument).name.toLowerCase() === search.toLowerCase()
+        || ((new Date(item.createdAt as string)).toLocaleDateString()).toLowerCase().includes(search.toLowerCase())
+        || ((new Date(item.createdAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: '2-digit', day: '2-digit' })).toLowerCase().includes(search.toLowerCase())
+        || ((new Date(item.createdAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })).toLowerCase().includes(search.toLowerCase())
+        || ((new Date(item.createdAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' })).toLowerCase().includes(search.toLowerCase())
+        || ((new Date(item.createdAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: 'long' })).toLowerCase().includes(search.toLowerCase())
+        || ((new Date(item.createdAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: 'short' })).toLowerCase().includes(search.toLowerCase())
+        || ((new Date(item.updatedAt as string)).toLocaleDateString()).toLowerCase().includes(search.toLowerCase())
+        || ((new Date(item.updatedAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: '2-digit', day: '2-digit' })).toLowerCase().includes(search.toLowerCase())
+        || ((new Date(item.updatedAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })).toLowerCase().includes(search.toLowerCase())
+        || ((new Date(item.updatedAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' })).toLowerCase().includes(search.toLowerCase())
+        || ((new Date(item.updatedAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: 'long' })).toLowerCase().includes(search.toLowerCase())
+        || ((new Date(item.updatedAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: 'short' })).toLowerCase().includes(search.toLowerCase())
+      ))
     }
     return filtered
-  }, [data, showPending, showPreparedByMe, showRejected])
+  }, [data, hidePending, hidePreparedByMe, hideRejected, search])
 
   const getData = useCallback(() => {
     const url = new URL('/' + Roles.Admin + '/api/memo', window.location.origin)
@@ -42,7 +64,7 @@ export default function MemoLetterInbox({ doctype }: Readonly<{ doctype: Documen
     fetch(url)
       .then(response => response.json())
       .then(({ result }) => { setData(result); setLoading(false) })
-      .then((e) => { console.log(e); setLoading(false) })
+      .catch((e) => { console.log(e); setLoading(false) })
   }, [doctype]);
 
   useEffect(() => {
@@ -112,18 +134,18 @@ export default function MemoLetterInbox({ doctype }: Readonly<{ doctype: Documen
       <div className="mt-3 flex flex-col lg:flex-row lg:flex-betweeen flex-wrap w-full min-w-[300px] lg:min-w-[800px] bg-white p-4 rounded-t-lg">
         <div className="flex flex-wrap">
           <label htmlFor="searchMemo" className="font-[500] mr-2 items-center flex">Search:</label>
-          <input type="search" id="searchMemo" placeholder="Search Memorandum" className="border-2 max-w-64 border-gray-300 px-2 py-1 rounded" />
+          <input type="search" id="searchMemo" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search Memorandum" className="border-2 max-w-64 border-gray-300 px-2 py-1 rounded" />
           <div className="flex items-center gap-x-1 ml-4">
-            <input type="checkbox" id="showRejected" className="ml-2" onChange={(e) => setShowRejected(e.target.checked)}/>
-            <label htmlFor="showRejected" className="font-[500] text-sm">Show Rejected</label>
+            <input type="checkbox" id="hideRejected" className="ml-2" onChange={(e) => setHideRejected(e.target.checked)} checked={hideRejected} />
+            <label htmlFor="hideRejected" className="font-[500] text-sm">Hide Rejected</label>
           </div>
           <div className="flex items-center gap-x-1 ml-4">
-            <input type="checkbox" id="showPreparedByMe" className="ml-2" onChange={(e) => setShowPreparedByMe(e.target.checked)}/>
-            <label htmlFor="showPreparedByMe" className="font-[500] text-sm">Show Prepared By Me</label>
+            <input type="checkbox" id="hidePreparedByMe" className="ml-2" onChange={(e) => setHidePreparedByMe(e.target.checked)} checked={hidePreparedByMe} />
+            <label htmlFor="hidePreparedByMe" className="font-[500] text-sm">Hide Prepared By Me</label>
           </div>
           <div className="flex items-center gap-x-1 ml-4">
-            <input type="checkbox" id="showPending" className="ml-2" onChange={(e) => setShowPending(e.target.checked)}/>
-            <label htmlFor="showPending" className="font-[500] text-sm">Show Pending Others</label>
+            <input type="checkbox" id="hidePending" className="ml-2" onChange={(e) => setHidePending(e.target.checked)} checked={hidePending} />
+            <label htmlFor="hidePending" className="font-[500] text-sm">Hide Pending Others</label>
           </div>
         </div>
         <div className="flex mt-2 lg:mt-0 lg:justify-end flex-grow pr-2 lg:pr-0">

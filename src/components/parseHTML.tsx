@@ -112,7 +112,6 @@ export default function ParseHTMLTemplate({ role, htmlString, showApprovedSignat
 
   useEffect(() => {
     if (!!htmlString) {
-      console.log("loading")
       setLoading(true)
       getPreparedBySignature()
       .then(getApprovedSignatures)

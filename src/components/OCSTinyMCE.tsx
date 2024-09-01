@@ -34,9 +34,6 @@ export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentD
   const onAddSignatories = useCallback(function () {
     const content = editorRef.current?.getContent();
     const signatures = getSignatureIdsFromContent(content);
-    console.log(signatoriesList)
-    console.log(content)
-    console.log(signatures)
     const inputOptions: { [x: string]: string } = signatoriesList.reduce((init, signatory) => signatures.includes(signatory?._id as string) ? ({...init}) : ({ ...init, [signatory?._id as string]: getFullName(signatory.adminId as UserDocument) }), ({}))
     Swal.fire({
       title: 'Add Signatory',

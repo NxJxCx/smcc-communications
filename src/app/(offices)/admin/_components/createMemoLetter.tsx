@@ -94,7 +94,7 @@ export default function CreateMemoLetterFromTemplate({
     </div>
     <OCSModal title={selectedTemplate?.title} open={!!selectedTemplate && !openAddTemplate} onClose={() => !openAddTemplate && setSelectedTemplate(undefined)}>
       <div className={clsx("min-w-[" + (8.5 * 96) + "px]", "max-w-[" + (8.5 * 96) + "px]", "min-h-[" + (1 * 96) + "px]")}>
-        {<ParseHTMLTemplate role={Roles.Admin} doctype={doctype} htmlString={selectedTemplate?.content || ''} showApprovedSignatories />}
+        {<ParseHTMLTemplate role={Roles.Admin} htmlString={selectedTemplate?.content || ''} showApprovedSignatories />}
       </div>
       <hr className="border w-full h-[1px] my-2" />
       <div className="w-full flex justify-end items-center gap-x-3 pr-2">

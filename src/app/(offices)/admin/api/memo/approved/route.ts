@@ -1,6 +1,6 @@
 'use server';;
 import connectDB from "@/lib/database";
-import { DocumentType, Roles } from "@/lib/modelInterfaces";
+import { DocumentType, LetterDocument, MemoDocument, Roles } from "@/lib/modelInterfaces";
 import ESignature from "@/lib/models/ESignature";
 import Letter from "@/lib/models/Letter";
 import Memo from "@/lib/models/Memo";
@@ -19,8 +19,7 @@ export async function GET(request: NextRequest) {
         const signature = await ESignature.findOne({ adminId: user?._id?.toHexString() }).select('_id').exec();
         const MemoLetter = doctype === DocumentType.Memo ? Memo : Letter;
         const signature_id = signature?._id?.toHexString();
-        console.log(signature_id)
-        const result = await MemoLetter.find({
+        const resultFind = await MemoLetter.find({
           $or: [
             {
               $and: [
@@ -46,7 +45,7 @@ export async function GET(request: NextRequest) {
                 {
                   signatureApprovals: {
                     $all: {
-                      $elemMatch: { rejectedData: null },
+                      $elemMatch: { rejectedDate: null },
                     }
                   }
                 }
@@ -71,7 +70,7 @@ export async function GET(request: NextRequest) {
                 {
                   signatureApprovals: {
                     $all: {
-                      $elemMatch: { rejectedData: null },
+                      $elemMatch: { rejectedDate: null },
                     }
                   }
                 }
@@ -79,6 +78,10 @@ export async function GET(request: NextRequest) {
             }
           ]
         }).populate('departmentId').exec();
+        const result = (JSON.parse(JSON.stringify(resultFind)) as MemoDocument[]|LetterDocument[]).map((item, i) => ({
+          ...item,
+          isPreparedByMe: item.preparedBy === session.user._id
+        }))
         return NextResponse.json({ result })
       }
     }

@@ -101,7 +101,7 @@ export default function DepartmentTemplates({
     </div>
     <OCSModal title={selectedTemplate?.title} open={!!selectedTemplate && !openEditTemplate} onClose={() => !openEditTemplate && setSelectedTemplate(undefined)}>
       <div className={clsx("min-w-[" + (8.5 * 96) + "px]", "max-w-[" + (8.5 * 96) + "px]", "min-h-[" + (1 * 96) + "px]")}>
-        {<ParseHTMLTemplate role={Roles.SuperAdmin} doctype={doctype} htmlString={selectedTemplate?.content || ''} />}
+        {<ParseHTMLTemplate role={Roles.SuperAdmin} htmlString={selectedTemplate?.content || ''} />}
       </div>
       <hr className="border w-full h-[1px] my-2" />
       <div className="w-full flex justify-end items-center gap-x-3 pr-2">

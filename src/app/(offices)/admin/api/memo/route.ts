@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
           const result = (JSON.parse(JSON.stringify(resultFind)) as MemoDocument[]|LetterDocument[]).map((item, i) => ({
             ...item,
             isPreparedByMe: item.preparedBy === session.user._id,
-            isPending: item.signatureApprovals.some((s) => !s.approvedDate) && item.signatureApprovals.find((s) => s.signature_id === signature_id)?.approvedDate !== null,
+            isPending: item.signatureApprovals.some((s) => !s.approvedDate) && ((item.preparedBy === session.user._id) || (item.preparedBy !== session.user._id && !!item.signatureApprovals.find((s) => s.signature_id == signature_id)?.approvedDate)),
             isRejected: item.signatureApprovals.some((s) => !!s.rejectedDate)
           }))
           return NextResponse.json({ result })

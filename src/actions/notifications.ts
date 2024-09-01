@@ -149,7 +149,7 @@ export async function addNotification(userId: string, { title, message, href }: 
   return false
 }
 
-export async function broadcastNotification({ role = Roles.Admin, title, message, href }: { role?: Roles, title: string, message: string, href: string }) {
+export async function broadcastNotification({ role = Roles.Faculty, departmentId, title, message, href }: { role?: Roles, departmentId: string,title: string, message: string, href: string }) {
   try {
     const notification = {
       title,
@@ -157,7 +157,7 @@ export async function broadcastNotification({ role = Roles.Admin, title, message
       href,
     }
     const updated = await User.updateMany(
-      { role },
+      { role, departmentIds: { $elemMatch: departmentId } },
       { $push: { notification }},
       {
         new: true,

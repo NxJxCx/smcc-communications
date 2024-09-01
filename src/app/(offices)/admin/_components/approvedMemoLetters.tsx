@@ -3,17 +3,15 @@ import LoadingComponent from "@/components/loading";
 import OCSModal from "@/components/ocsModal";
 import ParseHTMLTemplate from "@/components/parseHTML";
 import { DepartmentDocument, DocumentType, LetterDocument, MemoDocument, Roles } from "@/lib/modelInterfaces";
-import { useSession } from "@/lib/useSession";
 import clsx from "clsx";
 import { RefreshIcon } from "evergreen-ui";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import ThumbnailItemWithDepartment from "./thumbnailItemWithDepartment";
 
-export default function MemoLetterInbox({ doctype }: Readonly<{ doctype: DocumentType }>) {
-  const { data: sessionData } = useSession({ redirect: false });
-  const [data, setData] = useState<MemoDocument[]|LetterDocument[]>([]);
+export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doctype: DocumentType, searchParam: string }>) {
+  const [data, setData] = useState<(MemoDocument & { isPreparedByMe: boolean })[]|(LetterDocument & { isPreparedByMe: boolean })[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedMemo, setSelectedMemo] = useState<MemoDocument|LetterDocument>();
+  const [selectedMemo, setSelectedMemo] = useState<(MemoDocument|LetterDocument) & { isPreparedByMe: boolean }>();
   const getData = useCallback(() => {
     const url = new URL('/' + Roles.Admin + '/api/memo/approved', window.location.origin)
     url.searchParams.set('doctype', doctype)
@@ -21,7 +19,7 @@ export default function MemoLetterInbox({ doctype }: Readonly<{ doctype: Documen
     fetch(url)
       .then(response => response.json())
       .then(({ result }) => { setData(result); setLoading(false) })
-      .then((e) => { console.log(e); setLoading(false) })
+      .catch((e) => { console.log(e); setLoading(false) })
   }, [doctype]);
 
   useEffect(() => {
@@ -33,6 +31,32 @@ export default function MemoLetterInbox({ doctype }: Readonly<{ doctype: Documen
     setSelectedMemo(undefined);
   }, [])
 
+  const [search, setSearch] = useState<string>(searchParam)
+
+  const filteredData = useMemo(() => {
+    let filtered = data.toReversed();
+    if (search) {
+      filtered = data.filter((item) => (
+        item._id!.toLowerCase() === search.toLowerCase()
+        || item.title.toLowerCase().includes(search.toLowerCase())
+        || (item.departmentId as DepartmentDocument).name.toLowerCase().includes(search.toLowerCase())
+        || (item.departmentId as DepartmentDocument).name.toLowerCase() === search.toLowerCase()
+        || ((new Date(item.createdAt as string)).toLocaleDateString()).toLowerCase().includes(search.toLowerCase())
+        || ((new Date(item.createdAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: '2-digit', day: '2-digit' })).toLowerCase().includes(search.toLowerCase())
+        || ((new Date(item.createdAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })).toLowerCase().includes(search.toLowerCase())
+        || ((new Date(item.createdAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' })).toLowerCase().includes(search.toLowerCase())
+        || ((new Date(item.createdAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: 'long' })).toLowerCase().includes(search.toLowerCase())
+        || ((new Date(item.createdAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: 'short' })).toLowerCase().includes(search.toLowerCase())
+        || ((new Date(item.updatedAt as string)).toLocaleDateString()).toLowerCase().includes(search.toLowerCase())
+        || ((new Date(item.updatedAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: '2-digit', day: '2-digit' })).toLowerCase().includes(search.toLowerCase())
+        || ((new Date(item.updatedAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })).toLowerCase().includes(search.toLowerCase())
+        || ((new Date(item.updatedAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' })).toLowerCase().includes(search.toLowerCase())
+        || ((new Date(item.updatedAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: 'long' })).toLowerCase().includes(search.toLowerCase())
+        || ((new Date(item.updatedAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: 'short' })).toLowerCase().includes(search.toLowerCase())
+      ))
+    }
+    return filtered;
+  }, [data, search])
 
   return (<>
     <div className="p-6">
@@ -40,7 +64,7 @@ export default function MemoLetterInbox({ doctype }: Readonly<{ doctype: Documen
       <div className="mt-3 flex flex-col lg:flex-row lg:flex-betweeen flex-wrap w-full min-w-[300px] lg:min-w-[800px] bg-white p-4 rounded-t-lg">
         <div className="flex flex-wrap">
           <label htmlFor="searchMemo" className="font-[500] mr-2 items-center flex">Search:</label>
-          <input type="search" id="searchMemo" placeholder="Search Memorandum" className="border-2 max-w-64 border-gray-300 px-2 py-1 rounded" />
+          <input type="search" onChange={(e) => setSearch(e.target.value)} value={search} id="searchMemo" placeholder="Search Memorandum" className="border-2 max-w-64 border-gray-300 px-2 py-1 rounded" />
         </div>
         <div className="flex mt-2 lg:mt-0 lg:justify-end flex-grow pr-2 lg:pr-0">
           <button type="button" onClick={getData} title="Refresh List" className="max-w-32 aspect-square p-1 rounded border border-blue-900 flex items-center justify-center text-blue-900 bg-white hover:bg-blue-200/50"><RefreshIcon /></button>
@@ -50,9 +74,9 @@ export default function MemoLetterInbox({ doctype }: Readonly<{ doctype: Documen
         <div className="border min-w-[300px] rounded-md p-2 lg:min-w-[780px]">
           <div className="p-3 grid grid-cols-1 lg:grid-cols-3 lg:min-w-[750px] gap-3">
             { loading && <LoadingComponent /> }
-            { !loading && data.length === 0 && <div className="text-center">No approved {doctype === DocumentType.Memo ? "memorandum" : "letter"}.</div>}
-            { !loading && data.map((memoLetter, i) => (
-              <ThumbnailItemWithDepartment onClick={() => setSelectedMemo(memoLetter)} preparedByMe={memoLetter.preparedBy === sessionData?.user?._id} key={memoLetter._id} thumbnailSrc="/thumbnail-document.png" department={(memoLetter.departmentId as DepartmentDocument).name} label={memoLetter.title} createdAt={memoLetter.createdAt} updatedAt={memoLetter.updatedAt} />
+            { !loading && filteredData.length === 0 && <div className="text-center">No approved {doctype === DocumentType.Memo ? "memorandum" : "letter"}.</div>}
+            { !loading && filteredData.map((memoLetter, i) => (
+              <ThumbnailItemWithDepartment onClick={() => setSelectedMemo(memoLetter)} preparedByMe={memoLetter.isPreparedByMe} key={memoLetter._id} thumbnailSrc="/thumbnail-document.png" department={(memoLetter.departmentId as DepartmentDocument).name} label={memoLetter.title} createdAt={memoLetter.createdAt} updatedAt={memoLetter.updatedAt} />
             ))}
           </div>
         </div>
