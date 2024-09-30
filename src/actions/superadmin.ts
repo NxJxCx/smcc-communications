@@ -355,7 +355,7 @@ export async function saveTemplate(departmentId: string, doctype: DocumentType, 
         })
         if (!!template?._id) {
           department.memoTemplates.push(template._id.toHexString())
-          const updated = await department.save({ new: true, upsert: false, runValidation: true })
+          const updated = await department.save({ new: true, upsert: false, runValidators: true })
           if (!!updated) {
             return {
               success: 'Template Successfully Updated',
@@ -372,7 +372,7 @@ export async function saveTemplate(departmentId: string, doctype: DocumentType, 
         })
         if (!!template?._id) {
           department.letterTemplates.push(template._id.toHexString())
-          const updated = await department.save({ new: true, upsert: false, runValidation: true })
+          const updated = await department.save({ new: true, upsert: false, runValidators: true })
           if (!!updated) {
             return {
               success: 'Template Successfully Saved',
@@ -414,7 +414,7 @@ export async function updateTemplate(templateId: string, doctype: DocumentType, 
         }
       }
       template.content = content
-      const updated = await template.save({ new: true, upsert: false, runValidation: true })
+      const updated = await template.save({ new: true, upsert: false, runValidators: true })
       if (!!updated) {
         return {
           success: 'Template Successfully Updated',
