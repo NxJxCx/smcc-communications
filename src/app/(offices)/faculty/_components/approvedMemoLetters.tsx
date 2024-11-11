@@ -2,23 +2,24 @@
 import LoadingComponent from "@/components/loading";
 import OCSModal from "@/components/ocsModal";
 import ParseHTMLTemplate from "@/components/parseHTML";
-import { DepartmentDocument, DocumentType, LetterDocument, MemoDocument, Roles } from "@/lib/modelInterfaces";
+import { DepartmentDocument, DocumentType, LetterDocument, MemoDocument, Roles, UserDocument } from "@/lib/modelInterfaces";
 import clsx from "clsx";
 import { PrintIcon, RefreshIcon } from "evergreen-ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import ThumbnailItemWithDepartment from "./thumbnailItemWithDepartment";
 
 export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doctype: DocumentType, searchParam: string }>) {
-  const [data, setData] = useState<(MemoDocument & { isPreparedByMe: boolean })[]|(LetterDocument & { isPreparedByMe: boolean })[]>([]);
+  const [data, setData] = useState<(MemoDocument & { isPreparedByMe: boolean, isRead: boolean })[]|(LetterDocument & { isPreparedByMe: boolean, isRead: boolean })[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMemo, setSelectedMemo] = useState<(MemoDocument|LetterDocument) & { isPreparedByMe: boolean }>();
+  const [myUser, setMyUser] = useState<UserDocument>()
   const getData = useCallback(() => {
     const url = new URL('/' + Roles.Faculty + '/api/memo', window.location.origin)
     url.searchParams.set('doctype', doctype)
     setLoading(true)
     fetch(url)
       .then(response => response.json())
-      .then(({ result }) => { setData(result); setLoading(false) })
+      .then(({ result, user }) => { setMyUser(user); setData(result); setLoading(false) })
       .catch((e) => { console.log(e); setLoading(false) })
   }, [doctype]);
 
@@ -55,8 +56,13 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
         || ((new Date(item.updatedAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: 'short' })).toLowerCase().includes(search.toLowerCase())
       ))
     }
-    return filtered;
-  }, [data, search])
+    return filtered.map((item) => ({
+      ...item,
+      isRead: doctype === DocumentType.Memo
+        ? [...(myUser?.readMemos || [])]?.includes(item._id!.toString())
+        : [...(myUser?.readLetters || [])]?.includes(item._id!.toString()),
+    }));
+  }, [data, search, myUser, doctype])
 
   const onPrint = useCallback(() => {
     const url = new URL('/print', window.location.origin)
@@ -69,6 +75,20 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
       docWindow.onbeforeunload = () => window.location.reload();
     }
   }, [doctype, selectedMemo?._id, selectedMemo?.title])
+
+  const onReadMemoLetter = useCallback((memoLetter: (MemoDocument & { isPreparedByMe: boolean, isRead: boolean })|(LetterDocument & { isPreparedByMe: boolean, isRead: boolean })) => {
+    const url = new URL('/' + Roles.Faculty + '/api/memo/read', window.location.origin)
+    url.searchParams.set('id', memoLetter._id!)
+    url.searchParams.set('doctype', doctype)
+    fetch(url)
+      .then((response) => response.json())
+      .then(({ success, error }) => {
+        console.log("success",success);
+        console.log("error",error);
+      })
+      .catch(console.log);
+    setSelectedMemo(memoLetter);
+  }, [doctype])
 
   return (<>
     <div className="p-6">
@@ -88,7 +108,7 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
             { loading && <LoadingComponent /> }
             { !loading && filteredData.length === 0 && <div className="text-center">No approved {doctype === DocumentType.Memo ? "memorandum" : "letter"}.</div>}
             { !loading && filteredData.map((memoLetter, i) => (
-              <ThumbnailItemWithDepartment onClick={() => setSelectedMemo(memoLetter)} preparedByMe={memoLetter.isPreparedByMe} key={memoLetter._id} thumbnailSrc="/thumbnail-document.png" department={(memoLetter.departmentId as DepartmentDocument).name} label={memoLetter.title} createdAt={memoLetter.createdAt} updatedAt={memoLetter.updatedAt} />
+              <ThumbnailItemWithDepartment onClick={() => onReadMemoLetter(memoLetter)} preparedByMe={memoLetter.isPreparedByMe} isRead={memoLetter.isRead} key={memoLetter._id} thumbnailSrc="/thumbnail-document.png" department={(memoLetter.departmentId as DepartmentDocument).name} label={memoLetter.title} createdAt={memoLetter.createdAt} updatedAt={memoLetter.updatedAt} />
             ))}
           </div>
         </div>

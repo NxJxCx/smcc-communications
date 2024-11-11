@@ -14,7 +14,8 @@ export async function GET(request: NextRequest) {
     if (!!session?.user) {
       const doctype = request.nextUrl.searchParams.get('doctype');
       if ([DocumentType.Memo, DocumentType.Letter].includes(doctype as DocumentType)) {
-        const user = await User.findById(session.user._id).select('departmentIds').exec();
+        const selectFields = 'departmentIds ' + (doctype === DocumentType.Memo ? "readMemos" : "readLetters");
+        const user = await User.findById(session.user._id).select(selectFields).exec();
         const MemoLetter = doctype === DocumentType.Memo ? Memo : Letter;
         const result = await MemoLetter.find({
           $and: [
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
             }
           ],
         }).populate('departmentId').exec();
-        return NextResponse.json({ result })
+        return NextResponse.json({ result, user })
       }
     }
   } catch (e) {
