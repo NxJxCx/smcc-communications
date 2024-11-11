@@ -37,7 +37,7 @@ const LetterSchema = new Schema({
     },
     required: [true, 'Prepared By is required'],
   },
-  signature_approvals: {
+  signatureApprovals: {
     type: [{
       signature_id: {
         type: Schema.Types.ObjectId,

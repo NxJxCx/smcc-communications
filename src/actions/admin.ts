@@ -34,7 +34,6 @@ export async function saveMemorandumLetter(departmentId: string, doctype: Docume
         }
       }
       const signatureApprovals = eSignatures.map(signatureId => ({ signature_id: signatureId, approvedDate: null }))
-
       if (doctype === DocumentType.Memo) {
         const memo = await Memo.create({
           departmentId,
@@ -80,25 +79,26 @@ export async function saveMemorandumLetter(departmentId: string, doctype: Docume
           preparedBy,
           signatureApprovals
         })
+        console.log(letter);
         if (!!letter?._id) {
           try {
             await addNotification(letter.preparedBy.toHexString(), {
-              title: 'New Memorandum Pending Approval',
+              title: 'New Letter Pending Approval',
               message: letter.title + ' for ' + departmentName + ' by you',
-              href: '/' + Roles.Admin + '/memo?id' + letter._id
+              href: '/' + Roles.Admin + '/letter?id' + letter._id
             })
           } catch (e) {
             console.log(e)
           }
-          await Promise.all(signatureApprovals.map(async (signatureApproval) => {
+          await Promise.all(signatureApprovals.map(async (sa) => {
             try {
-              const eSig = await ESignature.findById(signatureApproval.signature_id).exec();
+              const eSig = await ESignature.findById(sa.signature_id).exec();
               const userSig = await User.findById(eSig.adminId.toHexString()).exec();
               const preparedByUser = session.user
               await addNotification(userSig._id.toHexString(), {
                 title: 'New Letter Pending Approval',
-                message: 'New Letter for '+ departmentName + ' by ' + preparedByUser.fullName,
-                href: '/' + Roles.Admin + '/memo?id=' + letter._id.toHexString()
+                message: letter.title + ' for ' + departmentName + ' by ' + preparedByUser.fullName,
+                href: '/' + Roles.Admin + '/letter?id' + letter._id
               })
             } catch (e) {
               console.log(e)
