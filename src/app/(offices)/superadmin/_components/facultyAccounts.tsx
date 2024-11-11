@@ -31,7 +31,7 @@ function getFacultyAccountsColumns({ onRemoveDepartment, onAddDepartment, onUpda
       label: 'Photo', field: "photo", align: 'center',
       render: (row: AccountsColumns) => (
         <div className="flex items-center justify-center gap-4">
-          <Avatar src={!!row.photo ? getPhotoURL(row.photo?._id, Buffer.from(row.photo?.file), row.photo?.mimeType) : ''} name={row.firstName + " " + row.lastName} size={48} />
+          <Avatar src={!!row.photo ? getPhotoURL(row.photo?._id, Buffer.from(row.photo?.file as any), row.photo?.mimeType) : ''} name={row.firstName + " " + row.lastName} size={48} />
         </div>
       ),
     },
