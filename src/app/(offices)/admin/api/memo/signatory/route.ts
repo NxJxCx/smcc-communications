@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       }
       const letter = await Letter.findById(mlid).select('signatureApprovals').populate('signatureApprovals.signature_id').exec();
       if (!!letter?._id) {
-        const result = (JSON.parse(JSON.stringify(memo)).signatureApprovals as SignatureApprovals[]).filter(({ approvedDate }) => !!approvedDate).map(({ signature_id, approvedDate }) => signature_id);
+        const result = (JSON.parse(JSON.stringify(letter)).signatureApprovals as SignatureApprovals[]).filter(({ approvedDate }) => !!approvedDate).map(({ signature_id, approvedDate }) => signature_id);
         return NextResponse.json({ result })
       }
     }
