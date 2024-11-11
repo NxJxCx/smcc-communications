@@ -1,5 +1,4 @@
-'use server'
-
+'use server';
 import { Roles } from "@/lib/modelInterfaces";
 import User from "@/lib/models/User";
 import { getMyNotifications, getSession } from "@/lib/session";
@@ -150,15 +149,16 @@ export async function addNotification(userId: string, { title, message, href }: 
   return false
 }
 
-export async function broadcastNotification({ role = Roles.Faculty, departmentId, title, message, href }: { role?: Roles, departmentId: string,title: string, message: string, href: string }) {
+export async function broadcastNotification({ role = Roles.Faculty, departmentId, title, message, href }: { role?: Roles, departmentId: string, title: string, message: string, href: string }) {
   try {
     const notification = {
       title,
       message,
       href,
     }
+
     const updated = await User.updateMany(
-      { role, departmentIds: { $elemMatch: departmentId } },
+      { role, departmentIds: { $in: [departmentId] } },
       { $push: { notification }},
       {
         new: true,

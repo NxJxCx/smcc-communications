@@ -1,4 +1,5 @@
 'use server';;
+import { broadcastNotification } from "@/actions/notifications";
 import connectDB from "@/lib/database";
 import { DocumentType, Roles } from "@/lib/modelInterfaces";
 import Letter from "@/lib/models/Letter";
@@ -23,11 +24,23 @@ export async function GET(request: NextRequest) {
         const memoletter = await MemoLetter.findById(id).exec();
         if (!!memoletter) {
           if (doctype === DocumentType.Memo) {
-            user.readMemos.push(memoletter._id);
+            if (![...user.readMemos].map((v) => v.toString()).includes(memoletter._id.toString())) {
+              user.readMemos.push(memoletter._id);
+            }
           } else {
-            user.readLetters.push(memoletter._id);
+            if (![...user.readLetters].map((v) => v.toString()).includes(memoletter._id.toString())) {
+              user.readLetters.push(memoletter._id);
+            }
           }
           await user.save({ runValidators: true });
+          await broadcastNotification({
+            role: Roles.Admin,
+            departmentId: memoletter.departmentId.toString(),
+            title: "A Faculty Read the " + (doctype === DocumentType.Memo ? "Memorandum" : "Letter"),
+            message: (user.prefixName ? user.prefixName + " " : "") + user.firstName + " " + user.lastName + (user.suffixName ? ", " + user.suffixName : "") +
+              " has read the " + (doctype === DocumentType.Memo ? "Memorandum" : "Letter"),
+            href: '/' + Roles.Admin + '/' + (doctype === DocumentType.Memo ? "memo" : "letter") + '/approved?id=' + memoletter._id.toHexString(),
+          })
           return NextResponse.json({ success: true });
         }
       }
