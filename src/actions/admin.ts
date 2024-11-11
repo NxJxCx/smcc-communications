@@ -55,7 +55,6 @@ export async function saveMemorandumLetter(departmentId: string, doctype: Docume
           }
           await Promise.all(signatureApprovals.map(async (sa) => {
             try {
-              console.log(sa)
               const eSig = await ESignature.findById(sa.signature_id).exec();
               const userSig = await User.findById(eSig.adminId.toHexString()).exec();
               const preparedByUser = session.user

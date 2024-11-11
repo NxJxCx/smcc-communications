@@ -26,7 +26,7 @@ const LetterSchema = new Schema({
         const user = await User.findById(val);
         if (!!user && user.role === Roles.Admin) {
           const department = await Department.findOne({
-            letterTemplates: (this as any).templateId,
+            _id: (this as any).departmentId,
             isDissolved: false,
           });
           return !!department;
