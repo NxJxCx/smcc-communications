@@ -87,3 +87,9 @@ export interface SessionPayloadProp extends JWTPayload {
 export type SessionPayload = SessionPayloadProp | undefined
 
 export type AuthenticationStatus = 'authenticated' | 'unauthenticated' | 'loading' | 'error'
+
+export enum HighestPosition {
+  Admin = "Admin",
+  President = "Office of the President",
+  VicePresident = "Office of the Vice President"
+}

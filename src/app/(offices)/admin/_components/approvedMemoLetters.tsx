@@ -2,7 +2,15 @@
 import LoadingComponent from "@/components/loading";
 import OCSModal from "@/components/ocsModal";
 import ParseHTMLTemplate from "@/components/parseHTML";
-import { DepartmentDocument, DocumentType, LetterDocument, MemoDocument, Roles, UserDocument } from "@/lib/modelInterfaces";
+import {
+  DocumentType,
+  LetterDocument,
+  LetterIndividualDocument,
+  MemoDocument,
+  MemoIndividualDocument,
+  Roles,
+  UserDocument,
+} from "@/lib/modelInterfaces";
 import clsx from "clsx";
 import { ListIcon, PrintIcon, RefreshIcon } from "evergreen-ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -12,15 +20,16 @@ import ThumbnailItemWithDepartment from "./thumbnailItemWithDepartment";
 
 export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doctype: DocumentType, searchParam: string }>) {
   const [data, setData] = useState<(MemoDocument & { isPreparedByMe: boolean })[]|(LetterDocument & { isPreparedByMe: boolean })[]>([]);
+  const [dataIndividual, setDataIndividual] = useState<(MemoIndividualDocument & { isPreparedByMe: boolean })[]|(LetterIndividualDocument & { isPreparedByMe: boolean })[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedMemo, setSelectedMemo] = useState<(MemoDocument|LetterDocument) & { isPreparedByMe: boolean }>();
+  const [selectedMemo, setSelectedMemo] = useState<(MemoDocument|LetterDocument|any) & { isPreparedByMe: boolean }>();
   const getData = useCallback(() => {
     const url = new URL('/' + Roles.Admin + '/api/memo/approved', window.location.origin)
     url.searchParams.set('doctype', doctype)
     setLoading(true)
     fetch(url)
       .then(response => response.json())
-      .then(({ result }) => { setData(result); setLoading(false) })
+      .then(({ result }) => { setData(result?.departments); setDataIndividual(result?.individuals); setLoading(false) })
       .catch((e) => { console.log(e); setLoading(false) })
   }, [doctype]);
 
@@ -36,13 +45,13 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
   const [search, setSearch] = useState<string>(searchParam || '')
 
   const filteredData = useMemo(() => {
-    let filtered = data.toReversed();
+    let filtered = [...data.toReversed(), ...dataIndividual.toReversed()];
     if (search) {
-      filtered = data.filter((item) => (
+      filtered = filtered.filter((item) => (
         item._id!.toLowerCase() === search.toLowerCase()
         || item.title.toLowerCase().includes(search.toLowerCase())
-        || (item.departmentId as DepartmentDocument).name.toLowerCase().includes(search.toLowerCase())
-        || (item.departmentId as DepartmentDocument).name.toLowerCase() === search.toLowerCase()
+        || (item as any).departmentId?.name.toLowerCase().includes(search.toLowerCase())
+        || (item as any)?.departmentId?.name.toLowerCase() === search.toLowerCase()
         || ((new Date(item.createdAt as string)).toLocaleDateString()).toLowerCase().includes(search.toLowerCase())
         || ((new Date(item.createdAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: '2-digit', day: '2-digit' })).toLowerCase().includes(search.toLowerCase())
         || ((new Date(item.createdAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })).toLowerCase().includes(search.toLowerCase())
@@ -57,8 +66,9 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
         || ((new Date(item.updatedAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: 'short' })).toLowerCase().includes(search.toLowerCase())
       ))
     }
-    return filtered;
-  }, [data, search])
+    const result = filtered.toSorted((a, b) => (new Date(b.updatedAt!)).getTime() - (new Date(a.updatedAt!)).getTime());
+    return [...result];
+  }, [data, dataIndividual, search])
 
   const onPrint = useCallback(() => {
     const url = new URL('/print', window.location.origin)
@@ -66,6 +76,9 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
     url.searchParams.set('id', selectedMemo?._id!)
     url.searchParams.set('role', Roles.Admin)
     url.searchParams.set('title', selectedMemo?.title!)
+    if (selectedMemo?.userId) {
+      url.searchParams.set('isForIndividual', 'true');
+    }
     const docWindow = window.open(url, '_blank', 'width=1000,height=1000, menubar=no, toolbar=no, scrollbars=yes, location=no, status=no');
     if (docWindow) {
       docWindow.onbeforeunload = () => window.location.reload();
@@ -156,7 +169,7 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
 
   return (<>
     <div className="p-6">
-      <h1 className="text-2xl font-[500]">{doctype === DocumentType.Memo ? "Memorandum for approval list" : "Letter for approval list"}</h1>
+      <h1 className="text-2xl font-[500]">{doctype === DocumentType.Memo ? "Approved Memorandums" : "Approved Letters"}</h1>
       <div className="mt-3 flex flex-col lg:flex-row lg:flex-betweeen flex-wrap w-full min-w-[300px] lg:min-w-[800px] bg-white p-4 rounded-t-lg">
         <div className="flex flex-wrap">
           <label htmlFor="searchMemo" className="font-[500] mr-2 items-center flex">Search:</label>
@@ -172,7 +185,7 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
             { loading && <LoadingComponent /> }
             { !loading && filteredData.length === 0 && <div className="text-center">No approved {doctype === DocumentType.Memo ? "memorandum" : "letter"}.</div>}
             { !loading && filteredData.map((memoLetter, i) => (
-              <ThumbnailItemWithDepartment onClick={() => setSelectedMemo(memoLetter)} preparedByMe={memoLetter.isPreparedByMe} key={memoLetter._id} thumbnailSrc="/thumbnail-document.png" department={(memoLetter.departmentId as DepartmentDocument).name} label={memoLetter.title} createdAt={memoLetter.createdAt} updatedAt={memoLetter.updatedAt} />
+              <ThumbnailItemWithDepartment onClick={() => setSelectedMemo(memoLetter)} preparedByMe={memoLetter.isPreparedByMe} key={memoLetter._id} thumbnailSrc="/thumbnail-document.png" department={(memoLetter as any).departmentId?.name} label={memoLetter.title} createdAt={memoLetter.createdAt} updatedAt={memoLetter.updatedAt} />
             ))}
           </div>
         </div>
@@ -180,13 +193,18 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
     </div>
     <OCSModal title={selectedMemo?.title} open={!!selectedMemo} onClose={onBack}>
       <div className={clsx("min-w-[" + (8.5 * 96) + "px]", "max-w-[" + (8.5 * 96) + "px]", "min-h-[" + (1 * 96) + "px]")}>
-        {<ParseHTMLTemplate role={Roles.Admin} htmlString={selectedMemo?.content || ''} memoLetterId={selectedMemo?._id} showApprovedSignatories />}
+        {<ParseHTMLTemplate isForIndividual={!!selectedMemo?.userId} role={Roles.Admin} htmlString={selectedMemo?.content || ''} memoLetterId={selectedMemo?._id} showApprovedSignatories />}
       </div>
       <hr className="border w-full h-[1px] my-2" />
       <div className="w-full flex justify-between items-center gap-x-3 pr-2">
         <div className="flex items-center justify-start gap-x-3">
-          <button type="button" className="rounded-lg bg-green-200 hover:bg-green-100 text-black px-3 py-1 ml-4" onClick={onFacultyReaders}><ListIcon display="inline" /> See Faculty Readers</button>
-          <button type="button" className="rounded-lg bg-yellow-200 hover:bg-yellow-100 text-black px-3 py-1 ml-4" onClick={onFacultyNonReaders}><ListIcon display="inline" /> See Faculties Not Read</button>
+          {!selectedMemo?.userId && (<>
+            <button type="button" className="rounded-lg bg-green-200 hover:bg-green-100 text-black px-3 py-1 ml-4" onClick={onFacultyReaders}><ListIcon display="inline" /> See Faculty Readers</button>
+            <button type="button" className="rounded-lg bg-yellow-200 hover:bg-yellow-100 text-black px-3 py-1 ml-4" onClick={onFacultyNonReaders}><ListIcon display="inline" /> See Faculties Not Read</button>
+          </>)}
+          {!!selectedMemo?.userId && (
+            <div>Read by recipient: <span className={!!selectedMemo?.isRead ? "text-green-500" : "text-gray-500"}>{!!selectedMemo?.isRead ? "Yes" : "No"}</span></div>
+          )}
         </div>
         <div className="flex items-center justify-end gap-x-3">
           <button type="button" className="rounded-lg bg-blue-300 hover:bg-blue-100 text-black px-3 py-1 ml-4" onClick={onPrint}><PrintIcon display="inline" /> Print</button>

@@ -7,10 +7,13 @@ const TemplateSchema = new Schema({
     type: String,
     required: [true, 'Template Title is required'],
   },
+  isForIndividual: {
+    type: Boolean,
+    default: false,
+  },
   documentType: {
     type: String,
     enum: DocumentType,
-    required: [true, 'Document Type is required'],
   },
   content: {
     type: String,

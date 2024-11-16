@@ -16,7 +16,7 @@ export default function ThumbnailItemWithDepartment({ thumbnailSrc, department, 
         <Image src={thumbnailSrc} className="object-cover" width={233.65} height={302.36} alt="thumbnail" />
       </div>
       <div className="font-[500]">{label}</div>
-      <div className="italic">{department}</div>
+      <div className="italic">{department || "For Individual"}</div>
       <div>Created: {toDateString(createdAt as string|undefined)}</div>
       <div>Updated: {toDateString(updatedAt as string|undefined)}</div>
     </button>

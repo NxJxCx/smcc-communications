@@ -1,4 +1,5 @@
 'use client';
+import { UserDocument } from "@/lib/modelInterfaces";
 import { useSession } from "@/lib/useSession";
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import { SidebarNavigation, getSidebarNavigations } from "./sidebar-navigations";
@@ -9,12 +10,13 @@ export const SidebarContext = createContext<{
   closeSidebar: () => void;
   openSidebar: () => void;
   sidebarNavigations: SidebarNavigation[];
+  user?: UserDocument;
 }>({
   isSidebarOpen: false,
   toggleSidebar: () => {},
   closeSidebar: () => {},
   openSidebar: () => {},
-  sidebarNavigations: []
+  sidebarNavigations: [],
 })
 
 export default function SidebarProvider({
@@ -44,7 +46,8 @@ export default function SidebarProvider({
       toggleSidebar,
       closeSidebar,
       openSidebar,
-      sidebarNavigations
+      sidebarNavigations,
+      user: sessionData?.user,
     }}>
       {children}
     </SidebarContext.Provider>
@@ -53,13 +56,14 @@ export default function SidebarProvider({
 
 export function useSidebar() {
   const context = useContext(SidebarContext)
-  const { isSidebarOpen, toggleSidebar, closeSidebar, openSidebar, sidebarNavigations } = context
+  const { isSidebarOpen, toggleSidebar, closeSidebar, openSidebar, sidebarNavigations, user } = context
 
   return {
     isSidebarOpen,
     toggleSidebar,
     closeSidebar,
     openSidebar,
-    sidebarNavigations
+    sidebarNavigations,
+    user
   }
 }

@@ -1,14 +1,5 @@
-import { Metadata } from "next";
-import DashboardPage from "./_components/dashboard";
-
-export const metadata: Metadata = {
-  title: "Admin"
-};
+import NotificationsPage from "@/components/notifications/notification-page-component";
 
 export default function Page() {
-  return (
-    <div className="w-full">
-      <DashboardPage />
-    </div>
-  )
+  return <NotificationsPage />
 }

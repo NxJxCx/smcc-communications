@@ -11,7 +11,7 @@ import { useSidebar } from "./sidebar-context";
 import smccLogo from "./smcc-logo.webp";
 
 export default function SidebarComponent() {
-  const { isSidebarOpen, sidebarNavigations } = useSidebar();
+  const { isSidebarOpen, sidebarNavigations, user } = useSidebar();
   const pathname = usePathname();
   const role = useMemo(() => pathname.substring(1).split('/')[0], [pathname])
 
@@ -32,7 +32,8 @@ export default function SidebarComponent() {
           <Image src={smccLogo} alt="SMCC Logo" width={60} height={60} className="mx-auto mt-4" />
           <h1 className="text-center mt-1 mb-2 font-[700] text-[22px]">OCS</h1>
           <div className="font-bold text-center text-blue-900 drop-shadow-lg rounded-lg mb-8 uppercase bg-sky-300 py-1">
-            {role}
+            {role === Roles.Admin && <>{user?.highestPosition || "Loading..."}</>}
+            {role !== Roles.Admin && <>{role}</>}
           </div>
         </div>
         {/* <!-- Side Navigation Bars --> */}

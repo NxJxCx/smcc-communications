@@ -4,10 +4,12 @@ import { DocumentType, Roles } from "@/lib/modelInterfaces";
 import Department from "@/lib/models/Department";
 import ESignature from "@/lib/models/ESignature";
 import Letter from "@/lib/models/Letter";
+import LetterIndividual from "@/lib/models/LetterIndividual";
 import Memo from "@/lib/models/Memo";
+import MemoIndividual from "@/lib/models/MemoIndividual";
 import User from "@/lib/models/User";
 import { getSession } from "@/lib/session";
-import { SignatureApprovals } from '../lib/modelInterfaces';
+import { SignatureApprovals, UserDocument } from '../lib/modelInterfaces';
 import { addNotification, broadcastNotification } from "./notifications";
 import { ActionResponseType } from "./superadmin";
 
@@ -47,7 +49,7 @@ export async function saveMemorandumLetter(departmentId: string, doctype: Docume
             await addNotification(memo.preparedBy.toHexString(), {
               title: 'New Memorandum Pending Approval',
               message: memo.title + ' for ' + departmentName + ' by you',
-              href: '/' + Roles.Admin + '/memo?id' + memo._id
+              href: '/' + Roles.Admin + '/memo?id=' + memo._id
             })
           } catch (e) {
             console.log(e)
@@ -60,7 +62,7 @@ export async function saveMemorandumLetter(departmentId: string, doctype: Docume
               await addNotification(userSig._id.toHexString(), {
                 title: 'New Memorandum Pending Approval',
                 message: memo.title + ' for ' + departmentName + ' by ' + preparedByUser.fullName,
-                href: '/' + Roles.Admin + '/memo?id' + memo._id
+                href: '/' + Roles.Admin + '/memo?id=' + memo._id
               })
             } catch (e) {
               console.log(e)
@@ -85,7 +87,7 @@ export async function saveMemorandumLetter(departmentId: string, doctype: Docume
             await addNotification(letter.preparedBy.toHexString(), {
               title: 'New Letter Pending Approval',
               message: letter.title + ' for ' + departmentName + ' by you',
-              href: '/' + Roles.Admin + '/letter?id' + letter._id
+              href: '/' + Roles.Admin + '/letter?id=' + letter._id
             })
           } catch (e) {
             console.log(e)
@@ -98,7 +100,7 @@ export async function saveMemorandumLetter(departmentId: string, doctype: Docume
               await addNotification(userSig._id.toHexString(), {
                 title: 'New Letter Pending Approval',
                 message: letter.title + ' for ' + departmentName + ' by ' + preparedByUser.fullName,
-                href: '/' + Roles.Admin + '/letter?id' + letter._id
+                href: '/' + Roles.Admin + '/letter?id=' + letter._id
               })
             } catch (e) {
               console.log(e)
@@ -108,6 +110,101 @@ export async function saveMemorandumLetter(departmentId: string, doctype: Docume
             success: 'Letter Saved and Sent for Approval.',
             memorandumId: letter._id.toHexString()
           }
+        }
+      } else {
+        return {
+          error: 'Invalid document type'
+        }
+      }
+    }
+  } catch (e) {
+    console.log(e)
+  }
+  return {
+    error: 'Failed to save'
+  }
+}
+
+
+export async function saveMemorandumLetterToIndividual(individualId: string, doctype: DocumentType, formData: FormData): Promise<ActionResponseType & { memorandumId?: string, letterId?: string }>
+{
+  await connectDB()
+  try {
+    const session = await getSession(Roles.Admin)
+    if (!!session?.user) {
+      const preparedBy = session.user._id;
+      const individual = await User.findById(individualId).lean<UserDocument>().exec()
+      if (!individual) {
+        return {
+          error: 'Employee not found'
+        }
+      }
+      const content = formData.get('content')
+      const title = formData.get('title')
+      if (!content) {
+        return {
+          error: 'Memorandum title should not be empty'
+        }
+      }
+      if (doctype === DocumentType.Memo) {
+        const memo = await MemoIndividual.create({
+          userId: individual._id?.toString(),
+          title,
+          content: content,
+          preparedBy,
+        })
+        if (!!memo?._id) {
+          try {
+            await addNotification(individual._id!.toString(), {
+              title: 'New Memorandum Sent to you',
+              message: memo.title + ' for ' + individual.firstName + ' ' + individual.lastName,
+              href: '/' + Roles.Faculty + '/memo?id=' + memo._id
+            })
+          } catch (e) {
+            console.log(e)
+          }
+          try {
+            await addNotification(preparedBy._id.toString(), {
+              title: 'New Memorandum Sent to ' + individual.firstName + ' ' + individual.lastName,
+              message: memo.title + ' for ' + individual.firstName + ' ' + individual.lastName,
+              href: '/' + Roles.Admin + '/memo?id=' + memo._id
+            })
+          } catch (e) {
+            console.log(e);
+          }
+          return {
+            success: 'Memorandum Sent',
+            memorandumId: memo._id.toHexString()
+          }
+        }
+      } else if (doctype === DocumentType.Letter) {
+        const letter = await LetterIndividual.create({
+          userId: individual._id?.toString(),
+          title,
+          content: content,
+          preparedBy,
+        })
+        try {
+          await addNotification(individual._id!.toString(), {
+            title: 'New Memorandum Sent to you',
+            message: letter.title + ' for ' + individual.firstName + ' ' + individual.lastName,
+            href: '/' + Roles.Faculty + '/letter?id=' + letter._id
+          })
+        } catch (e) {
+          console.log(e)
+        }
+        try {
+          await addNotification(preparedBy._id.toString(), {
+            title: 'New Memorandum Sent to ' + individual.firstName + ' ' + individual.lastName,
+            message: letter.title + ' for ' + individual.firstName + ' ' + individual.lastName,
+            href: '/' + Roles.Admin + '/letter?id=' + letter._id
+          })
+        } catch (e) {
+          console.log(e);
+        }
+        return {
+          success: 'Memorandum Sent',
+          memorandumId: letter._id.toHexString()
         }
       } else {
         return {

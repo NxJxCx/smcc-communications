@@ -12,7 +12,7 @@ import { getSignatureIdsFromContent } from "./getSignatureIdsFromContent";
 
 const tinyMCE_API_KEY = process.env.NEXT_PUBLIC_TINYMCE_API_KEY
 
-export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentData, withPreparedBy = false, onAddSignatory, onSave }: Readonly<{ editorRef: MutableRefObject<any>, signatoriesList: ESignatureDocument[], initialContentData?: string, withPreparedBy?: boolean, onAddSignatory?: () => void, onSave: (editor: any, content: string) => void }>) {
+export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentData, withPreparedBy = false, withSignatories = true, onAddSignatory, onSave }: Readonly<{ editorRef: MutableRefObject<any>, signatoriesList: ESignatureDocument[], initialContentData?: string, withPreparedBy?: boolean, withSignatories?: boolean, onAddSignatory?: () => void, onSave: (editor: any, content: string) => void }>) {
   const { data: sessionData } = useSession({ redirect: false })
 
   const ppi = 96
@@ -174,7 +174,7 @@ export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentD
           'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
           'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount',
           'image', 'editimage']}
-        toolbar={'undo redo | fontfamily fontsize lineheight image table | addAdminSignatory ' + (withPreparedBy ? 'addPreparedBy ' : '') + 'saveAsTemplate | ' +
+        toolbar={'undo redo | fontfamily fontsize lineheight image table | ' + (withSignatories ? 'addAdminSignatory ' : '') + (withPreparedBy ? 'addPreparedBy ' : '') + 'saveAsTemplate | ' +
             'bold italic underline forecolor backcolor | alignleft aligncenter ' +
             'alignright alignjustify | bullist numlist outdent indent | ' +
             'removeformat | help'}
@@ -188,15 +188,17 @@ export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentD
               tooltip: 'Save',
               onAction: onSaveAsTemplate,
             });
-            editor.ui.registry.addButton("addAdminSignatory", {
-              icon: 'edit-block',
-              tooltip: 'Add Signatory',
-              onAction: onAddSignatories,
-            });
+            if (withSignatories) {
+              editor.ui.registry.addButton("addAdminSignatory", {
+                icon: 'edit-block',
+                tooltip: 'Add Signatory',
+                onAction: onAddSignatories,
+              });
+            }
             if (withPreparedBy) {
               editor.ui.registry.addButton("addPreparedBy", {
                 icon: 'checkmark',
-                tooltip: 'Add Prepared By',
+                tooltip: !withSignatories && withPreparedBy ? 'Add your signatory' : 'Add Prepared By',
                 onAction: onAddPreparedBy,
               });
             }

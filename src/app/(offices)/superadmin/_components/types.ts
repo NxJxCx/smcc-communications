@@ -1,4 +1,5 @@
 import { DepartmentDocument, PhotoFileDocument } from "@/lib/modelInterfaces";
+import { HighestPosition } from "@/lib/types";
 
 export interface DashboardDataProps {
   departmentsCount: string|number|JSX.Element,
@@ -21,6 +22,7 @@ export interface DepartmentColumns {
 export interface AccountsColumns {
   _id: string;
   employeeId: string;
+  highestPosition: HighestPosition
   email: string
   prefixName: string
   suffixName: string

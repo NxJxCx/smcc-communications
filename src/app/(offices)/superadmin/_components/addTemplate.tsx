@@ -1,5 +1,5 @@
 'use client';;
-import { saveTemplate } from '@/actions/superadmin';
+import { saveIndividualTemplate, saveTemplate } from '@/actions/superadmin';
 import LoadingComponent from '@/components/loading';
 import OCSTinyMCE from '@/components/OCSTinyMCE';
 import { DepartmentDocument, DocumentType, ESignatureDocument } from '@/lib/modelInterfaces';
@@ -8,7 +8,7 @@ import { CrossIcon, toaster } from 'evergreen-ui';
 import { useCallback, useRef } from 'react';
 import Swal from 'sweetalert2';
 
-export default function AddTemplate({ department, doctype, signatoriesList, onAdd, onCancel }: { department?: DepartmentDocument, doctype: DocumentType, signatoriesList: ESignatureDocument[], onAdd: (templateId: string) => void, onCancel: () => void }) {
+export default function AddTemplate({ department, doctype, signatoriesList, onAdd, onCancel }: { department?: DepartmentDocument, doctype?: DocumentType, signatoriesList: ESignatureDocument[], onAdd: (templateId: string) => void, onCancel: () => void }) {
   const { status } = useSession({ redirect: false })
 
   const editorRef = useRef<any>(null);
@@ -27,27 +27,41 @@ export default function AddTemplate({ department, doctype, signatoriesList, onAd
           toaster.danger('Please enter a template title')
           return;
         }
-        const saveMyTemplate = saveTemplate.bind(null, department?._id || '', doctype)
-        const formData = new FormData()
-        formData.append('title', value)
-        formData.append('content', content)
-        const { success, templateId, error } = await saveMyTemplate(formData)
-        if (error) {
-          toaster.danger(error)
-        } else if (success) {
-          toaster.success(success)
-          onAdd && onAdd(templateId as string)
+        if (!department || !doctype) {
+          // individual template
+          const formData = new FormData()
+          formData.append('title', value)
+          formData.append('content', content)
+          const { success, templateId, error } = await saveIndividualTemplate(formData)
+          if (error) {
+            toaster.danger(error)
+          } else if (success) {
+            toaster.success(success)
+            onAdd && onAdd(templateId as string)
+          }
+        } else {
+          const saveMyTemplate = saveTemplate.bind(null, department?._id || '', doctype)
+          const formData = new FormData()
+          formData.append('title', value)
+          formData.append('content', content)
+          const { success, templateId, error } = await saveMyTemplate(formData)
+          if (error) {
+            toaster.danger(error)
+          } else if (success) {
+            toaster.success(success)
+            onAdd && onAdd(templateId as string)
+          }
         }
       }
     })
-  }, [doctype, onAdd, department?._id])
+  }, [doctype, onAdd, department])
 
   if (status === 'loading') return <LoadingComponent />;
 
   return (
     <div className="text-center mt-4">
       <h2 className="text-2xl font-[600] mb-2">
-        Add {doctype === DocumentType.Memo ? 'Memorandum' : 'Letter'} Template
+        Add Individual Template
         <button type="button" onClick={() => onCancel()} className="px-2 py-1 rounded bg-gray-300 text-black ml-4 font-normal text-sm"><CrossIcon display="inline" /> Cancel</button>
       </h2>
       <OCSTinyMCE editorRef={editorRef} signatoriesList={signatoriesList} onSave={onSaveAsTemplate} />

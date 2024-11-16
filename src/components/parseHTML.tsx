@@ -6,10 +6,9 @@ import { useCallback, useEffect, useState } from "react";
 import jsxToString from "./JSXToString";
 import LoadingComponent from "./loading";
 
-export default function ParseHTMLTemplate({ role, htmlString, showApprovedSignatories = false, memoLetterId, print = false }: { role: Roles, htmlString: string, showApprovedSignatories?: boolean, memoLetterId?: string, print?: boolean }) {
+export default function ParseHTMLTemplate({ isForIndividual, role, htmlString, showApprovedSignatories = false, memoLetterId, print = false }: { isForIndividual?: boolean, role: Roles, htmlString: string, showApprovedSignatories?: boolean, memoLetterId?: string, print?: boolean }) {
   const [htmlFinal, setHTMLFinal] = useState<string|undefined>();
   const [loading, setLoading] = useState<boolean>(true)
-
   const getPreparedBySignature = useCallback(async () => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlString, "text/html");
@@ -19,6 +18,9 @@ export default function ParseHTMLTemplate({ role, htmlString, showApprovedSignat
       if (!!preparedBy && !!memoLetterId) {
         const url = new URL('/' + role + '/api/memo/preparedby', window.location.origin)
         url.searchParams.set('mlid', memoLetterId || '')
+        if (!!isForIndividual) {
+          url.searchParams.set('isForIndividual', 'true');
+        }
         fetch(url)
         .then(response => response.json())
         .then(({ result }) => {
@@ -55,7 +57,7 @@ export default function ParseHTMLTemplate({ role, htmlString, showApprovedSignat
     return new Promise((resolve: (value?:any) => void, reject: (error?: any) => void) => {
       const parser = new DOMParser();
       const htmlDoc = parser.parseFromString(htmlDocString, "text/html");
-      if (showApprovedSignatories && !!memoLetterId) {
+      if (!isForIndividual && showApprovedSignatories && !!memoLetterId) {
         const url = new URL('/' + role + '/api/memo/signatory', window.location.origin)
         url.searchParams.set('mlid', memoLetterId || '')
         fetch(url)
@@ -66,14 +68,14 @@ export default function ParseHTMLTemplate({ role, htmlString, showApprovedSignat
         resolve({ htmlDocString: htmlDoc.documentElement.innerHTML, approvedSignatories: [] })
       }
     })
-  }, [showApprovedSignatories, role, memoLetterId])
+  }, [showApprovedSignatories, role, memoLetterId, isForIndividual])
 
   const getData = useCallback(async ({ htmlDocString, approvedSignatories }: { htmlDocString: string, approvedSignatories: ESignatureDocument[] }) => {
     return new Promise(async (resolve: (value?: any) => void, reject: (error?: any) => void) => {
       const parser = new DOMParser();
       const htmlDoc = parser.parseFromString(htmlDocString, "text/html");
       // get approved signatures
-      if (approvedSignatories.length > 0 && showApprovedSignatories) {
+      if (approvedSignatories?.length > 0 && showApprovedSignatories) {
         const signatories = htmlDoc?.querySelectorAll("table[data-type='signatory']")
         if (!!signatories && signatories.length > 0) {
           try {

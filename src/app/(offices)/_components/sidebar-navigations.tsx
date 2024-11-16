@@ -35,6 +35,10 @@ const superAdminSidebarNavList: SidebarNavigation[] = [
     url: '/superadmin/letter',
   },
   {
+    name: 'Individual Templates',
+    url: '/superadmin/individual',
+  },
+  {
     name: 'Account',
     url: '/superadmin/account',
   },
@@ -42,7 +46,7 @@ const superAdminSidebarNavList: SidebarNavigation[] = [
 
 const adminSidebarNavList: any[] = [
   {
-    name: 'Dashboard',
+    name: 'Notifications',
     url: '/admin',
   },
   {
@@ -68,10 +72,6 @@ const adminSidebarNavList: any[] = [
   {
     name: 'Approved Letters',
     url: '/admin/letter/approved',
-  },
-  {
-    name: 'Notifications',
-    url: '/admin/notifications',
   },
   {
     name: 'Account',

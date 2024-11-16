@@ -5,16 +5,11 @@ import OCSTinyMCE from '@/components/OCSTinyMCE';
 import { DocumentType, ESignatureDocument, TemplateDocument } from '@/lib/modelInterfaces';
 import { useSession } from '@/lib/useSession';
 import { CrossIcon, toaster } from 'evergreen-ui';
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import Swal from 'sweetalert2';
 
-export default function EditTemplate({ template, doctype, signatoriesList, onSave, onCancel, }: { template?: TemplateDocument, doctype: DocumentType, signatoriesList: ESignatureDocument[], onSave: (templateId: string) => void, onCancel: () => void }) {
+export default function EditTemplate({ template, doctype, signatoriesList, onSave, onCancel, }: { template?: TemplateDocument, doctype?: DocumentType, signatoriesList: ESignatureDocument[], onSave: (templateId: string) => void, onCancel: () => void }) {
   const { status } = useSession({ redirect: false })
-  const ppi = 96
-  const size = useMemo<{width:number, height:number}>(() => ({
-    width: 8.5 * ppi,
-    height: 11 * ppi,
-  }), []);
 
   const editorRef = useRef<any>(null);
 
@@ -29,15 +24,19 @@ export default function EditTemplate({ template, doctype, signatoriesList, onSav
         showLoaderOnConfirm: false,
       }).then(async ({ isConfirmed }) => {
         if (isConfirmed) {
-          const saveMyTemplate = updateTemplate.bind(null, template?._id || '', doctype)
-          const formData = new FormData()
-          formData.append('content', content)
-          const { success, error } = await saveMyTemplate(formData)
-          if (error) {
-            toaster.danger(error)
-          } else if (success) {
-            toaster.success(success)
-            onSave && onSave(template._id as string)
+          if (!doctype) {
+            // individual template
+          } else {
+            const saveMyTemplate = updateTemplate.bind(null, template?._id || '', doctype)
+            const formData = new FormData()
+            formData.append('content', content)
+            const { success, error } = await saveMyTemplate(formData)
+            if (error) {
+              toaster.danger(error)
+            } else if (success) {
+              toaster.success(success)
+              onSave && onSave(template._id as string)
+            }
           }
         }
       })

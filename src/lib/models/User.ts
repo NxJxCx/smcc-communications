@@ -2,6 +2,7 @@ import { Schema, model, models, type Document } from 'mongoose'
 import 'server-only'
 import { hashPassword } from '../hash'
 import { Roles, type UserDocument } from '../modelInterfaces'
+import { HighestPosition } from '../types'
 
 const UserSchema = new Schema({
   employeeId: {
@@ -17,6 +18,11 @@ const UserSchema = new Schema({
     type: String,
     enum: Roles,
     required: [true, 'Role is required'],
+  },
+  highestPosition: {
+    type: String,
+    enum: HighestPosition,
+    default: HighestPosition.Admin,
   },
   email: {
     type: String,

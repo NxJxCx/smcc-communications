@@ -35,13 +35,13 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
   const [search, setSearch] = useState<string>(searchParam || '')
 
   const filteredData = useMemo(() => {
-    let filtered = data.toReversed();
+    let filtered = [...data.toReversed() as any];
     if (search) {
       filtered = data.filter((item) => (
         item._id!.toLowerCase() === search.toLowerCase()
         || item.title.toLowerCase().includes(search.toLowerCase())
-        || (item.departmentId as DepartmentDocument).name.toLowerCase().includes(search.toLowerCase())
-        || (item.departmentId as DepartmentDocument).name.toLowerCase() === search.toLowerCase()
+        || (item.departmentId as DepartmentDocument)?.name.toLowerCase().includes(search.toLowerCase())
+        || (item.departmentId as DepartmentDocument)?.name.toLowerCase() === search.toLowerCase()
         || ((new Date(item.createdAt as string)).toLocaleDateString()).toLowerCase().includes(search.toLowerCase())
         || ((new Date(item.createdAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: '2-digit', day: '2-digit' })).toLowerCase().includes(search.toLowerCase())
         || ((new Date(item.createdAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })).toLowerCase().includes(search.toLowerCase())
@@ -56,9 +56,9 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
         || ((new Date(item.updatedAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: 'short' })).toLowerCase().includes(search.toLowerCase())
       ))
     }
-    return filtered.map((item) => ({
+    return filtered.map((item: any) => ({
       ...item,
-      isRead: doctype === DocumentType.Memo
+      isRead: !!item.userId ? item.isRead : doctype === DocumentType.Memo
         ? [...(myUser?.readMemos || [])]?.includes(item._id!.toString())
         : [...(myUser?.readLetters || [])]?.includes(item._id!.toString()),
     }));
@@ -68,18 +68,25 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
     const url = new URL('/print', window.location.origin)
     url.searchParams.set('doc', doctype)
     url.searchParams.set('id', selectedMemo?._id!)
-    url.searchParams.set('role', Roles.Faculty)
+    url.searchParams.set('role', Roles.Admin)
     url.searchParams.set('title', selectedMemo?.title!)
+    if ((selectedMemo as any)?.userId) {
+      url.searchParams.set('isForIndividual', 'true');
+    }
+    console.log(url, url.toString())
     const docWindow = window.open(url, '_blank', 'width=1000,height=1000, menubar=no, toolbar=no, scrollbars=yes, location=no, status=no');
     if (docWindow) {
       docWindow.onbeforeunload = () => window.location.reload();
     }
   }, [doctype, selectedMemo?._id, selectedMemo?.title])
 
-  const onReadMemoLetter = useCallback((memoLetter: (MemoDocument & { isPreparedByMe: boolean, isRead: boolean })|(LetterDocument & { isPreparedByMe: boolean, isRead: boolean })) => {
+  const onReadMemoLetter = useCallback((memoLetter: (MemoDocument & { isPreparedByMe: boolean, isRead: boolean, userId?: string })|(LetterDocument & { isPreparedByMe: boolean, isRead: boolean, userId?: string })) => {
     const url = new URL('/' + Roles.Faculty + '/api/memo/read', window.location.origin)
     url.searchParams.set('id', memoLetter._id!)
     url.searchParams.set('doctype', doctype)
+    if (!!memoLetter?.userId) {
+      url.searchParams.set('isForIndividual', "true");
+    }
     fetch(url)
       .then((response) => response.json())
       .then(({ success, error }) => {
@@ -107,8 +114,8 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
           <div className="p-3 grid grid-cols-1 lg:grid-cols-3 lg:min-w-[750px] gap-3">
             { loading && <LoadingComponent /> }
             { !loading && filteredData.length === 0 && <div className="text-center">No approved {doctype === DocumentType.Memo ? "memorandum" : "letter"}.</div>}
-            { !loading && filteredData.map((memoLetter, i) => (
-              <ThumbnailItemWithDepartment onClick={() => onReadMemoLetter(memoLetter)} preparedByMe={memoLetter.isPreparedByMe} isRead={memoLetter.isRead} key={memoLetter._id} thumbnailSrc="/thumbnail-document.png" department={(memoLetter.departmentId as DepartmentDocument).name} label={memoLetter.title} createdAt={memoLetter.createdAt} updatedAt={memoLetter.updatedAt} />
+            { !loading && filteredData.map((memoLetter: any, i: any) => (
+              <ThumbnailItemWithDepartment onClick={() => onReadMemoLetter(memoLetter)} preparedByMe={false} isRead={memoLetter.isRead} key={memoLetter._id} thumbnailSrc="/thumbnail-document.png" department={(memoLetter.departmentId as DepartmentDocument)?.name} label={memoLetter.title} createdAt={memoLetter.createdAt} updatedAt={memoLetter.updatedAt} />
             ))}
           </div>
         </div>
@@ -116,7 +123,7 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
     </div>
     <OCSModal title={selectedMemo?.title} open={!!selectedMemo} onClose={onBack}>
       <div className={clsx("min-w-[" + (8.5 * 96) + "px]", "max-w-[" + (8.5 * 96) + "px]", "min-h-[" + (1 * 96) + "px]")}>
-        {<ParseHTMLTemplate role={Roles.Faculty} htmlString={selectedMemo?.content || ''} memoLetterId={selectedMemo?._id} showApprovedSignatories />}
+        {<ParseHTMLTemplate isForIndividual={!!(selectedMemo as any)?.userId} role={Roles.Faculty} htmlString={selectedMemo?.content || ''} memoLetterId={selectedMemo?._id} showApprovedSignatories />}
       </div>
       <hr className="border w-full h-[1px] my-2" />
       <div className="w-full flex justify-end items-center gap-x-3 pr-2">

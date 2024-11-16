@@ -1,3 +1,4 @@
+import { HighestPosition } from './types';
 export interface Documents {
   _id?: string
   createdAt?: Date|string|null
@@ -34,6 +35,7 @@ export interface UserDocument extends Documents {
   employeeId: string
   password: string
   role: Roles
+  highestPosition: HighestPosition;
   email: string
   prefixName?: string
   suffixName?: string
@@ -62,6 +64,7 @@ export enum DocumentType {
 
 export interface TemplateDocument extends Documents {
   title: string
+  isForIndividual: boolean
   documentType: DocumentType
   content: string
   validity: Date|string
@@ -87,10 +90,27 @@ export interface MemoDocument extends Documents {
   signatureApprovals: SignatureApprovals[]
 }
 
+export interface MemoIndividualDocument extends Documents {
+  userId: UserDocument|string
+  title: string
+  content: string
+  preparedBy: UserDocument|string
+}
+
 export interface LetterDocument extends Documents {
   departmentId: DepartmentDocument|string
   title: string
   content: string
   preparedBy: UserDocument|string
-  signatureApprovals: SignatureApprovals[]
+  isRevoked: boolean
+  isRead: boolean
+}
+
+export interface LetterIndividualDocument extends Documents {
+  userId: UserDocument|string
+  title: string
+  content: string
+  preparedBy: UserDocument|string
+  isRevoked: boolean
+  isRead: boolean
 }

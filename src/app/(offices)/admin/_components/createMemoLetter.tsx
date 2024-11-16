@@ -2,10 +2,12 @@
 import LoadingComponent from "@/components/loading";
 import OCSModal from "@/components/ocsModal";
 import ParseHTMLTemplate from "@/components/parseHTML";
-import { DepartmentDocument, DocumentType, ESignatureDocument, Roles, TemplateDocument } from "@/lib/modelInterfaces";
+import { DepartmentDocument, DocumentType, ESignatureDocument, Roles, TemplateDocument, UserDocument } from "@/lib/modelInterfaces";
+import { HighestPosition } from "@/lib/types";
 import clsx from "clsx";
 import { KeyEscapeIcon, PlusIcon } from "evergreen-ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSession } from '../../../../lib/useSession';
 import CreateFromTemplate from "./createFromTemplate";
 import ThumbnailItem from "./thumbnailItem";
 
@@ -14,9 +16,18 @@ export default function CreateMemoLetterFromTemplate({
 }: Readonly<{
   doctype: DocumentType
 }>) {
+  const { data: sessionData } = useSession({ redirect: false });
   const [loading, setLoading] = useState<boolean>(true)
   const [departments, setDepartments] = useState<DepartmentDocument[]>([])
+  const [employees, setEmployees] = useState<UserDocument[]>([])
+  const [individualTemplates, setIndividualTemplates] = useState<TemplateDocument[]>([])
   const [selectedDepartment, setSelectedDepartment] = useState<DepartmentDocument>()
+  const [selectedIndividual, setSelectedIndividual] = useState<UserDocument>()
+
+  const isHighestPosition = useMemo(() => {
+    const highestPosition = sessionData?.user?.highestPosition as HighestPosition|undefined;
+    return highestPosition === HighestPosition.President || highestPosition === HighestPosition.VicePresident;
+  }, [sessionData])
 
   const getDepartmentData = useCallback(() => {
     setLoading(true)
@@ -28,8 +39,28 @@ export default function CreateMemoLetterFromTemplate({
       .catch((e) => { console.log(e); setLoading(false) })
   }, [doctype])
 
+  const getIndividualTemplates = useCallback(() => {
+    setLoading(true)
+    const url = new URL('/' + Roles.Admin + '/api/template/individuals', window.location.origin)
+    fetch(url)
+      .then(res => res.json())
+      .then(({ result }) => { setIndividualTemplates(result); setLoading(false) })
+      .catch((e) => { console.log(e); setLoading(false) })
+  }, [])
+
+  const getEmployeesData = useCallback(() => {
+    setLoading(true)
+    const url = new URL('/' + Roles.Admin + '/api/account/employees', window.location.origin)
+    fetch(url)
+      .then(res => res.json())
+      .then(({ result }) => { setEmployees(result); setLoading(false) })
+      .catch((e) => { console.log(e); setLoading(false) })
+  }, [])
+
   useEffect(() => {
     getDepartmentData()
+    getIndividualTemplates()
+    getEmployeesData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [doctype])
 
@@ -42,6 +73,7 @@ export default function CreateMemoLetterFromTemplate({
     getDepartmentData();
     setSelectedDepartment(undefined)
     setSelectedTemplate(undefined)
+    setSelectedIndividual(undefined)
     setOpenAddTemplate(false)
   }, [getDepartmentData])
 
@@ -55,22 +87,66 @@ export default function CreateMemoLetterFromTemplate({
       .catch(console.log)
   }, [])
 
+  const onChangeSelectedIndividual = useCallback((id: string) => {
+    setSelectedIndividual(employees.find((d) => d._id === id) || undefined)
+  }, [employees])
+
   return (<>
     <div className="w-full">
-      <h1 className="w-fit mx-auto text-2xl mt-4 font-[500]">Department {doctype === DocumentType.Memo ? "Memorandum" : "Letter"} Templates</h1>
-      {!!selectedDepartment && (<>
-        <div className="border border-gray-300 bg-white p-4 rounded-xl mt-4 mx-4">
-          <h2 className="text-2xl font-[500]">{selectedDepartment.name}</h2>
-          <p className="text-gray-600">Number of {doctype === DocumentType.Memo ? "Memorandums" : "Letters"}: {selectedDepartment[doctype === DocumentType.Memo ? 'memoTemplates' : 'letterTemplates'].length}</p>
-          <button type="button" onClick={() => onBack()} className="px-2 py-1 border rounded bg-gray-300 text-black my-2 mr-2"><KeyEscapeIcon display="inline" /> Back</button>
-          <button type="button" onClick={() => setOpenAddTemplate(true)} className="px-2 py-1 border rounded bg-sky-300 text-black font-[500] my-2"><PlusIcon display="inline" /> Create from empty template</button>
+      <h1 className="w-fit mx-auto text-2xl mt-4 font-[500]">{doctype === DocumentType.Memo ? "Memorandum" : "Letter"} Templates</h1>
+      {!!selectedDepartment && (
+        <>
+          <div className="border border-gray-300 bg-white p-4 rounded-xl mt-4 mx-4">
+            <h2 className="text-2xl font-[500]">{selectedDepartment.name}</h2>
+            <p className="text-gray-600">Number of {doctype === DocumentType.Memo ? "Memorandums" : "Letters"}: {selectedDepartment[doctype === DocumentType.Memo ? 'memoTemplates' : 'letterTemplates'].length}</p>
+            <button type="button" onClick={() => onBack()} className="px-2 py-1 border rounded bg-gray-300 text-black my-2 mr-2"><KeyEscapeIcon display="inline" /> Back</button>
+            <button type="button" onClick={() => setOpenAddTemplate(true)} className="px-2 py-1 border rounded bg-sky-300 text-black font-[500] my-2"><PlusIcon display="inline" /> Create from empty template</button>
+          </div>
+        </>
+      )}
+      {!!selectedIndividual && (
+        <>
+          <div className="border border-gray-300 bg-white p-4 rounded-xl mt-4 mx-4">
+            <h2 className="text-2xl font-[500]">{doctype === DocumentType.Memo ? "Memorandums" : "Letters"} for {selectedIndividual.firstName + " " + selectedIndividual.lastName}</h2>
+            <p className="text-gray-600">Number of {doctype === DocumentType.Memo ? "Memorandums" : "Letters"}: {individualTemplates.length}</p>
+            <button type="button" onClick={() => onBack()} className="px-2 py-1 border rounded bg-gray-300 text-black my-2 mr-2"><KeyEscapeIcon display="inline" /> Back</button>
+            <button type="button" onClick={() => setOpenAddTemplate(true)} className="px-2 py-1 border rounded bg-sky-300 text-black font-[500] my-2"><PlusIcon display="inline" /> Create from empty template</button>
+          </div>
+        </>
+      )}
+      { !openAddTemplate && (<>
+        <div className="w-full mt-2">
+          {loading && <div className="col-span-2 min-h-[200px]"><LoadingComponent /></div>}
+          <h1 className="text-center">Send {doctype === DocumentType.Memo ? "Memorandum" : "Letter"} to Individual</h1>
+          {!loading && !selectedIndividual && employees?.length === 0 && <p className="text-center text-gray-600">No Employees/Faculty/Staff</p>}
+          {!loading && !selectedIndividual && (
+            <div className="w-full">
+              <select className="px-3 py-2 bg-white rounded shadow mx-auto flex mt-2" value={(selectedIndividual as UserDocument|undefined)?._id} onChange={(e) => onChangeSelectedIndividual(e.target.value)} >
+                <option value="">-- Select Individual --</option>
+                {employees?.map((employee) => (
+                  <option key={employee._id + "Employee"} value={employee._id}>{employee.firstName} {employee.lastName}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          {!loading && !!selectedIndividual && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8 border rounded-xl mt-4 mx-4">
+              {!loading && !!selectedIndividual && individualTemplates.length === 0 && <p className="text-center text-gray-600">No Individual Templates</p>}
+              {!loading && !!selectedIndividual && individualTemplates.map((template: TemplateDocument) => (
+                <ThumbnailItem key={template._id} thumbnailSrc={"/thumbnail-document.png"} onClick={() => setSelectedTemplate(template)} label={template.title} createdAt={template.createdAt} updatedAt={template.updatedAt} />
+              ))}
+            </div>
+          )}
         </div>
-      </>
+        {!loading && (!selectedIndividual && !selectedDepartment) && (<div className="h-[50px] relative flex items-center justify-center">
+          <div className="w-fit">OR</div>
+        </div>
+        )}
+      </>)}
+      { (!!selectedDepartment && !selectedIndividual) && !openAddTemplate && (
+        <h1 className="pl-4 mt-8 text-xl font-[600]">Create {doctype === DocumentType.Memo ? "Memorandum" : "Letter"} from template</h1>
       )}
-      {!!selectedDepartment && !openAddTemplate && (
-        <h1 className="pl-4 mt-8 text-xl font-[600]">Create memorandum from template</h1>
-      )}
-      {!openAddTemplate && (
+      { !openAddTemplate && !selectedIndividual && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8 border rounded-xl mt-4 mx-4">
           {loading && <div className="col-span-2 min-h-[200px]"><LoadingComponent /></div>}
           {!loading && !selectedDepartment && departments?.length === 0 && <p className="text-center text-gray-600">No Departments</p>}
@@ -88,8 +164,8 @@ export default function CreateMemoLetterFromTemplate({
           ))}
         </div>
       )}
-      { openAddTemplate && !!selectedDepartment && (
-        <CreateFromTemplate departmentId={selectedDepartment?._id} template={selectedTemplate} doctype={doctype} signatoriesList={signatoriesList} onSave={(templateId: string) => onBack()} onCancel={onBack} />
+      { !!openAddTemplate && (!!selectedDepartment || !!selectedIndividual) && (
+        <CreateFromTemplate isHighestPosition={isHighestPosition} individual={selectedIndividual} departmentId={selectedDepartment?._id} template={selectedTemplate} doctype={doctype} signatoriesList={signatoriesList} onSave={(templateId: string) => onBack()} onCancel={onBack} />
       )}
     </div>
     <OCSModal title={selectedTemplate?.title} open={!!selectedTemplate && !openAddTemplate} onClose={() => !openAddTemplate && setSelectedTemplate(undefined)}>

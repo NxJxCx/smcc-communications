@@ -6,7 +6,7 @@ import { DocumentType, Roles } from "@/lib/modelInterfaces"
 import { useEffect, useState } from "react"
 import PrintButton from "./printButton"
 
-export default function Print({ title, role, id, doctype }: { title: string, role: Roles, id: string, doctype: DocumentType|string }) {
+export default function Print({ title, role, id, doctype, isForIndividual }: { title: string, role: Roles, id: string, doctype: DocumentType|string, isForIndividual?: boolean }) {
   const [loading, setLoading] = useState(true)
   const [content, setContent] = useState<string>('<p>Loading Content...</p>')
   const [isError, setError] = useState<boolean>(false)
@@ -15,9 +15,12 @@ export default function Print({ title, role, id, doctype }: { title: string, rol
     const url = new URL('/' + role + '/api/print/content/' + id, window.location.origin)
     url.searchParams.append('role', role)
     url.searchParams.append('doctype', doctype)
+    if (isForIndividual) {
+      url.searchParams.append('isForIndividual', 'true');
+    }
     fetch(url)
       .then(response => response.json())
-      .then(({ success, error }) => { setContent(success); error && setError(true); setLoading(false) })
+      .then(({ success, error }) => { console.log("success", success); setContent(success); error && setError(true); setLoading(false) })
       .catch((e) => { console.log("ERROR:", e); setError(true); setLoading(false)})
   }, [doctype, id, role])
 
@@ -30,7 +33,7 @@ export default function Print({ title, role, id, doctype }: { title: string, rol
     <div className="min-h-screen w-full flex items-center justify-center">Print content not found</div>
   ) : (
     <>
-      <ParseHTMLTemplate role={role} htmlString={content} memoLetterId={id} showApprovedSignatories print />
+      <ParseHTMLTemplate role={role} htmlString={content} memoLetterId={id} showApprovedSignatories print isForIndividual={isForIndividual} />
       <PrintButton />
     </>
   )

@@ -4,6 +4,7 @@ import { ActionResponseType, addUserAccount } from "@/actions/superadmin";
 import { FormButton } from "@/components/forms/button";
 import OCSModal from "@/components/ocsModal";
 import { Roles } from "@/lib/modelInterfaces";
+import { HighestPosition } from "@/lib/types";
 import { toaster } from "evergreen-ui";
 import { useEffect, useRef, useState } from "react";
 import { useFormState } from "react-dom";
@@ -50,6 +51,12 @@ export default function AddAdminAccountModal({
         <input type="text" name="employeeId" placeholder="Employee ID" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} className="px-2 py-1 rounded bg-white border border-slate-400" required />
         {exists && <div className="text-red-500 text-xs mt-1 w-full">Employee ID already exists</div>}
         <input type="email" name="email" placeholder="Email Address" className="px-2 py-1 rounded bg-white border border-slate-400" required />
+        <select name="highestPosition" className="px-2 py-1 rounded bg-white border border-slate-400" required>
+          <option value="">-- Select Position --</option>
+          <option value={HighestPosition.Admin}>Admin/Dean</option>
+          <option value={HighestPosition.President}>President</option>
+          <option value={HighestPosition.VicePresident}>Vice President</option>
+        </select>
         <input type="text" name="prefixName" placeholder="Prefix Name e.g: Rev. Fr." className="px-2 py-1 rounded bg-white border border-slate-400" />
         <input type="text" name="firstName" placeholder="First Name" className="px-2 py-1 rounded bg-white border border-slate-400" required />
         <input type="text" name="middleName" placeholder="Middle Name" className="px-2 py-1 rounded bg-white border border-slate-400" />

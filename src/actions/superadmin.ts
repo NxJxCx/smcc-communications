@@ -1,6 +1,6 @@
 'use server';
 import connectDB from "@/lib/database";
-import { DocumentType, Roles } from "@/lib/modelInterfaces";
+import { DocumentType, Roles, UserDocument } from "@/lib/modelInterfaces";
 import Department from "@/lib/models/Department";
 import ESignature from "@/lib/models/ESignature";
 import Template from "@/lib/models/Template";
@@ -100,6 +100,7 @@ export async function addUserAccount(userRole: Roles, prevState: ActionResponseT
       role: userRole,
       employeeId: formData.get('employeeId'),
       email: formData.get('email'),
+      highestPosition: formData.get('highestPosition'),
       prefixName: formData.get('prefixName') || '',
       suffixName: formData.get('suffixName') || '',
       firstName: formData.get('firstName'),
@@ -156,6 +157,38 @@ export async function removeAccountDepartment({ id, departmentId }: { id: string
   }
 }
 
+export async function removeAdminSignature(employeeId: string)
+{
+  await connectDB()
+  try {
+    const session = await getSession(role)
+    if (!session) {
+      return {
+        error: 'Invalid Session'
+      }
+    }
+    if (!employeeId) {
+      return {
+        error: 'Invalid Account ID'
+      }
+    }
+    const admin = await User.findOne({ employeeId }).lean<UserDocument>().exec()
+    if (!admin) {
+      throw new Error("Admin not found")
+    }
+    const esignature = await ESignature.deleteOne({ adminId: admin._id }, { runValidators: true }).exec()
+    if (esignature.acknowledged && esignature.deletedCount > 0) {
+      return {
+        success: 'Admin signature removed successfully'
+      }
+    }
+  } catch (e) {}
+  return {
+    error: 'Failed to remove admin signature'
+  }
+}
+
+
 export async function updateDepartment(id: string|undefined, prevState: ActionResponseType, formData: FormData): Promise<ActionResponseType>
 {
   await connectDB()
@@ -210,6 +243,7 @@ export async function updateAccount(id: string|undefined, prevState: ActionRespo
     const data = {
       $set: {
         email: formData.get('email'),
+        highestPosition: formData.get('highestPosition'),
         prefixName: formData.get('prefixName') || '',
         suffixName: formData.get('suffixName') || '',
         firstName: formData.get('firstName'),
@@ -394,6 +428,41 @@ export async function saveTemplate(departmentId: string, doctype: DocumentType, 
   }
 }
 
+export async function saveIndividualTemplate(formData: FormData): Promise<ActionResponseType & { templateId?: string }>
+{
+  await connectDB()
+  try {
+    const session = await getSession(Roles.SuperAdmin)
+    if (!!session?.user) {
+      const content = formData.get('content')
+      const title = formData.get('title')
+      const validity = new Date()
+      validity.setFullYear(validity.getFullYear() + 1)
+      if (!content) {
+        return {
+          error: 'Template should not be empty'
+        }
+      }
+      const template = await Template.create({
+        title,
+        isForIndividual: true,
+        content: content,
+        validity: validity,
+      })
+      if (template?._id) {
+        return {
+          success: 'Template Successfully Saved',
+          templateId: template._id.toHexString()
+        }
+      }
+    }
+  } catch (e) {
+    console.log(e)
+  }
+  return {
+    error: 'Failed to save template'
+  }
+}
 
 export async function updateTemplate(templateId: string, doctype: DocumentType, formData: FormData): Promise<ActionResponseType>
 {
