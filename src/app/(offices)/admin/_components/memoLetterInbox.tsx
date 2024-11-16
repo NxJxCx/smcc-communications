@@ -11,12 +11,12 @@ import Swal from "sweetalert2";
 import ThumbnailItemWithDepartment from "./thumbnailItemWithDepartment";
 
 export default function MemoLetterInbox({ doctype, searchParam, showRejected = false }: Readonly<{ doctype: DocumentType, searchParam: string, showRejected?: boolean }>) {
-  const [data, setData] = useState<(MemoDocument & { isPreparedByMe: boolean; isPending: boolean; isRejected: boolean; })[]|(LetterDocument & { isPreparedByMe: boolean; isPending: boolean; isRejected: boolean; })[]>([]);
+  const [data, setData] = useState<(MemoDocument & { isPreparedByMe: boolean; isPending: boolean; isRejected: boolean; }|any)[]|(LetterDocument & { isPreparedByMe: boolean; isPending: boolean; isRejected: boolean; }|any)[]>([]);
   const [hideRejected, setHideRejected] = useState(!showRejected);
   const [hidePreparedByMe, setHidePreparedByMe] = useState(true);
   const [hidePending, setHidePending] = useState(true);
   const [loading, setLoading] = useState(true);
-  const [selectedMemo, setSelectedMemo] = useState<(MemoDocument|LetterDocument) & { isPreparedByMe: boolean; isPending: boolean; isRejected: boolean; }>();
+  const [selectedMemo, setSelectedMemo] = useState<(MemoDocument|LetterDocument) & { isPreparedByMe: boolean; isPending: boolean; isRejected: boolean; }|any>();
   const [search, setSearch] = useState<string>(searchParam || '');
   const isRejectedMemo = useMemo(() => selectedMemo && selectedMemo.isRejected, [selectedMemo])
   const isPreparedByMe = useMemo(() => selectedMemo && selectedMemo.isPreparedByMe, [selectedMemo])
