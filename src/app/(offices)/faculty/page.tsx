@@ -1,5 +1,5 @@
-import DashboardPage from "./_components/dashboard";
+import NotificationsPage from "@/components/notifications/notification-page-component";
 
 export default function Page() {
-  return <DashboardPage />
+  return <NotificationsPage />
 }
