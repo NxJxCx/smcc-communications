@@ -138,6 +138,23 @@ export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentD
     }
   }, [editorRef, getFullName, signatoriesList, sessionData?.user?._id])
 
+
+  const onAddHorizontal = useCallback(function () {
+    editorRef.current?.insertContent(
+      jsxToString(
+        <div>
+          <hr
+            style={{
+              borderBottom: "2px solid black",
+              height: "1px",
+            }}
+          />
+        </div>
+      )
+    );
+  }, [editorRef])
+
+
   const handleFilePicker = (cb: any, value: any, meta: any) => {
     const input = document.createElement('input');
     input.setAttribute('type', 'file');
@@ -177,7 +194,7 @@ export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentD
         ]}
         toolbar={'undo redo | fontfamily fontsize lineheight image table | ' + (withSignatories ? 'addAdminSignatory ' : '') + (withPreparedBy ? 'addPreparedBy ' : '') + 'saveAsTemplate | ' +
             'bold italic underline forecolor backcolor | alignleft aligncenter ' +
-            'alignright alignjustify | bullist numlist outdent indent | ' +
+            'alignright alignjustify | bullist numlist outdent indent | addHorizontal ' +
             'removeformat | help'}
         init={{
           height: size.height, // 11 inches
@@ -189,6 +206,11 @@ export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentD
               tooltip: 'Save',
               onAction: onSaveAsTemplate,
             });
+            editor.ui.registry.addButton("addHorizontal", {
+              icon: 'line',
+              tooltip: 'Add horizontal line',
+              onAction: onAddHorizontal
+            })
             if (withSignatories) {
               editor.ui.registry.addButton("addAdminSignatory", {
                 icon: 'edit-block',
