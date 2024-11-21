@@ -6,7 +6,7 @@ import { DepartmentDocument, DocumentType, LetterDocument, MemoDocument, Roles, 
 import clsx from "clsx";
 import { PrintIcon, RefreshIcon } from "evergreen-ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import ThumbnailItemWithDepartment from "./thumbnailItemWithDepartment";
+import ThumbnailItemWithDepartmentReceive from "./thumbnailItemWithDepartmentReceive";
 
 export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doctype: DocumentType, searchParam: string }>) {
   const [data, setData] = useState<(MemoDocument & { isPreparedByMe: boolean, isRead: boolean })[]|(LetterDocument & { isPreparedByMe: boolean, isRead: boolean })[]>([]);
@@ -14,7 +14,7 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
   const [selectedMemo, setSelectedMemo] = useState<(MemoDocument|LetterDocument) & { isPreparedByMe: boolean }>();
   const [myUser, setMyUser] = useState<UserDocument>()
   const getData = useCallback(() => {
-    const url = new URL('/' + Roles.Faculty + '/api/memo', window.location.origin)
+    const url = new URL('/' + Roles.Admin + '/api/memo/receive', window.location.origin)
     url.searchParams.set('doctype', doctype)
     setLoading(true)
     fetch(url)
@@ -70,9 +70,7 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
     url.searchParams.set('id', selectedMemo?._id!)
     url.searchParams.set('role', Roles.Admin)
     url.searchParams.set('title', selectedMemo?.title!)
-    if ((selectedMemo as any)?.userId) {
-      url.searchParams.set('isForIndividual', 'true');
-    }
+    url.searchParams.set('isForIndividual', 'true');
     console.log(url, url.toString())
     const docWindow = window.open(url, '_blank', 'width=1000,height=1000, menubar=no, toolbar=no, scrollbars=yes, location=no, status=no');
     if (docWindow) {
@@ -81,12 +79,10 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
   }, [doctype, selectedMemo])
 
   const onReadMemoLetter = useCallback((memoLetter: (MemoDocument & { isPreparedByMe: boolean, isRead: boolean, userId?: string })|(LetterDocument & { isPreparedByMe: boolean, isRead: boolean, userId?: string })) => {
-    const url = new URL('/' + Roles.Faculty + '/api/memo/read', window.location.origin)
+    const url = new URL('/' + Roles.Admin + '/api/memo/receive/read', window.location.origin)
     url.searchParams.set('id', memoLetter._id!)
     url.searchParams.set('doctype', doctype)
-    if (!!memoLetter?.userId) {
-      url.searchParams.set('isForIndividual', "true");
-    }
+    url.searchParams.set('isForIndividual', "true");
     fetch(url)
       .then((response) => response.json())
       .then(({ success, error }) => {
@@ -99,7 +95,7 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
 
   return (<>
     <div className="p-6">
-      <h1 className="text-2xl font-[500]">{doctype === DocumentType.Memo ? "Approved Memorandum" : "Approved Letter"}</h1>
+      <h1 className="text-2xl font-[500]">{doctype === DocumentType.Memo ? "Received Memorandum" : "Received Letter"}</h1>
       <div className="mt-3 flex flex-col lg:flex-row lg:flex-betweeen flex-wrap w-full min-w-[300px] lg:min-w-[800px] bg-white p-4 rounded-t-lg">
         <div className="flex flex-wrap">
           <label htmlFor="searchMemo" className="font-[500] mr-2 items-center flex">Search:</label>
@@ -115,7 +111,7 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
             { loading && <LoadingComponent /> }
             { !loading && filteredData.length === 0 && <div className="text-center">No approved {doctype === DocumentType.Memo ? "memorandum" : "letter"}.</div>}
             { !loading && filteredData.map((memoLetter: any, i: any) => (
-              <ThumbnailItemWithDepartment onClick={() => onReadMemoLetter(memoLetter)} preparedByMe={false} isRead={memoLetter.isRead} key={memoLetter._id} thumbnailSrc="/thumbnail-document.png" department={(memoLetter.departmentId as DepartmentDocument)?.name} label={memoLetter.title} createdAt={memoLetter.createdAt} updatedAt={memoLetter.updatedAt} />
+              <ThumbnailItemWithDepartmentReceive onClick={() => onReadMemoLetter(memoLetter)} preparedByMe={false} isRead={memoLetter.isRead} key={memoLetter._id} thumbnailSrc="/thumbnail-document.png" department={(memoLetter.departmentId as DepartmentDocument)?.name} label={memoLetter.title} createdAt={memoLetter.createdAt} updatedAt={memoLetter.updatedAt} />
             ))}
           </div>
         </div>
@@ -123,7 +119,7 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
     </div>
     <OCSModal title={selectedMemo?.title} open={!!selectedMemo} onClose={onBack}>
       <div className={clsx("min-w-[" + (8.5 * 96) + "px]", "max-w-[" + (8.5 * 96) + "px]", "min-h-[" + (1 * 96) + "px]")}>
-        {<ParseHTMLTemplate isForIndividual={!!(selectedMemo as any)?.userId} role={Roles.Faculty} htmlString={selectedMemo?.content || ''} memoLetterId={selectedMemo?._id} showApprovedSignatories />}
+        {<ParseHTMLTemplate isForIndividual={!!(selectedMemo as any)?.userId} role={Roles.Admin} htmlString={selectedMemo?.content || ''} memoLetterId={selectedMemo?._id} showApprovedSignatories />}
       </div>
       <hr className="border w-full h-[1px] my-2" />
       <div className="w-full flex justify-end items-center gap-x-3 pr-2">

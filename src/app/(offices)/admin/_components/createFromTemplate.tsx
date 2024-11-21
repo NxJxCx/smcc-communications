@@ -114,7 +114,7 @@ export default function CreateFromTemplate({ departmentId, individual, template,
         {doctype === DocumentType.Memo ? 'Memorandum' : 'Letter'} - {template?.title || "(new)"}
         <button type="button" onClick={() => onCancel()} className="px-2 py-1 rounded bg-gray-300 text-black ml-4 font-normal text-sm"><CrossIcon display="inline" /> Cancel</button>
       </h2>
-      <OCSTinyMCE editorRef={editorRef} signatoriesList={signatoriesList} initialContentData={template?.content} onSave={onSaveAsTemplate} withPreparedBy />
+      <OCSTinyMCE editorRef={editorRef} signatoriesList={signatoriesList} initialContentData={template?.content} onSave={onSaveAsTemplate} withPreparedBy withSignatories={!individual?._id} />
     </div>
   );
 }

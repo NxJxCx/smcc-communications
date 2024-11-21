@@ -16,10 +16,10 @@ async function getData(setData: (data: DashboardDataProps) => void) {
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardDataProps>({
-    departmentsCount: <LoadingComponent />,
-    adminAccountsCount: <LoadingComponent />,
-    facultyAccountsCount: <LoadingComponent />,
-    eSignatureCount: <LoadingComponent />,
+    // departmentsCount: <LoadingComponent />,
+    // adminAccountsCount: <LoadingComponent />,
+    // facultyAccountsCount: <LoadingComponent />,
+    // eSignatureCount: <LoadingComponent />,
     totalMemorandumsCount: <LoadingComponent />,
     totalLettersCount: <LoadingComponent />,
   });
@@ -30,7 +30,7 @@ export default function DashboardPage() {
 
   return (
     <div className="px-8 py-4">
-      <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-2 lg:gap-4 mt-8">
+      {/* <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-2 lg:gap-4 mt-8">
         <div className="border h-[130px] bg-white shadow rounded-lg text-wrap">
           <div className="flex flex-nowrap h-full">
             <h1 className="text-4xl min-w-[100px] h-full flex items-center justify-center font-[600] p-6">{data.departmentsCount}</h1>
@@ -55,7 +55,7 @@ export default function DashboardPage() {
             <p className="flex-grow h-full pl-6 items-center justify-start flex border-l">Faculty Accounts</p>
           </div>
         </div>
-      </div>
+      </div> */}
       <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-2 lg:gap-4 mt-3">
         <div className="border h-[130px] bg-white shadow rounded-lg">
           <div className="flex flex-nowrap h-full">

@@ -173,7 +173,8 @@ export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentD
           'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
           'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
           'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount',
-          'image', 'editimage']}
+          'image', 'editimage'
+        ]}
         toolbar={'undo redo | fontfamily fontsize lineheight image table | ' + (withSignatories ? 'addAdminSignatory ' : '') + (withPreparedBy ? 'addPreparedBy ' : '') + 'saveAsTemplate | ' +
             'bold italic underline forecolor backcolor | alignleft aligncenter ' +
             'alignright alignjustify | bullist numlist outdent indent | ' +

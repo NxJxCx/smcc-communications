@@ -155,10 +155,11 @@ export async function saveMemorandumLetterToIndividual(individualId: string, doc
         })
         if (!!memo?._id) {
           try {
+            const href = individual.role === Roles.Admin ? '/' + Roles.Admin + '/memo/receive?id=' + memo._id : '/' + Roles.Faculty + '/memo?id=' + memo._id;
             await addNotification(individual._id!.toString(), {
               title: 'New Memorandum Sent to you',
               message: memo.title + ' for ' + individual.firstName + ' ' + individual.lastName,
-              href: '/' + Roles.Faculty + '/memo?id=' + memo._id
+              href
             })
           } catch (e) {
             console.log(e)
@@ -185,10 +186,11 @@ export async function saveMemorandumLetterToIndividual(individualId: string, doc
           preparedBy,
         })
         try {
+          const href = individual.role === Roles.Admin ? '/' + Roles.Admin + '/letter/receive?id=' + letter._id : '/' + Roles.Faculty + '/letter?id=' + letter._id;
           await addNotification(individual._id!.toString(), {
             title: 'New Memorandum Sent to you',
             message: letter.title + ' for ' + individual.firstName + ' ' + individual.lastName,
-            href: '/' + Roles.Faculty + '/letter?id=' + letter._id
+            href,
           })
         } catch (e) {
           console.log(e)

@@ -2,10 +2,10 @@ import { DepartmentDocument, PhotoFileDocument } from "@/lib/modelInterfaces";
 import { HighestPosition } from "@/lib/types";
 
 export interface DashboardDataProps {
-  departmentsCount: string|number|JSX.Element,
-  adminAccountsCount: string|number|JSX.Element,
-  facultyAccountsCount: string|number|JSX.Element,
-  eSignatureCount: string|number|JSX.Element,
+  // departmentsCount: string|number|JSX.Element,
+  // adminAccountsCount: string|number|JSX.Element,
+  // facultyAccountsCount: string|number|JSX.Element,
+  // eSignatureCount: string|number|JSX.Element,
   totalMemorandumsCount: string|number|JSX.Element,
   totalLettersCount: string|number|JSX.Element,
 }

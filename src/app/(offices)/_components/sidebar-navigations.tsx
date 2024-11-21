@@ -74,6 +74,14 @@ const adminSidebarNavList: any[] = [
     url: '/admin/letter/approved',
   },
   {
+    name: 'Received Memorandums',
+    url: '/admin/memo/receive',
+  },
+  {
+    name: 'Received Letters',
+    url: '/admin/letter/receive',
+  },
+  {
     name: 'Account',
     url: '/admin/account',
   },
@@ -81,7 +89,7 @@ const adminSidebarNavList: any[] = [
 
 const facultySidebarNavList: any[] = [
   {
-    name: 'Dashboard',
+    name: 'Notifications',
     url: '/faculty',
   },
   {
@@ -91,10 +99,6 @@ const facultySidebarNavList: any[] = [
   {
     name: 'Letters',
     url: '/faculty/letter',
-  },
-  {
-    name: 'Notifications',
-    url: '/faculty/notifications',
   },
   {
     name: 'Account',
