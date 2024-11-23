@@ -93,7 +93,7 @@ export default function CreateMemoLetterFromTemplate({
     return !!selectedDepartment ? signatoriesList.filter((signatory: ESignatureDocument & { adminId: UserDocument } | any) => {
       return signatory.adminId.departmentIds?.length > 0 && signatory.adminId.departmentIds.includes(selectedDepartment._id)
     }) : []
-  }, [selectedDepartment]);
+  }, [selectedDepartment, signatoriesList]);
 
   const onChangeSelectedIndividual = useCallback((id: string) => {
     setSelectedIndividual(employees.find((d) => d._id === id) || undefined)
