@@ -11,7 +11,8 @@ export async function GET(request: NextRequest) {
     const session = await getSession(Roles.Admin);
     if (!!session?.user) {
       const signatories = await ESignature.find({}).populate('adminId').exec();
-      const result = JSON.parse(JSON.stringify(signatories))
+      let result = JSON.parse(JSON.stringify(signatories))
+      result = result.filter((r: any) => !!r.adminId)
       return NextResponse.json({ result })
     }
   } catch (e) {

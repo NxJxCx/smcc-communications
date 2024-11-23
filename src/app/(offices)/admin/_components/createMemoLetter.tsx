@@ -83,9 +83,17 @@ export default function CreateMemoLetterFromTemplate({
     const url = new URL('/' + Roles.Admin + '/api/signatories', window.location.origin);
     fetch(url)
       .then(res => res.json())
-      .then(({ result }) => setSignatoriesList(result))
+      .then(({ result }) => {
+        setSignatoriesList(result)
+      })
       .catch(console.log)
   }, [])
+
+  const selectedSignatoriesList = useMemo(() => {
+    return !!selectedDepartment ? signatoriesList.filter((signatory: ESignatureDocument & { adminId: UserDocument } | any) => {
+      return signatory.adminId.departmentIds?.length > 0 && signatory.adminId.departmentIds.includes(selectedDepartment._id)
+    }) : []
+  }, [selectedDepartment]);
 
   const onChangeSelectedIndividual = useCallback((id: string) => {
     setSelectedIndividual(employees.find((d) => d._id === id) || undefined)
@@ -117,9 +125,9 @@ export default function CreateMemoLetterFromTemplate({
       { !openAddTemplate && (<>
         <div className="w-full mt-2">
           {loading && <div className="col-span-2 min-h-[200px]"><LoadingComponent /></div>}
-          <h1 className="text-center">Send {doctype === DocumentType.Memo ? "Memorandum" : "Letter"} to Individual</h1>
-          {!loading && !selectedIndividual && employees?.length === 0 && <p className="text-center text-gray-600">No Employees/Faculty/Staff</p>}
-          {!loading && !selectedIndividual && (
+          {!loading && !!selectedIndividual && !selectedDepartment && <h1 className="text-center">Send {doctype === DocumentType.Memo ? "Memorandum" : "Letter"} to Individual</h1>}
+          {!loading && !selectedIndividual && !selectedDepartment && employees?.length === 0 && <p className="text-center text-gray-600">No Employees/Faculty/Staff</p>}
+          {!loading && !selectedIndividual && !selectedDepartment && (
             <div className="w-full">
               <select className="px-3 py-2 bg-white rounded shadow mx-auto flex mt-2" value={(selectedIndividual as UserDocument|undefined)?._id} onChange={(e) => onChangeSelectedIndividual(e.target.value)} >
                 <option value="">-- Select Individual --</option>
@@ -129,7 +137,7 @@ export default function CreateMemoLetterFromTemplate({
               </select>
             </div>
           )}
-          {!loading && !!selectedIndividual && (
+          {!loading && !!selectedIndividual && !selectedDepartment && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8 border rounded-xl mt-4 mx-4">
               {!loading && !!selectedIndividual && individualTemplates.length === 0 && <p className="text-center text-gray-600">No Individual Templates</p>}
               {!loading && !!selectedIndividual && individualTemplates.map((template: TemplateDocument) => (
@@ -165,7 +173,7 @@ export default function CreateMemoLetterFromTemplate({
         </div>
       )}
       { !!openAddTemplate && (!!selectedDepartment || !!selectedIndividual) && (
-        <CreateFromTemplate isHighestPosition={isHighestPosition} individual={selectedIndividual} departmentId={selectedDepartment?._id} template={selectedTemplate} doctype={doctype} signatoriesList={signatoriesList} onSave={(templateId: string) => onBack()} onCancel={onBack} />
+        <CreateFromTemplate isHighestPosition={isHighestPosition} individual={selectedIndividual} departmentId={selectedDepartment?._id} template={selectedTemplate} doctype={doctype} signatoriesList={selectedSignatoriesList} onSave={(templateId: string) => onBack()} onCancel={onBack} />
       )}
     </div>
     <OCSModal title={selectedTemplate?.title} open={!!selectedTemplate && !openAddTemplate} onClose={() => !openAddTemplate && setSelectedTemplate(undefined)}>
