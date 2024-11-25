@@ -34,7 +34,7 @@ function EmployeeSelection({
 
   useEffect(() => {
     if (photo?.file) {
-      const p = getPhotoURL(photo._id, Buffer.from(photo.file), photo.mimeType)
+      const p = getPhotoURL(photo._id, Buffer.from(photo.file as any), photo.mimeType)
       setPhotoURL(p)
       return () => {
         if (p && p.startsWith('blob:')) {

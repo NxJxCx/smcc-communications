@@ -75,7 +75,7 @@ export default function MyAccountSettings({
   useEffect(() => {
     if (!!(data?.photo as PhotoFileDocument)?.file) {
       const file = data?.photo as PhotoFileDocument
-      const photo = photoBufferToPhoto(Buffer.from(file.file), file.mimeType)
+      const photo = photoBufferToPhoto(Buffer.from(file.file as any), file.mimeType)
       setPhotoImage(photo)
       return () => {
         if (photo && photo.startsWith('blob:')) {

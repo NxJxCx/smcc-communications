@@ -83,7 +83,7 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
     if (docWindow) {
       docWindow.onbeforeunload = () => window.location.reload();
     }
-  }, [doctype, selectedMemo?._id, selectedMemo?.title])
+  }, [doctype, selectedMemo])
 
   const onFacultyReaders = useCallback(() => {
     const url = new URL('/' + Roles.Admin + '/api/memo/read', window.location.origin)
