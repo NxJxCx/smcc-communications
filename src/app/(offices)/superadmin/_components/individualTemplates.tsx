@@ -75,7 +75,7 @@ export default function IndividualTemplates() {
         <EditTemplate template={selectedTemplate} signatoriesList={signatoriesList} onSave={(templateId: string) => onBack()} onCancel={onBack} />
       )}
       { openAddTemplate && !selectedTemplate && (
-        <AddTemplate signatoriesList={signatoriesList} onAdd={(templateId: string) => onBack()} onCancel={onAddCancel} />
+        <AddTemplate withSignatories={false} signatoriesList={signatoriesList} onAdd={(templateId: string) => onBack()} onCancel={onAddCancel} />
       )}
     </div>
     <OCSModal title={selectedTemplate?.title} open={!!selectedTemplate && !openEditTemplate} onClose={() => !openEditTemplate && setSelectedTemplate(undefined)}>

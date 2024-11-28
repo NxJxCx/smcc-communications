@@ -8,7 +8,7 @@ import { CrossIcon, toaster } from 'evergreen-ui';
 import { useCallback, useRef } from 'react';
 import Swal from 'sweetalert2';
 
-export default function AddTemplate({ department, doctype, signatoriesList, onAdd, onCancel }: { department?: DepartmentDocument, doctype?: DocumentType, signatoriesList: ESignatureDocument[], onAdd: (templateId: string) => void, onCancel: () => void }) {
+export default function AddTemplate({ withSignatories, department, doctype, signatoriesList, onAdd, onCancel }: { withSignatories?: boolean, department?: DepartmentDocument, doctype?: DocumentType, signatoriesList: ESignatureDocument[], onAdd: (templateId: string) => void, onCancel: () => void }) {
   const { status } = useSession({ redirect: false })
 
   const editorRef = useRef<any>(null);
@@ -64,7 +64,7 @@ export default function AddTemplate({ department, doctype, signatoriesList, onAd
         Add Individual Template
         <button type="button" onClick={() => onCancel()} className="px-2 py-1 rounded bg-gray-300 text-black ml-4 font-normal text-sm"><CrossIcon display="inline" /> Cancel</button>
       </h2>
-      <OCSTinyMCE editorRef={editorRef} signatoriesList={signatoriesList} onSave={onSaveAsTemplate} />
+      <OCSTinyMCE editorRef={editorRef} signatoriesList={signatoriesList} onSave={onSaveAsTemplate} withPreparedBy={false} withSignatories={!!withSignatories} />
     </div>
   );
 }
