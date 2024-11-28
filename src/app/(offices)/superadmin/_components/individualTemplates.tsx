@@ -72,7 +72,7 @@ export default function IndividualTemplates() {
         </div>
       )}
       {openEditTemplate && !openAddTemplate && !!selectedTemplate && (
-        <EditTemplate template={selectedTemplate} signatoriesList={signatoriesList} onSave={(templateId: string) => onBack()} onCancel={onBack} />
+        <EditTemplate withSignatories={false} template={selectedTemplate} signatoriesList={signatoriesList} onSave={(templateId: string) => onBack()} onCancel={onBack} />
       )}
       { openAddTemplate && !selectedTemplate && (
         <AddTemplate withSignatories={false} signatoriesList={signatoriesList} onAdd={(templateId: string) => onBack()} onCancel={onAddCancel} />

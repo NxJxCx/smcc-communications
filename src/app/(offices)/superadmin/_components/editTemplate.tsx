@@ -8,7 +8,7 @@ import { CrossIcon, toaster } from 'evergreen-ui';
 import { useCallback, useRef } from 'react';
 import Swal from 'sweetalert2';
 
-export default function EditTemplate({ template, doctype, signatoriesList, onSave, onCancel, }: { template?: TemplateDocument, doctype?: DocumentType, signatoriesList: ESignatureDocument[], onSave: (templateId: string) => void, onCancel: () => void }) {
+export default function EditTemplate({ withSignatories, template, doctype, signatoriesList, onSave, onCancel, }: { withSignatories?: boolean, template?: TemplateDocument, doctype?: DocumentType, signatoriesList: ESignatureDocument[], onSave: (templateId: string) => void, onCancel: () => void }) {
   const { status } = useSession({ redirect: false })
 
   const editorRef = useRef<any>(null);
@@ -51,7 +51,7 @@ export default function EditTemplate({ template, doctype, signatoriesList, onSav
         Edit {doctype === DocumentType.Memo ? 'Memorandum' : 'Letter'} Template for {template?.title || "(unknown template)"}
         <button type="button" onClick={() => onCancel()} className="px-2 py-1 rounded bg-gray-300 text-black ml-4 font-normal text-sm"><CrossIcon display="inline" /> Cancel</button>
       </h2>
-      <OCSTinyMCE editorRef={editorRef} signatoriesList={signatoriesList} initialContentData={template?.content} onSave={onSaveAsTemplate} />
+      <OCSTinyMCE editorRef={editorRef} signatoriesList={signatoriesList} initialContentData={template?.content} onSave={onSaveAsTemplate} withPreparedBy={false} withSignatories={!!withSignatories} />
     </div>
   );
 }
