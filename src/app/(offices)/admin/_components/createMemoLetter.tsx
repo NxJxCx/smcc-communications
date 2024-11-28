@@ -90,10 +90,13 @@ export default function CreateMemoLetterFromTemplate({
   }, [])
 
   const selectedSignatoriesList = useMemo(() => {
+    console.log(signatoriesList, sessionData)
     return !!selectedDepartment ? signatoriesList.filter((signatory: ESignatureDocument & { adminId: UserDocument } | any) => {
       return signatory.adminId.departmentIds?.length > 0 && signatory.adminId.departmentIds.includes(selectedDepartment._id)
+    }) : !!selectedIndividual ? signatoriesList.filter((signatory: ESignatureDocument & { adminId: UserDocument } | any) => {
+      return signatory.adminId?._id?.toString() === sessionData?.user?._id?.toString()
     }) : []
-  }, [selectedDepartment, signatoriesList]);
+  }, [selectedDepartment, selectedIndividual, signatoriesList, sessionData]);
 
   const onChangeSelectedIndividual = useCallback((id: string) => {
     setSelectedIndividual(employees.find((d) => d._id === id) || undefined)

@@ -178,7 +178,6 @@ export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentD
 
     input.click();
   };
-
   return (
     <div className={clsx("flex items-start justify-center", "min-w-[" + size.width + "px]", "max-w-[" + size.width + "px]"  , "min-h-[" + size.height + "px]")}>
       <Editor
