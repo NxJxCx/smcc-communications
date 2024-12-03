@@ -56,7 +56,7 @@ export default function Print({ title, role, id, doctype, isForIndividual, isAtt
       )}
       {isAttendance && (
         <div style={{ maxWidth: 8.5 * 96, minHeight: 11 * 96, backgroundColor: "white" }} className="border shadow mx-auto p-[12.2mm]">
-          <div className="w-full text-center pb-4 print:hidden">
+          <div className="w-full text-center pb-4">
             <div className="flex justify-between items-center mb-4">
               <div className="w-20">
                 <Image src="/smcclogo.png" alt="School Logo" className="w-full h-auto" width={100} height={100} />
