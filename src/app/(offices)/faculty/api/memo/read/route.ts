@@ -1,7 +1,7 @@
 'use server';;
 import { addNotification, broadcastNotification } from "@/actions/notifications";
 import connectDB from "@/lib/database";
-import { DocumentType, Roles } from "@/lib/modelInterfaces";
+import { DocumentType, ReadLetterDocument, ReadMemoDocument, Roles } from "@/lib/modelInterfaces";
 import Letter from "@/lib/models/Letter";
 import LetterIndividual from "@/lib/models/LetterIndividual";
 import Memo from "@/lib/models/Memo";
@@ -47,8 +47,8 @@ export async function GET(request: NextRequest) {
           const memoletter = await MemoLetter.findById(id).exec();
           if (!!memoletter) {
             if (doctype === DocumentType.Memo) {
-              if (![...user.readMemos].map((v) => v.toString()).includes(memoletter._id.toString())) {
-                user.readMemos.push(memoletter._id);
+              if (![...user.readMemos].map((v: ReadMemoDocument) => v.memoId?.toString()).includes(memoletter._id.toString())) {
+                user.readMemos.push({ memoId: memoletter._id });
                 await user.save({ runValidators: true });
                 await broadcastNotification({
                   role: Roles.Admin,
@@ -60,8 +60,8 @@ export async function GET(request: NextRequest) {
                 })
               }
             } else {
-              if (![...user.readLetters].map((v) => v.toString()).includes(memoletter._id.toString())) {
-                user.readLetters.push(memoletter._id);
+              if (![...user.readLetters].map((v: ReadLetterDocument) => v.letterId?.toString()).includes(memoletter._id.toString())) {
+                user.readLetters.push({ letterId: memoletter._id });
                 await user.save({ runValidators: true });
                 await broadcastNotification({
                   role: Roles.Admin,

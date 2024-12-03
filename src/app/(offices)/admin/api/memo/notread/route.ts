@@ -20,7 +20,12 @@ export async function GET(request: NextRequest) {
         if (!!memoletter) {
           const memoDepartment = memoletter.departmentId?.toString();
           const filterName = doctype === DocumentType.Memo ? "readMemos" : "readLetters";
-          const faculties = await User.find({ role: Roles.Faculty, departmentIds: { $in: [memoDepartment] }, [filterName]: { $nin: [id.toString()] } }).select('-password -readMemos -readLetters -notification').lean<UserDocument[]>();
+          const memoletterId = doctype === DocumentType.Memo ? "memoId" : "letterId";
+          const faculties = await User.find({
+            role: Roles.Faculty,
+            departmentIds: { $in: [memoDepartment] },
+            [filterName]: { $not: { $elemMatch: { [memoletterId]: id.toString() } } }
+          }).select('-password -readMemos -readLetters -notification').lean<UserDocument[]>();
           return NextResponse.json({ data: faculties });
         }
       }

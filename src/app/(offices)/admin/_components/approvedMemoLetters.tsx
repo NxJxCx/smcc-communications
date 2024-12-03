@@ -85,6 +85,20 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
     }
   }, [doctype, selectedMemo])
 
+  const onPrintAttendance = useCallback((selectedId: string) => {
+    const url = new URL('/print', window.location.origin)
+    url.searchParams.set('doc', doctype)
+    url.searchParams.set('id', selectedId)
+    url.searchParams.set('role', Roles.Admin)
+    url.searchParams.set('title', "Memo/Letter Attendance")
+    url.searchParams.set('type', "attendance")
+    const docWindow = window.open(url, '_blank', 'width=1000,height=1000, menubar=no, toolbar=no, scrollbars=yes, location=no, status=no');
+    if (docWindow) {
+      docWindow.onbeforeunload = () => window.location.reload();
+    }
+  }, [doctype])
+
+
   const onFacultyReaders = useCallback(() => {
     const url = new URL('/' + Roles.Admin + '/api/memo/read', window.location.origin)
     url.searchParams.set('doctype', doctype)
@@ -94,25 +108,32 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
       .then(({ data }) => {
         Swal.fire({
           title: 'Faculty Readers',
+          customClass: {
+            popup: 'w-[1000px]' // Apply the custom class to the popup
+          },
           html: renderToString(
-            <div className="bg-white p-6 rounded-lg shadow-lg max-w-6xl mx-auto">
+            <div className="bg-white p-6 rounded-lg shadow-lg mx-auto w-full">
               <h2 className="text-lg font-semibold text-gray-700 mb-4">Faculty Members Who Read This Memorandum</h2>
               {data.length === 0 ? (
                 <p className="text-center text-gray-500">No faculty members have read this memorandum yet.</p>
               ) : (
-                <div className="overflow-x-auto">
+                <div className="overflow-auto max-h-[400px] min-h-[400px]">
                   <table className="min-w-full table-auto border-collapse">
                     <thead>
                       <tr>
                         <th className="px-4 py-2 text-left text-gray-600 bg-gray-100">Name</th>
                         <th className="px-4 py-2 text-left text-gray-600 bg-gray-100">Email</th>
+                        <th className="px-4 py-2 text-center text-gray-600 bg-gray-100 min-w-[150px]">Date Read</th>
+                        <th className="px-4 py-2 text-center text-gray-600 bg-gray-100 min-w-[150px]">Time Read</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {data.map((faculty: UserDocument) => (
+                      {data.map((faculty: UserDocument & { readAt: string }) => (
                         <tr key={faculty._id} className="border-t">
                           <td className="px-4 py-2">{faculty.prefixName ? `${faculty.prefixName} ` : ''}{faculty.firstName} {faculty.lastName}{faculty.suffixName ? `, ${faculty.suffixName}` : ''}</td>
                           <td className="px-4 py-2">{faculty.email}</td>
+                          <td className="px-4 py-2">{(new Date(faculty.readAt)).toLocaleDateString('en-PH', { year: "numeric", month: "short", day: "numeric" })}</td>
+                          <td className="px-4 py-2">{(new Date(faculty.readAt)).toLocaleTimeString('en-PH', { hour12: true, hour: "numeric", minute: "numeric"})}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -121,10 +142,21 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
               )}
             </div>
           ),
-          confirmButtonText: 'Close',
+          confirmButtonText: renderToString(<div><PrintIcon display="inline" marginRight={8} />Print</div>),
+          showCloseButton: true,
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          cancelButtonText: "Close",
+          reverseButtons: true,
         })
+          .then(({ isConfirmed }: { isConfirmed: boolean }) => {
+            if (isConfirmed) {
+              onPrintAttendance(selectedMemo?._id!)
+            }
+          })
       })
-  }, [doctype, selectedMemo?._id]);
+  }, [doctype, selectedMemo?._id, onPrintAttendance]);
 
   const onFacultyNonReaders = useCallback(() => {
     const url = new URL('/' + Roles.Admin + '/api/memo/notread', window.location.origin)

@@ -51,7 +51,7 @@ export default function ParseHTMLTemplate({ isForIndividual, role, htmlString, s
         resolve(doc.documentElement.innerHTML)
       }
     })
-  }, [role, memoLetterId, htmlString])
+  }, [role, memoLetterId, htmlString, isForIndividual])
 
   const getApprovedSignatures = useCallback(async (htmlDocString: string) => {
     return new Promise((resolve: (value?:any) => void, reject: (error?: any) => void) => {

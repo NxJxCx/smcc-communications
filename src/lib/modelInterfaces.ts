@@ -31,6 +31,14 @@ export enum Roles {
   Faculty = 'faculty',
 }
 
+export interface ReadMemoDocument extends Documents {
+  memoId: string|MemoDocument
+}
+
+export interface ReadLetterDocument extends Documents {
+  letterId: string|LetterDocument
+}
+
 export interface UserDocument extends Documents {
   employeeId: string
   password: string
@@ -42,9 +50,9 @@ export interface UserDocument extends Documents {
   firstName: string
   middleName?: string
   lastName: string
-  departmentIds: DepartmentDocument[]|string[]
-  readMemos: MemoDocument[]|string[]
-  readLetters: LetterDocument[]|string[]
+  departmentIds: DepartmentDocument[]
+  readMemos: ReadMemoDocument[]
+  readLetters: ReadLetterDocument[]
   photo: PhotoFileDocument|string|null
   deactivated: boolean
   notification: NotificationDocument[]

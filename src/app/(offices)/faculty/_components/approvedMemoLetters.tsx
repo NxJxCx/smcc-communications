@@ -2,7 +2,7 @@
 import LoadingComponent from "@/components/loading";
 import OCSModal from "@/components/ocsModal";
 import ParseHTMLTemplate from "@/components/parseHTML";
-import { DepartmentDocument, DocumentType, LetterDocument, MemoDocument, Roles, UserDocument } from "@/lib/modelInterfaces";
+import { DepartmentDocument, DocumentType, LetterDocument, MemoDocument, ReadLetterDocument, ReadMemoDocument, Roles, UserDocument } from "@/lib/modelInterfaces";
 import clsx from "clsx";
 import { PrintIcon, RefreshIcon } from "evergreen-ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -59,8 +59,8 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
     return filtered.map((item: any) => ({
       ...item,
       isRead: !!item.userId ? item.isRead : doctype === DocumentType.Memo
-        ? [...(myUser?.readMemos || [])]?.includes(item._id!.toString())
-        : [...(myUser?.readLetters || [])]?.includes(item._id!.toString()),
+        ? [...(myUser?.readMemos?.map((v: ReadMemoDocument) => v.memoId) || [])]?.includes(item._id!.toString())
+        : [...(myUser?.readLetters?.map((v: ReadLetterDocument) => v.letterId) || [])]?.includes(item._id!.toString()),
     }));
   }, [data, search, myUser, doctype])
 

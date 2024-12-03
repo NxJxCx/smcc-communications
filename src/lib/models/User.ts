@@ -4,6 +4,27 @@ import { hashPassword } from '../hash'
 import { Roles, type UserDocument } from '../modelInterfaces'
 import { HighestPosition } from '../types'
 
+const ReadMemoSchema = new Schema({
+  memoId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Memo',
+    required: [true, 'Memo ID is required'],
+  },
+}, {
+  timestamps: true
+})
+
+const ReadLetterSchema = new Schema({
+  memoId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Letter',
+    required: [true, 'Letter ID is required'],
+  },
+}, {
+  timestamps: true
+})
+
+
 const UserSchema = new Schema({
   employeeId: {
     type: String,
@@ -64,17 +85,11 @@ const UserSchema = new Schema({
     }],
   },
   readMemos: {
-    type: [{
-      type: Schema.Types.ObjectId,
-      ref: 'Memos',
-    }],
+    type: [ReadMemoSchema],
     default: []
   },
   readLetters: {
-    type: [{
-      type: Schema.Types.ObjectId,
-      ref: 'Letters',
-    }],
+    type: [ReadLetterSchema],
     default: []
   },
   photo: {

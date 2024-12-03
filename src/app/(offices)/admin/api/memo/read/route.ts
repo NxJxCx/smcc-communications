@@ -1,6 +1,6 @@
 'use server';;
 import connectDB from "@/lib/database";
-import { DocumentType, Roles, UserDocument } from "@/lib/modelInterfaces";
+import { DocumentType, ReadLetterDocument, ReadMemoDocument, Roles, UserDocument } from "@/lib/modelInterfaces";
 import Letter from "@/lib/models/Letter";
 import Memo from "@/lib/models/Memo";
 import User from "@/lib/models/User";
@@ -19,8 +19,21 @@ export async function GET(request: NextRequest) {
         const memoletter = await MemoLetter.findById(id).exec();
         if (!!memoletter) {
           const filterName = doctype === DocumentType.Memo ? "readMemos" : "readLetters";
-          const faculties = await User.find({ role: Roles.Faculty, [filterName]: { $in: [id.toString()] } }).select('-password -readMemos -readLetters -notification').lean<UserDocument[]>();
-          return NextResponse.json({ data: faculties });
+          const memoletterId = doctype === DocumentType.Memo ? "memoId" : "letterId";
+          const faculties = await User.find({
+            role: Roles.Faculty,
+            [filterName]: { $elemMatch: { [memoletterId]: id.toString() } }
+          }).select('-password -notification').lean<UserDocument[]>();
+          const mapped = faculties.map((f: UserDocument) => ({
+            ...f,
+            readAt: f[filterName]?.find((ml: ReadMemoDocument|ReadLetterDocument) => doctype === DocumentType.Memo
+              ? (ml as ReadMemoDocument).memoId?.toString() === id.toString()
+              : (ml as ReadLetterDocument).letterId?.toString() === id.toString()
+            )?.createdAt,
+            readMemos: undefined,
+            readLetters: undefined
+          }))
+          return NextResponse.json({ data: mapped });
         }
       }
     }
