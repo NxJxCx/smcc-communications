@@ -92,6 +92,34 @@ const UserSchema = new Schema({
     type: [ReadLetterSchema],
     default: []
   },
+  archivedMemos: {
+    type: [{
+      type: Schema.Types.ObjectId,
+      ref: 'Memo',
+    }],
+    default: []
+  },
+  archivedLetters: {
+    type: [{
+      type: Schema.Types.ObjectId,
+      ref: 'Letter',
+    }],
+    default: []
+  },
+  archivedMemoIndividuals: {
+    type: [{
+      type: Schema.Types.ObjectId,
+      ref: 'MemoIndividual',
+    }],
+    default: []
+  },
+  archivedLetterIndividuals: {
+    type: [{
+      type: Schema.Types.ObjectId,
+      ref: 'LetterIndividual',
+    }],
+    default: []
+  },
   photo: {
     type: Schema.Types.ObjectId,
     ref: 'PhotoFile'

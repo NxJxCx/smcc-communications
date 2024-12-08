@@ -1,6 +1,6 @@
 'use server';;
 import connectDB from "@/lib/database";
-import { DocumentType, Roles } from "@/lib/modelInterfaces";
+import { DepartmentDocument, DocumentType, Roles } from "@/lib/modelInterfaces";
 import Department from "@/lib/models/Department";
 import ESignature from "@/lib/models/ESignature";
 import Letter from "@/lib/models/Letter";
@@ -9,16 +9,19 @@ import Memo from "@/lib/models/Memo";
 import MemoIndividual from "@/lib/models/MemoIndividual";
 import User from "@/lib/models/User";
 import { getSession } from "@/lib/session";
+import { isObjectIdOrHexString } from "mongoose";
 import { SignatureApprovals, UserDocument } from '../lib/modelInterfaces';
 import { addNotification, broadcastNotification } from "./notifications";
 import { ActionResponseType } from "./superadmin";
 
 
-export async function saveMemorandumLetter(departmentId: string, doctype: DocumentType, eSignatures: string[], formData: FormData): Promise<ActionResponseType & { memorandumId?: string, letterId?: string }>
+const role = Roles.Admin;
+
+export async function saveMemorandumLetter(departmentId: string, doctype: DocumentType, rejectedId: string|null, cc: string[], eSignatures: string[], formData: FormData): Promise<ActionResponseType & { memorandumId?: string, letterId?: string }>
 {
   await connectDB()
   try {
-    const session = await getSession(Roles.Admin)
+    const session = await getSession(role)
     if (!!session?.user) {
       const preparedBy = session.user._id;
       const department = await Department.findById(departmentId).exec()
@@ -37,19 +40,36 @@ export async function saveMemorandumLetter(departmentId: string, doctype: Docume
       }
       const signatureApprovals = eSignatures.map(signatureId => ({ signature_id: signatureId, approvedDate: null }))
       if (doctype === DocumentType.Memo) {
+        const dept = await Department.findOne({ _id: departmentId }).lean<DepartmentDocument>().exec();
+        const count = await Memo.countDocuments({
+          departmentId
+        }).exec();
+        const deptName = dept?.name.split(' ').filter((v: string) => v?.toLowerCase() !== "and" && v?.toLowerCase() !== "or" && v?.toLowerCase() !== "of" && v?.toLowerCase() !== "the" && v !== "").map((v: string) => v.length === 1 || /[A-Z]/.test(v) ? v?.toUpperCase() : v[0]?.toUpperCase()).join("")
+        const series = `${deptName}${doctype?.[0]?.toUpperCase()}${doctype?.substring(1)?.toLowerCase()}${(count + 1).toString().padStart(3, "0")}_Series`;
         const memo = await Memo.create({
           departmentId,
           title,
-          content: content,
+          series,
+          cc,
+          content,
           preparedBy,
           signatureApprovals
         })
+        console.log("REJECTED ID WAS ", rejectedId);
         if (!!memo?._id) {
+          if (!!rejectedId) {
+            try {
+              const deleted = await Memo.deleteOne({ _id: rejectedId }, { runValidators: true }).exec();
+              console.log("deleted", deleted)
+            } catch (e) {
+              console.log("Failed to delete rejected memo: ", e);
+            }
+          }
           try {
             await addNotification(memo.preparedBy.toHexString(), {
               title: 'New Memorandum Pending Approval',
               message: memo.title + ' for ' + departmentName + ' by you',
-              href: '/' + Roles.Admin + '/memo?id=' + memo._id
+              href: '/' + role + '/memo?id=' + memo._id
             })
           } catch (e) {
             console.log(e)
@@ -62,7 +82,7 @@ export async function saveMemorandumLetter(departmentId: string, doctype: Docume
               await addNotification(userSig._id.toHexString(), {
                 title: 'New Memorandum Pending Approval',
                 message: memo.title + ' for ' + departmentName + ' by ' + preparedByUser.fullName,
-                href: '/' + Roles.Admin + '/memo?id=' + memo._id
+                href: '/' + role + '/memo?id=' + memo._id
               })
             } catch (e) {
               console.log(e)
@@ -74,20 +94,35 @@ export async function saveMemorandumLetter(departmentId: string, doctype: Docume
           }
         }
       } else if (doctype === DocumentType.Letter) {
+        const dept = await Department.findOne({ _id: departmentId }).lean<DepartmentDocument>().exec();
+        const count = await Letter.countDocuments({
+          departmentId
+        }).exec();
+        const deptName = dept?.name.split(' ').filter((v: string) => v?.toLowerCase() !== "and" && v?.toLowerCase() !== "or" && v?.toLowerCase() !== "of" && v?.toLowerCase() !== "the" && v !== "").map((v: string) => v.length === 1 || /[A-Z]/.test(v) ? v?.toUpperCase() : v[0]?.toUpperCase()).join("")
+        const series = `${deptName}${doctype?.[0]?.toUpperCase()}${doctype?.substring(1)?.toLowerCase()}${(count + 1).toString().padStart(3, "0")}_Series`;
         const letter = await Letter.create({
           departmentId,
           title,
-          content: content,
+          series,
+          cc,
+          content,
           preparedBy,
           signatureApprovals
         })
         console.log(letter);
         if (!!letter?._id) {
+          if (!!rejectedId) {
+            try {
+              await Letter.deleteOne({ _id: rejectedId }, { runValidators: true }).exec();
+            } catch (e) {
+              console.log("Failed to delete rejected memo: ", e);
+            }
+          }
           try {
             await addNotification(letter.preparedBy.toHexString(), {
               title: 'New Letter Pending Approval',
               message: letter.title + ' for ' + departmentName + ' by you',
-              href: '/' + Roles.Admin + '/letter?id=' + letter._id
+              href: '/' + role + '/letter?id=' + letter._id
             })
           } catch (e) {
             console.log(e)
@@ -100,7 +135,7 @@ export async function saveMemorandumLetter(departmentId: string, doctype: Docume
               await addNotification(userSig._id.toHexString(), {
                 title: 'New Letter Pending Approval',
                 message: letter.title + ' for ' + departmentName + ' by ' + preparedByUser.fullName,
-                href: '/' + Roles.Admin + '/letter?id=' + letter._id
+                href: '/' + role + '/letter?id=' + letter._id
               })
             } catch (e) {
               console.log(e)
@@ -126,11 +161,11 @@ export async function saveMemorandumLetter(departmentId: string, doctype: Docume
 }
 
 
-export async function saveMemorandumLetterToIndividual(individualId: string, doctype: DocumentType, formData: FormData): Promise<ActionResponseType & { memorandumId?: string, letterId?: string }>
+export async function saveMemorandumLetterToIndividual(individualId: string, doctype: DocumentType, cc: string[], formData: FormData): Promise<ActionResponseType & { memorandumId?: string, letterId?: string }>
 {
   await connectDB()
   try {
-    const session = await getSession(Roles.Admin)
+    const session = await getSession(role)
     if (!!session?.user) {
       const preparedBy = session.user._id;
       const individual = await User.findById(individualId).lean<UserDocument>().exec()
@@ -150,12 +185,13 @@ export async function saveMemorandumLetterToIndividual(individualId: string, doc
         const memo = await MemoIndividual.create({
           userId: individual._id?.toString(),
           title,
+          cc,
           content: content,
           preparedBy,
         })
         if (!!memo?._id) {
           try {
-            const href = individual.role === Roles.Admin ? '/' + Roles.Admin + '/memo/receive?id=' + memo._id : '/' + Roles.Faculty + '/memo?id=' + memo._id;
+            const href = individual.role === role ? '/' + role + '/memo/receive?id=' + memo._id : '/' + Roles.Faculty + '/memo?id=' + memo._id;
             await addNotification(individual._id!.toString(), {
               title: 'New Memorandum Sent to you',
               message: memo.title + ' for ' + individual.firstName + ' ' + individual.lastName,
@@ -168,7 +204,7 @@ export async function saveMemorandumLetterToIndividual(individualId: string, doc
             await addNotification(preparedBy._id.toString(), {
               title: 'New Memorandum Sent to ' + individual.firstName + ' ' + individual.lastName,
               message: memo.title + ' for ' + individual.firstName + ' ' + individual.lastName,
-              href: '/' + Roles.Admin + '/memo?id=' + memo._id
+              href: '/' + role + '/memo?id=' + memo._id
             })
           } catch (e) {
             console.log(e);
@@ -182,11 +218,12 @@ export async function saveMemorandumLetterToIndividual(individualId: string, doc
         const letter = await LetterIndividual.create({
           userId: individual._id?.toString(),
           title,
+          cc,
           content: content,
           preparedBy,
         })
         try {
-          const href = individual.role === Roles.Admin ? '/' + Roles.Admin + '/letter/receive?id=' + letter._id : '/' + Roles.Faculty + '/letter?id=' + letter._id;
+          const href = individual.role === role ? '/' + role + '/letter/receive?id=' + letter._id : '/' + Roles.Faculty + '/letter?id=' + letter._id;
           await addNotification(individual._id!.toString(), {
             title: 'New Memorandum Sent to you',
             message: letter.title + ' for ' + individual.firstName + ' ' + individual.lastName,
@@ -199,7 +236,7 @@ export async function saveMemorandumLetterToIndividual(individualId: string, doc
           await addNotification(preparedBy._id.toString(), {
             title: 'New Memorandum Sent to ' + individual.firstName + ' ' + individual.lastName,
             message: letter.title + ' for ' + individual.firstName + ' ' + individual.lastName,
-            href: '/' + Roles.Admin + '/letter?id=' + letter._id
+            href: '/' + role + '/letter?id=' + letter._id
           })
         } catch (e) {
           console.log(e);
@@ -226,7 +263,7 @@ export async function approveMemorandumLetter(doctype: DocumentType, memoLetterI
 {
   await connectDB()
   try {
-    const session = await getSession(Roles.Admin)
+    const session = await getSession(role)
     if (!!session?.user) {
       const eSignature = await ESignature.findOne({ adminId: session.user._id }).exec()
       if (!!eSignature?._id) {
@@ -247,9 +284,9 @@ export async function approveMemorandumLetter(doctype: DocumentType, memoLetterI
               }
               const titleAdmin = 'Memorandum'
               const messageAdmin = memo.title
-              const hrefAdmin = '/' + Roles.Admin + '/memo/approved?id=' + memo._id.toHexString()
+              const hrefAdmin = '/' + role + '/memo/approved?id=' + memo._id.toHexString()
               try {
-                await broadcastNotification({ role: Roles.Admin, departmentId: memo.departmentId as string, title: titleAdmin, message: messageAdmin, href: hrefAdmin })
+                await broadcastNotification({ role: role, departmentId: memo.departmentId as string, title: titleAdmin, message: messageAdmin, href: hrefAdmin })
               } catch (e) {
                 console.log(e)
               }
@@ -274,9 +311,9 @@ export async function approveMemorandumLetter(doctype: DocumentType, memoLetterI
               }
               const titleAdmin = 'Letter Approved'
               const messageAdmin = letter.title
-              const hrefAdmin = '/' + Roles.Admin + '/memo/approved?id=' + letter._id.toHexString()
+              const hrefAdmin = '/' + role + '/memo/approved?id=' + letter._id.toHexString()
               try {
-                await broadcastNotification({ role: Roles.Admin, departmentId: letter.departmentId as string, title: titleAdmin, message: messageAdmin, href: hrefAdmin })
+                await broadcastNotification({ role: role, departmentId: letter.departmentId as string, title: titleAdmin, message: messageAdmin, href: hrefAdmin })
               } catch (e) {
                 console.log(e)
               }
@@ -300,11 +337,11 @@ export async function approveMemorandumLetter(doctype: DocumentType, memoLetterI
   }
 }
 
-export async function rejectMemorandumLetter(doctype: DocumentType, memoLetterId: string): Promise<ActionResponseType>
+export async function rejectMemorandumLetter(doctype: DocumentType, memoLetterId: string, rejectedReason: string): Promise<ActionResponseType>
 {
   await connectDB()
   try {
-    const session = await getSession(Roles.Admin)
+    const session = await getSession(role)
     if (!!session?.user) {
       const eSignature = await ESignature.findOne({ adminId: session.user._id }).exec()
       if (!!eSignature?._id) {
@@ -313,11 +350,12 @@ export async function rejectMemorandumLetter(doctype: DocumentType, memoLetterId
           const memo = await Memo.findById(memoLetterId).populate('departmentId').exec()
           const departmentName = memo.departmentId.name
           memo.signatureApprovals.find((signatureApproval: any) => signatureApproval.signature_id.toHexString() === sid).rejectedDate = new Date()
+          memo.signatureApprovals.find((signatureApproval: any) => signatureApproval.signature_id.toHexString() === sid).rejectedReason = rejectedReason
           const updated = await memo.save({ new: true, upsert: false, runValidators: true })
           if (!!updated?._id) {
             const title = 'Memorandum Rejected'
             const message = memo.title + ' for ' + departmentName + ' by '+ session.user.fullName
-            const href = '/' + Roles.Admin + '/memo?id=' + memo._id.toHexString() + '&show=rejected'
+            const href = '/' + role + '/memo?id=' + memo._id.toHexString() + '&show=rejected'
             try {
               await addNotification(memo.preparedBy.toHexString(), {
                 title,
@@ -352,7 +390,7 @@ export async function rejectMemorandumLetter(doctype: DocumentType, memoLetterId
           if (!!updated?._id) {
             const title = 'Letter Rejected'
             const message = letter.title + ' for ' + departmentName + ' by '+ session.user.fullName
-            const href = '/' + Roles.Admin + '/memo?id=' + letter._id.toHexString() + '&show=rejected'
+            const href = '/' + role + '/memo?id=' + letter._id.toHexString() + '&show=rejected'
             try {
               await addNotification(letter.preparedBy.toHexString(), {
                 title,
@@ -393,3 +431,175 @@ export async function rejectMemorandumLetter(doctype: DocumentType, memoLetterId
     error: 'Failed to reject'
   }
 }
+
+
+export async function saveESignature(id: string|undefined, eSignatureDataURL?: string): Promise<ActionResponseType>
+{
+  await connectDB()
+  try {
+    const session = await getSession(role)
+    if (!session) {
+      return {
+        error: 'Invalid Session'
+      }
+    }
+    if (!id) {
+      return {
+        error: 'Invalid Account ID'
+      }
+    }
+    if (!eSignatureDataURL) {
+      return {
+        error: 'Invalid e-Signature'
+      }
+    }
+    const account = await User.findById(id).exec();
+    if (!!account) {
+      const esignature = await ESignature.create({
+        adminId: account._id.toHexString(),
+        signature: eSignatureDataURL,
+      })
+      if (!!esignature) {
+        return {
+          success: 'e-Signature saved successfully'
+        }
+      }
+    }
+  } catch (e) {
+    console.log(e)
+  }
+  return {
+    error: 'Failed to save e-signature'
+  }
+}
+
+
+export async function updateESignature(eSignatureDataURL?: string): Promise<ActionResponseType>
+{
+  await connectDB()
+  try {
+    const session = await getSession(role)
+    if (!session) {
+      return {
+        error: 'Invalid Session'
+      }
+    }
+    if (!eSignatureDataURL) {
+      return {
+        error: 'Invalid e-Signature'
+      }
+    }
+    const account = await User.findById(session.user?._id).exec();
+    if (!!account) {
+      const esignature = await ESignature.updateOne(
+        { adminId: account._id.toHexString() },
+        {
+          signature: eSignatureDataURL,
+        },
+        {
+          new: true,
+          upsert: false,
+          runValidators: true
+        }
+      ).exec();
+      if (esignature.acknowledged && esignature.modifiedCount > 0) {
+        return {
+          success: 'e-Signature saved successfully'
+        }
+      }
+    }
+  } catch (e) {
+    console.log(e)
+  }
+  return {
+    error: 'Failed to save e-signature'
+  }
+}
+
+// export async function removeAdminSignature(employeeId: string)
+// {
+//   await connectDB()
+//   try {
+//     const session = await getSession(role)
+//     if (!session) {
+//       return {
+//         error: 'Invalid Session'
+//       }
+//     }
+//     if (!employeeId) {
+//       return {
+//         error: 'Invalid Account ID'
+//       }
+//     }
+//     const admin = await User.findOne({ employeeId }).lean<UserDocument>().exec()
+//     if (!admin) {
+//       throw new Error("Admin not found")
+//     }
+//     const esignature = await ESignature.deleteOne({ adminId: admin._id }, { runValidators: true }).exec()
+//     if (esignature.acknowledged && esignature.deletedCount > 0) {
+//       return {
+//         success: 'Admin signature removed successfully'
+//       }
+//     }
+//   } catch (e) {}
+//   return {
+//     error: 'Failed to remove admin signature'
+//   }
+// }
+
+
+export async function archiveMemorandumLetter(doctype: DocumentType, id: string, isIndividual: boolean): Promise<ActionResponseType>
+{
+  await connectDB()
+  try {
+    const session = await getSession(role)
+    if (!!session?.user) {
+      if (!id || !isObjectIdOrHexString(id)) {
+        return {
+          error: 'Invalid Document ID'
+        }
+      }
+      const memoLetterField = isIndividual ? (doctype === DocumentType.Memo ? "archivedMemoIndividuals" : "archivedLetterIndividuals") : (doctype === DocumentType.Memo ? "archivedMemos" : "archivedLetters");
+      const memo = await User.updateOne({ _id: session.user._id }, { $push: { [memoLetterField]: id } }).exec();
+      if (memo.acknowledged && memo.modifiedCount > 0) {
+        return {
+          success: 'Memorandum Archived',
+        }
+      }
+    }
+  } catch (e) {
+    console.log(e)
+  }
+  return {
+    error: 'Failed to save'
+  }
+}
+
+
+export async function unarchiveMemorandumLetter(doctype: DocumentType, id: string, isIndividual: boolean): Promise<ActionResponseType>
+{
+  await connectDB()
+  try {
+    const session = await getSession(role)
+    if (!!session?.user) {
+      if (!id || !isObjectIdOrHexString(id)) {
+        return {
+          error: 'Invalid Document ID'
+        }
+      }
+      const memoLetterField = isIndividual ? (doctype === DocumentType.Memo ? "archivedMemoIndividuals" : "archivedLetterIndividuals") : (doctype === DocumentType.Memo ? "archivedMemos" : "archivedLetters");
+      const memo = await User.updateOne({ _id: session.user._id }, { $pull: { [memoLetterField]: id } }).exec();
+      if (memo.acknowledged && memo.modifiedCount > 0) {
+        return {
+          success: 'Memorandum Archived',
+        }
+      }
+    }
+  } catch (e) {
+    console.log(e)
+  }
+  return {
+    error: 'Failed to save'
+  }
+}
+

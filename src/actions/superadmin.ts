@@ -157,38 +157,6 @@ export async function removeAccountDepartment({ id, departmentId }: { id: string
   }
 }
 
-export async function removeAdminSignature(employeeId: string)
-{
-  await connectDB()
-  try {
-    const session = await getSession(role)
-    if (!session) {
-      return {
-        error: 'Invalid Session'
-      }
-    }
-    if (!employeeId) {
-      return {
-        error: 'Invalid Account ID'
-      }
-    }
-    const admin = await User.findOne({ employeeId }).lean<UserDocument>().exec()
-    if (!admin) {
-      throw new Error("Admin not found")
-    }
-    const esignature = await ESignature.deleteOne({ adminId: admin._id }, { runValidators: true }).exec()
-    if (esignature.acknowledged && esignature.deletedCount > 0) {
-      return {
-        success: 'Admin signature removed successfully'
-      }
-    }
-  } catch (e) {}
-  return {
-    error: 'Failed to remove admin signature'
-  }
-}
-
-
 export async function updateDepartment(id: string|undefined, prevState: ActionResponseType, formData: FormData): Promise<ActionResponseType>
 {
   await connectDB()
@@ -316,46 +284,6 @@ export async function toogleActiveAccount(id: string): Promise<ActionResponseTyp
   } catch (e) {}
   return {
     error: 'Failed to dissolve department'
-  }
-}
-
-export async function saveESignature(id: string|undefined, eSignatureDataURL?: string): Promise<ActionResponseType>
-{
-  await connectDB()
-  try {
-    const session = await getSession(role)
-    if (!session) {
-      return {
-        error: 'Invalid Session'
-      }
-    }
-    if (!id) {
-      return {
-        error: 'Invalid Account ID'
-      }
-    }
-    if (!eSignatureDataURL) {
-      return {
-        error: 'Invalid e-Signature'
-      }
-    }
-    const account = await User.findById(id).exec();
-    if (!!account) {
-      const esignature = await ESignature.create({
-        adminId: account._id.toHexString(),
-        signature: eSignatureDataURL,
-      })
-      if (!!esignature) {
-        return {
-          success: 'e-Signature saved successfully'
-        }
-      }
-    }
-  } catch (e) {
-    console.log(e)
-  }
-  return {
-    error: 'Failed to save e-signature'
   }
 }
 

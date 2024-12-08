@@ -14,6 +14,11 @@ const LetterSchema = new Schema({
     type: String,
     required: [true, 'Letter Title is required'],
   },
+  series: {
+    type: String,
+    required: [true, 'Letter Series is required'],
+    unique: true,
+  },
   content: {
     type: String,
     required: [true, 'Memo Content is required'],
@@ -51,9 +56,14 @@ const LetterSchema = new Schema({
       rejectedDate: {
         type: Date,
         default: null
-      }
+      },
+      rejectedReason: String,
     }],
-  }
+  },
+  cc: {
+    type: [Schema.Types.ObjectId],
+    ref: 'User',
+  },
 },
   {
     timestamps: true

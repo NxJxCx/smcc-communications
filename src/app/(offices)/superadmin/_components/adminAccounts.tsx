@@ -1,5 +1,5 @@
 'use client';;
-import { removeAccountDepartment, removeAdminSignature, toogleActiveAccount } from "@/actions/superadmin";
+import { removeAccountDepartment, toogleActiveAccount } from "@/actions/superadmin";
 import OCSModal from "@/components/ocsModal";
 import OCSTable from "@/components/table";
 import { DepartmentDocument, Roles } from "@/lib/modelInterfaces";
@@ -17,7 +17,6 @@ import {
   RemoveIcon,
   SmallCrossIcon,
   toaster,
-  TrashIcon,
   UpdatedIcon,
   WarningSignIcon,
 } from "evergreen-ui";
@@ -248,36 +247,6 @@ export default function AdminAccountsPage() {
       .catch(console.log)
   }, [getFullName])
 
-  const onRemoveSignature = useCallback(() => {
-    if (!!openViewSignature) {
-      Swal.fire({
-        title: 'Remove Signature?',
-        text: "Employee ID " + openViewSignature?.employeeId,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#888',
-        confirmButtonText: 'Yes, remove it!'
-      })
-        .then(({ isConfirmed }) => {
-          if (isConfirmed) {
-            const removeSignature = removeAdminSignature.bind(null, openViewSignature?.employeeId);
-            removeSignature()
-              .then(({ success, error } ) => {
-                if (error) {
-                  toaster.danger(error);
-                } else {
-                  toaster.success(success)
-                  setOpenViewSignature(undefined)
-                  setTimeout(() => getData(setData, setLoading), 500)
-                }
-              })
-              .catch(console.log)
-          }
-        })
-    }
-  }, [openViewSignature])
-
   const adminColumns = getAdminAccountsColumns({
     onUpdate,
     onToggleActive,
@@ -322,9 +291,6 @@ export default function AdminAccountsPage() {
       <OCSModal title={"E-Signature of " + openViewSignature?.fullName + " (ID: " + openViewSignature?.employeeId + ")"} open={!!openViewSignature} onClose={() => { URL.revokeObjectURL(openViewSignature?.url || ''); setOpenViewSignature(undefined); }}>
         <div className="bg-white border">
           <Image src={openViewSignature?.url} alt="E-Signature"/>
-        </div>
-        <div className="flex justify-end items-end p-3">
-          <button type="button" onClick={onRemoveSignature} className="bg-red-500 text-white hover:bg-red-400 rounded py-2 px-3"><TrashIcon className="inline" /> Remove Signature</button>
         </div>
       </OCSModal>
     </div>

@@ -17,7 +17,9 @@ export async function GET(request: NextRequest) {
     if (!!session?.user) {
       const doctype = request.nextUrl.searchParams.get('doctype');
       if ([DocumentType.Memo, DocumentType.Letter].includes(doctype as DocumentType)) {
-        const user = await User.findById(session.user._id).select('departmentIds').exec();
+        const memoLetterField = doctype === DocumentType.Memo ? "archivedMemos" : "archivedLetters";
+        const memoLetterIndividualField = doctype === DocumentType.Memo ? "archivedMemoIndividuals" : "archivedLetterIndividuals";
+        const user = await User.findById(session.user._id).select(`departmentIds ${memoLetterField} ${memoLetterIndividualField}`).exec();
         const signature = await ESignature.findOne({ adminId: user?._id?.toHexString() }).select('_id').exec();
         const MemoLetter = doctype === DocumentType.Memo ? Memo : Letter;
         const MemoLetterIndividual = doctype === DocumentType.Memo ? MemoIndividual : LetterIndividual;
@@ -26,6 +28,11 @@ export async function GET(request: NextRequest) {
           $or: [
             {
               $and: [
+                {
+                  _id: {
+                    $nin: [...(user._doc[memoLetterField] || [])]
+                  }
+                },
                 {
                   departmentId: {
                     $nin: user._doc.departmentIds,
@@ -57,6 +64,11 @@ export async function GET(request: NextRequest) {
             {
               $and: [
                 {
+                  _id: {
+                    $nin: [...(user._doc[memoLetterField] || [])]
+                  }
+                },
+                {
                   departmentId: {
                     $in: user._doc.departmentIds,
                   },
@@ -82,6 +94,9 @@ export async function GET(request: NextRequest) {
           ]
         }).populate('departmentId').exec();
         const resultFindIndividual = await MemoLetterIndividual.find({
+          _id: {
+            $nin: [...(user._doc[memoLetterIndividualField] || [])]
+          },
           userId: {
             $ne: user._doc._id,
           },

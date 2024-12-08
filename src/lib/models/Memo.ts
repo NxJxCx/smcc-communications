@@ -14,6 +14,11 @@ const MemoSchema = new Schema({
     type: String,
     required: [true, 'Memorandum Title is required'],
   },
+  series: {
+    type: String,
+    required: [true, 'Memorandum Series is required'],
+    unique: true,
+  },
   content: {
     type: String,
     required: [true, 'Memorandum Content is required'],
@@ -51,9 +56,14 @@ const MemoSchema = new Schema({
       rejectedDate: {
         type: Date,
         default: null
-      }
+      },
+      rejectedReason: String
     }],
-  }
+  },
+  cc: {
+    type: [Schema.Types.ObjectId],
+    ref: 'User',
+  },
 },
   {
     timestamps: true

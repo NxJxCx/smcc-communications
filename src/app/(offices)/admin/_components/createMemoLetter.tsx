@@ -90,11 +90,38 @@ export default function CreateMemoLetterFromTemplate({
   }, [])
 
   const selectedSignatoriesList = useMemo(() => {
-    return !!selectedDepartment ? signatoriesList.filter((signatory: ESignatureDocument & { adminId: UserDocument } | any) => {
-      return signatory.adminId.departmentIds?.length > 0 && signatory.adminId.departmentIds.includes(selectedDepartment._id)
-    }) : !!selectedIndividual ? signatoriesList.filter((signatory: ESignatureDocument & { adminId: UserDocument } | any) => {
-      return signatory.adminId?._id?.toString() === sessionData?.user?._id?.toString()
-    }) : []
+    return !!selectedDepartment
+      ? signatoriesList.sort((a: ESignatureDocument & { adminId: UserDocument } | any, b: ESignatureDocument & { adminId: UserDocument } | any) => {
+        const heri: any = {
+          [HighestPosition.Admin]: 1,
+          [HighestPosition.VicePresident]: 2,
+          [HighestPosition.President]: 3
+        }
+        if (a.adminId.highestPosition === HighestPosition.President || a.adminId.highestPosition === HighestPosition.VicePresident
+          || b.adminId.highestPosition === HighestPosition.President || b.adminId.highestPosition === HighestPosition.VicePresident) {
+          return heri[a.adminId.highestPosition] < heri[b.adminId.highestPosition]
+            ? 1
+            : heri[a.adminId.highestPosition] > heri[b.adminId.highestPosition]
+            ? -1
+            : 0
+        }
+        return a.adminId.departmentIds?.includes(selectedDepartment) && b.adminId.departmentIds?.includes(selectedDepartment)
+          ? 0
+          : (
+            a.adminId.departmentIds?.includes(selectedDepartment)
+            ? -1
+            : (b.adminId.departmentIds?.includes(selectedDepartment)
+              ? 1
+              : 0
+            )
+          )
+      })
+      : (!!selectedIndividual
+          ? signatoriesList.filter((signatory: ESignatureDocument & { adminId: UserDocument } | any) => {
+              return signatory.adminId?._id?.toString() === sessionData?.user?._id?.toString()
+            })
+          : []
+      )
   }, [selectedDepartment, selectedIndividual, signatoriesList, sessionData]);
 
   const onChangeSelectedIndividual = useCallback((id: string) => {

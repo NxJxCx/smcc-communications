@@ -36,7 +36,11 @@ const LetterIndividualSchema = new Schema({
   isRead: {
     type: Boolean,
     default: false,
-  }
+  },
+  cc: {
+    type: [Schema.Types.ObjectId],
+    ref: 'User',
+  },
 },
   {
     timestamps: true

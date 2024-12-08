@@ -20,12 +20,22 @@ export async function GET(request: NextRequest) {
         const user = await User.findById(session.user._id).select(selectFields).exec();
         const MemoLetter = doctype === DocumentType.Memo ? Memo : Letter;
         const MemoLetterIndividual = doctype === DocumentType.Memo ? MemoIndividual : LetterIndividual;
+        const userId = user?._id?.toHexString();
         const result = await MemoLetter.find({
           $and: [
             {
-              departmentId: {
-                $in: user._doc.departmentIds,
-              },
+              $or: [
+                {
+                  departmentId: {
+                    $in: user._doc.departmentIds,
+                  },
+                },
+                {
+                  cc: {
+                    $in: [userId]
+                  },
+                }
+              ]
             },
             {
               signatureApprovals: {
@@ -43,7 +53,7 @@ export async function GET(request: NextRequest) {
                 }
               }
             }
-          ],
+          ]
         }).populate('departmentId').exec();
 
         const result2 = await MemoLetterIndividual.find({

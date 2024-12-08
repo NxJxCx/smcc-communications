@@ -1,11 +1,13 @@
 'use client';;
+import { archiveMemorandumLetter } from "@/actions/admin";
 import LoadingComponent from "@/components/loading";
 import OCSModal from "@/components/ocsModal";
 import ParseHTMLTemplate from "@/components/parseHTML";
 import { DepartmentDocument, DocumentType, LetterDocument, MemoDocument, ReadLetterDocument, ReadMemoDocument, Roles, UserDocument } from "@/lib/modelInterfaces";
 import clsx from "clsx";
-import { PrintIcon, RefreshIcon } from "evergreen-ui";
+import { ArchiveIcon, PrintIcon, RefreshIcon } from "evergreen-ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Swal from "sweetalert2";
 import ThumbnailItemWithDepartmentReceive from "./thumbnailItemWithDepartmentReceive";
 
 export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doctype: DocumentType, searchParam: string }>) {
@@ -93,6 +95,50 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
     setSelectedMemo(memoLetter);
   }, [doctype])
 
+  const onArchive = useCallback(() => {
+    Swal.fire({
+      title: 'Do you want to archive this?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      cancelButtonText: 'No, cancel',
+      confirmButtonText: 'Yes, archive'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const { success, error } = await archiveMemorandumLetter(doctype, selectedMemo?._id!, true)
+          if (success) {
+            Swal.fire({
+              icon:'success',
+              title: 'Archived!',
+              text: 'Memorandum letter has been archived successfully.',
+              confirmButtonText: 'Okay',
+              showConfirmButton: true,
+            })
+            onBack()
+            setTimeout(() => getData(), 100)
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Oops...',
+              text: error,
+              confirmButtonText: 'Okay',
+              showConfirmButton: true,
+            })
+          }
+        } catch (e) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'Something went wrong!',
+            footer: 'Please try again later.'
+          })
+        }
+      }
+    })
+  }, [selectedMemo, doctype, getData, onBack])
+
   return (<>
     <div className="p-6">
       <h1 className="text-2xl font-[500]">{doctype === DocumentType.Memo ? "Received Memorandum" : "Received Letter"}</h1>
@@ -123,7 +169,8 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
       </div>
       <hr className="border w-full h-[1px] my-2" />
       <div className="w-full flex justify-end items-center gap-x-3 pr-2">
-        <button type="button" className="rounded-lg bg-blue-300 hover:bg-blue-100 text-black px-3 py-1 ml-4" onClick={onPrint}><PrintIcon display="inline" /> Print</button>
+          <button type="button" className="rounded-lg bg-blue-300 hover:bg-blue-100 text-black px-3 py-1 ml-4" onClick={onArchive}><ArchiveIcon display="inline" /> Archive</button>
+          <button type="button" className="rounded-lg bg-blue-300 hover:bg-blue-100 text-black px-3 py-1 ml-4" onClick={onArchive}><PrintIcon display="inline" /> Print</button>
         <button type="button" className="rounded-lg bg-gray-300 hover:bg-yellow-100 text-black px-3 py-1 mr-4" onClick={onBack}>Close</button>
       </div>
     </OCSModal>

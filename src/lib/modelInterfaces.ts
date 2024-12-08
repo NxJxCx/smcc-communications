@@ -88,6 +88,7 @@ export interface SignatureApprovals {
   signature_id: ESignatureDocument|string
   approvedDate: Date|null
   rejectedDate: Date|null
+  rejectedReason?: string
 }
 
 export interface MemoDocument extends Documents {
@@ -96,6 +97,7 @@ export interface MemoDocument extends Documents {
   content: string
   preparedBy: UserDocument|string
   signatureApprovals: SignatureApprovals[]
+  cc: string[]|UserDocument[]
 }
 
 export interface MemoIndividualDocument extends Documents {
@@ -103,6 +105,7 @@ export interface MemoIndividualDocument extends Documents {
   title: string
   content: string
   preparedBy: UserDocument|string
+  cc: string[]|UserDocument[]
 }
 
 export interface LetterDocument extends Documents {
@@ -110,8 +113,8 @@ export interface LetterDocument extends Documents {
   title: string
   content: string
   preparedBy: UserDocument|string
-  isRevoked: boolean
-  isRead: boolean
+  signatureApprovals: SignatureApprovals[]
+  cc: string[]|UserDocument[]
 }
 
 export interface LetterIndividualDocument extends Documents {
@@ -121,4 +124,5 @@ export interface LetterIndividualDocument extends Documents {
   preparedBy: UserDocument|string
   isRevoked: boolean
   isRead: boolean
+  cc: string[]|UserDocument[]
 }

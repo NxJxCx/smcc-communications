@@ -23,10 +23,6 @@ const superAdminSidebarNavList: SidebarNavigation[] = [
     url: '/superadmin/faculty',
   },
   {
-    name: 'E-Signature Registration',
-    url: '/superadmin/admin/esignature',
-  },
-  {
     name: 'Memo Templates',
     url: '/superadmin/memo',
   },
@@ -50,36 +46,32 @@ const adminSidebarNavList: any[] = [
     url: '/admin',
   },
   {
-    name: 'Create Memo',
-    url: '/admin/memo/create',
+    name: 'My E-Signature',
+    url: '/admin/esignature',
   },
   {
-    name: 'Create Letter',
-    url: '/admin/letter/create',
+    name: 'Create',
+    url: '/admin/create',
   },
   {
-    name: 'Memorandom Inbox',
-    url: '/admin/memo',
+    name: 'Approvals',
+    url: '/admin/approvals',
   },
   {
-    name: 'Letter Inbox',
-    url: '/admin/letter',
+    name: 'Released',
+    url: '/admin/approved',
   },
   {
-    name: 'Approved Memorandoms',
-    url: '/admin/memo/approved',
+    name: 'Received',
+    url: '/admin/received',
   },
   {
-    name: 'Approved Letters',
-    url: '/admin/letter/approved',
+    name: 'Forwarded',
+    url: '/admin/forwarded',
   },
   {
-    name: 'Received Memorandums',
-    url: '/admin/memo/receive',
-  },
-  {
-    name: 'Received Letters',
-    url: '/admin/letter/receive',
+    name: 'Archive',
+    url: '/admin/archive',
   },
   {
     name: 'Account',

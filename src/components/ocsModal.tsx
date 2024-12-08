@@ -8,11 +8,13 @@ export default function OCSModal({
   title,
   open,
   onClose,
+  allowOutsideClick = true,
   children
 }: Readonly<{
   children: React.ReactNode
   title: string|React.ReactNode
   onClose: () => void
+  allowOutsideClick?: boolean
   open?: boolean
 }>) {
   const [openModal, setOpenModal] = useState(open || false);
@@ -40,7 +42,7 @@ export default function OCSModal({
       }
     >
       <div className="relative h-full w-full flex justify-center items-center">
-        <div className="absolute top-0 left-0 w-full h-full bg-gray-900/50" onClick={() => onModalClose()} />
+        <div className="absolute top-0 left-0 w-full h-full bg-gray-900/50" onClick={() => allowOutsideClick && onModalClose()} />
         <div className="z-50">
           <div className="bg-white rounded-lg p-2 shadow shadow-blue-500">
             <div className="px-2 py-1 flex flex-nowrap justify-between">

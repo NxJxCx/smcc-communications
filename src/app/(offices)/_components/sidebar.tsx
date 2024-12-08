@@ -42,7 +42,7 @@ export default function SidebarComponent() {
             { sidebarNavigations.map((sn, i: number) => (
               <Link key={i} href={sn.url || '#'} className={clsx(
                 "w-full rounded-full text-left hover:border hover:border-yellow-500 pl-3 pr-1 py-1",
-                pathname.split("?")[0] === sn.url ? "border border-black bg-sky-400 text-black" : "",
+                sn.url === `/${role}` && pathname.split("?")[0] === sn.url || sn.url !== `/${role}` && pathname.split("?")[0].startsWith(sn.url as any) ? "border border-black bg-sky-400 text-black" : "",
               )}>
                 {sn.name}
               </Link>
