@@ -5,7 +5,7 @@ import ParseHTMLTemplate from "@/components/parseHTML";
 import { DepartmentDocument, DocumentType, ESignatureDocument, Roles, TemplateDocument, UserDocument } from "@/lib/modelInterfaces";
 import { HighestPosition } from "@/lib/types";
 import clsx from "clsx";
-import { KeyEscapeIcon, PlusIcon } from "evergreen-ui";
+import { ArrowLeftIcon, KeyEscapeIcon, PlusIcon } from "evergreen-ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSession } from '../../../../lib/useSession';
 import CreateFromTemplate from "./createFromTemplate";
@@ -23,6 +23,7 @@ export default function CreateMemoLetterFromTemplate({
   const [individualTemplates, setIndividualTemplates] = useState<TemplateDocument[]>([])
   const [selectedDepartment, setSelectedDepartment] = useState<DepartmentDocument>()
   const [selectedIndividual, setSelectedIndividual] = useState<UserDocument>()
+  const [step, setStep] = useState<"individual"|"department"|undefined>()
 
   const isHighestPosition = useMemo(() => {
     const highestPosition = sessionData?.user?.highestPosition as HighestPosition|undefined;
@@ -129,9 +130,16 @@ export default function CreateMemoLetterFromTemplate({
   }, [employees])
 
   return (<>
-    <div className="w-full">
+    <div className="w-full relative">
       <h1 className="w-fit mx-auto text-2xl mt-4 font-[500]">{doctype === DocumentType.Memo ? "Memorandum" : "Letter"} Templates</h1>
-      {!!selectedDepartment && (
+      {!step ? (
+        <div className="h-[calc(100vh-200px)] flex justify-evenly items-center">
+          <button className="p-16 bg-yellow-500 text-2xl rounded-lg" onClick={() => setStep("individual")}>Send to Individual</button>
+          <button className="p-16 bg-blue-500 text-2xl rounded-lg" onClick={() => setStep("department")}>Send to Department</button>
+        </div>
+      ) : (<>
+      <button className="absolute left-2 top-2" onClick={() => setStep(undefined)}><ArrowLeftIcon display="inline" /> <span className="hover:underline">Back</span></button>
+      {step === "department" && !!selectedDepartment && (
         <>
           <div className="border border-gray-300 bg-white p-4 rounded-xl mt-4 mx-4">
             <h2 className="text-2xl font-[500]">{selectedDepartment.name}</h2>
@@ -141,7 +149,7 @@ export default function CreateMemoLetterFromTemplate({
           </div>
         </>
       )}
-      {!!selectedIndividual && (
+      {step === "individual" && !!selectedIndividual && (
         <>
           <div className="border border-gray-300 bg-white p-4 rounded-xl mt-4 mx-4">
             <h2 className="text-2xl font-[500]">{doctype === DocumentType.Memo ? "Memorandums" : "Letters"} for {selectedIndividual.firstName + " " + selectedIndividual.lastName}</h2>
@@ -151,14 +159,15 @@ export default function CreateMemoLetterFromTemplate({
           </div>
         </>
       )}
-      { !openAddTemplate && (<>
+      {step === "individual" &&  !openAddTemplate && (<>
         <div className="w-full mt-2">
           {loading && <div className="col-span-2 min-h-[200px]"><LoadingComponent /></div>}
-          {!loading && !!selectedIndividual && !selectedDepartment && <h1 className="text-center">Send {doctype === DocumentType.Memo ? "Memorandum" : "Letter"} to Individual</h1>}
-          {!loading && !selectedIndividual && !selectedDepartment && employees?.length === 0 && <p className="text-center text-gray-600">No Employees/Faculty/Staff</p>}
-          {!loading && !selectedIndividual && !selectedDepartment && (
-            <div className="w-full">
-              <select className="px-3 py-2 bg-white rounded shadow mx-auto flex mt-2" value={(selectedIndividual as UserDocument|undefined)?._id} onChange={(e) => onChangeSelectedIndividual(e.target.value)} >
+          {!loading && !!selectedIndividual && <h1 className="text-center">Send {doctype === DocumentType.Memo ? "Memorandum" : "Letter"} to Individual</h1>}
+          {!loading && !selectedIndividual && employees?.length === 0 && <p className="text-center text-gray-600">No Employees/Faculty/Staff</p>}
+          {!loading && !selectedIndividual && (
+            <div className="w-full h-[calc(100vh-300px)] flex flex-col justify-center items-center">
+              <label className="text-xl font-bold">Select Recipient:</label>
+              <select className="px-3 py-2 text-lg bg-white rounded shadow mx-auto flex mt-2" value={(selectedIndividual as UserDocument|undefined)?._id} onChange={(e) => onChangeSelectedIndividual(e.target.value)} >
                 <option value="">-- Select Individual --</option>
                 {employees?.map((employee) => (
                   <option key={employee._id + "Employee"} value={employee._id}>{employee.firstName} {employee.lastName}</option>
@@ -166,7 +175,7 @@ export default function CreateMemoLetterFromTemplate({
               </select>
             </div>
           )}
-          {!loading && !!selectedIndividual && !selectedDepartment && (
+          {!loading && !!selectedIndividual && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8 border rounded-xl mt-4 mx-4">
               {!loading && !!selectedIndividual && individualTemplates.length === 0 && <p className="text-center text-gray-600">No Individual Templates</p>}
               {!loading && !!selectedIndividual && individualTemplates.map((template: TemplateDocument) => (
@@ -175,15 +184,11 @@ export default function CreateMemoLetterFromTemplate({
             </div>
           )}
         </div>
-        {!loading && (!selectedIndividual && !selectedDepartment) && (<div className="h-[50px] relative flex items-center justify-center">
-          <div className="w-fit">OR</div>
-        </div>
-        )}
       </>)}
       { (!!selectedDepartment && !selectedIndividual) && !openAddTemplate && (
         <h1 className="pl-4 mt-8 text-xl font-[600]">Create {doctype === DocumentType.Memo ? "Memorandum" : "Letter"} from template</h1>
       )}
-      { !openAddTemplate && !selectedIndividual && (
+      { step === "department" && !openAddTemplate && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8 border rounded-xl mt-4 mx-4">
           {loading && <div className="col-span-2 min-h-[200px]"><LoadingComponent /></div>}
           {!loading && !selectedDepartment && departments?.length === 0 && <p className="text-center text-gray-600">No Departments</p>}
@@ -204,6 +209,7 @@ export default function CreateMemoLetterFromTemplate({
       { !!openAddTemplate && (!!selectedDepartment || !!selectedIndividual) && (
         <CreateFromTemplate isHighestPosition={isHighestPosition} individual={selectedIndividual} departmentId={selectedDepartment?._id} template={selectedTemplate} doctype={doctype} signatoriesList={selectedSignatoriesList} onSave={(templateId: string) => onBack()} onCancel={onBack} />
       )}
+      </>)}
     </div>
     <OCSModal title={selectedTemplate?.title} open={!!selectedTemplate && !openAddTemplate} onClose={() => !openAddTemplate && setSelectedTemplate(undefined)}>
       <div className={clsx("min-w-[" + (8.5 * 96) + "px]", "max-w-[" + (8.5 * 96) + "px]", "min-h-[" + (1 * 96) + "px]")}>
