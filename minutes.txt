@@ -2,7 +2,7 @@
 (DONE) 2. Change icon to list
 (DONE) 3. Put comment if document is rejected
 (DONE) 4. Set automatic code (Ex. CCISMemo001_Series)
-5. Search by Sender/Memo Series/Title
+(DONE) 5. Search by Sender/Memo Series/Title
 (DONE) 6. Put edit/modify option on rejected memo/letter
 (DONE) 7. Delete the rejected copy of memo or letter
 8. Recipient can forward the memo or letter

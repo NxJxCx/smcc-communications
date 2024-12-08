@@ -46,9 +46,9 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
   const [search, setSearch] = useState<string>(searchParam || '')
 
   const filteredData = useMemo(() => {
-    let filtered = [...data.toReversed(), ...dataIndividual.toReversed()];
+    let filtered: any = [...data.toReversed(), ...dataIndividual.toReversed()];
     if (search) {
-      filtered = filtered.filter((item) => (
+      filtered = filtered.filter((item: any) => (
         item._id!.toLowerCase() === search.toLowerCase()
         || item.title.toLowerCase().includes(search.toLowerCase())
         || (item as any).departmentId?.name.toLowerCase().includes(search.toLowerCase())
@@ -65,9 +65,10 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
         || ((new Date(item.updatedAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' })).toLowerCase().includes(search.toLowerCase())
         || ((new Date(item.updatedAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: 'long' })).toLowerCase().includes(search.toLowerCase())
         || ((new Date(item.updatedAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: 'short' })).toLowerCase().includes(search.toLowerCase())
+        || item.series?.toLowerCase() === search.toLowerCase()
       ))
     }
-    const result = filtered.toSorted((a, b) => (new Date(b.updatedAt!)).getTime() - (new Date(a.updatedAt!)).getTime());
+    const result = filtered.toSorted((a: any, b: any) => (new Date(b.updatedAt!)).getTime() - (new Date(a.updatedAt!)).getTime());
     return [...result];
   }, [data, dataIndividual, search])
 

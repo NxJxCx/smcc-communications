@@ -94,6 +94,7 @@ export interface SignatureApprovals {
 export interface MemoDocument extends Documents {
   departmentId: DepartmentDocument|string
   title: string
+  series: string
   content: string
   preparedBy: UserDocument|string
   signatureApprovals: SignatureApprovals[]
@@ -112,6 +113,7 @@ export interface LetterDocument extends Documents {
   departmentId: DepartmentDocument|string
   title: string
   content: string
+  series: string
   preparedBy: UserDocument|string
   signatureApprovals: SignatureApprovals[]
   cc: string[]|UserDocument[]
