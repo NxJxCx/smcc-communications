@@ -55,7 +55,6 @@ export async function saveMemorandumLetter(departmentId: string, doctype: Docume
           preparedBy,
           signatureApprovals
         })
-        console.log("REJECTED ID WAS ", rejectedId);
         if (!!memo?._id) {
           if (!!rejectedId) {
             try {
