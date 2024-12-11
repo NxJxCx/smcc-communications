@@ -1,20 +1,43 @@
 'use client';;
-import { archiveMemorandumLetter } from "@/actions/admin";
+import { archiveMemorandumLetter, forwardMemorandumLetter } from "@/actions/admin";
 import LoadingComponent from "@/components/loading";
 import OCSModal from "@/components/ocsModal";
 import ParseHTMLTemplate from "@/components/parseHTML";
-import { DepartmentDocument, DocumentType, LetterDocument, MemoDocument, ReadLetterDocument, ReadMemoDocument, Roles, UserDocument } from "@/lib/modelInterfaces";
+import {
+  DepartmentDocument,
+  DocumentType,
+  LetterDocument,
+  MemoDocument,
+  ReadLetterDocument,
+  ReadMemoDocument,
+  Roles,
+  UserDocument,
+} from "@/lib/modelInterfaces";
+import { useSession } from "@/lib/useSession";
 import clsx from "clsx";
-import { ArchiveIcon, PrintIcon, RefreshIcon } from "evergreen-ui";
+import { ArchiveIcon, FastForwardIcon, PrintIcon, RefreshIcon } from "evergreen-ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
 import ThumbnailItemWithDepartmentReceive from "./thumbnailItemWithDepartmentReceive";
 
 export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doctype: DocumentType, searchParam: string }>) {
+  const { data: sessionData } = useSession({ redirect: false });
   const [data, setData] = useState<(MemoDocument & { isPreparedByMe: boolean, isRead: boolean })[]|(LetterDocument & { isPreparedByMe: boolean, isRead: boolean })[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMemo, setSelectedMemo] = useState<(MemoDocument|LetterDocument) & { isPreparedByMe: boolean }>();
   const [myUser, setMyUser] = useState<UserDocument>()
+  const [allUsers, setAllUsers] = useState<{ [department: string]: {
+    department: DepartmentDocument,
+    users: (UserDocument & { signatureId: string|null })[],
+  }}>({})
+
+  const fetchAllUsers = useCallback(() => {
+    const url = new URL('/' + Roles.Admin + '/api/users', window.location.origin)
+    fetch(url)
+      .then(response => response.json())
+      .then(({ result }) => { setAllUsers(result); })
+      .catch((e) => { console.log(e) })
+  }, [])
   const getData = useCallback(() => {
     const url = new URL('/' + Roles.Admin + '/api/memo/receive', window.location.origin)
     url.searchParams.set('doctype', doctype)
@@ -27,6 +50,7 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
 
   useEffect(() => {
     getData();
+    fetchAllUsers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -139,6 +163,93 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
     })
   }, [selectedMemo, doctype, getData, onBack])
 
+  const getFullName = useCallback((user?: UserDocument): string => {
+    const fn = (user?.prefixName || '') + ' ' + user?.firstName + ' ' + (!!user?.middleName ? user?.middleName[0].toUpperCase() + '. ' : '') + user?.lastName + (user?.suffixName? ', ' + user?.suffixName : '')
+    return fn.trim()
+  }, [])
+
+  const onForwardTo = useCallback(() => {
+    Swal.fire({
+      title: 'Forward to:',
+      input: 'select',
+      inputOptions: Object.keys(allUsers).reduce((caller: any, val: string) => {
+        caller[val] = allUsers[val].department.name;
+        return caller;
+      }, {}),
+      inputLabel: "Select Department",
+      inputPlaceholder: 'Select department',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      cancelButtonText: 'cancel',
+      confirmButtonText: 'Next',
+      preConfirm(input: string) {
+        if (!input) {
+          Swal.showValidationMessage('Please select a department.')
+          return null
+        }
+        return input;
+      }
+    }).then(({ isConfirmed, value: departmentId }) => {
+      if (isConfirmed) {
+        // then select all users from departmentId
+        const inMemo = [selectedMemo?.preparedBy, ...(selectedMemo?.cc || []), sessionData?.user?._id]
+        if (!inMemo.includes((selectedMemo as any).userId)) {
+          inMemo.push((selectedMemo as any).userId)
+        }
+        Swal.fire({
+          title: 'Forward to:',
+          input: 'select',
+          inputOptions: allUsers[departmentId].users.reduce((caller: any, user: UserDocument & { signatureId: string|null }) => {
+            const userId: string = user?._id?.toString() || ""
+            if (!inMemo.includes(user._id)) {
+              caller[userId] = getFullName(user)
+            }
+            return caller;
+          }, {}),
+          inputLabel: "Select Forward to:",
+          inputPlaceholder: 'Select Forward to:',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          cancelButtonText: 'cancel',
+          confirmButtonText: 'Next',
+          preConfirm(input: string) {
+            if (!input) {
+              Swal.showValidationMessage('Please select a user.')
+              return null
+            }
+            return input;
+          }
+        }).then(async ({ isConfirmed, value: userId }) => {
+          if (isConfirmed) {
+            const { success, error } = await forwardMemorandumLetter(selectedMemo!._id!, doctype, userId, true)
+            if (success) {
+              Swal.fire({
+                icon:'success',
+                title: 'Forwarded!',
+                text: 'It has been forwarded successfully.',
+                confirmButtonText: 'Okay',
+                showConfirmButton: true,
+              })
+              onBack()
+              setTimeout(() => getData(), 100)
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: error,
+                confirmButtonText: 'Okay',
+                showConfirmButton: true,
+              })
+            }
+          }
+        })
+      }
+    })
+  }, [allUsers, selectedMemo, getFullName, sessionData, onBack, getData, doctype])
+
+
   return (<>
     <div className="p-6">
       <h1 className="text-2xl font-[500]">{doctype === DocumentType.Memo ? "Received Memorandum" : "Received Letter"}</h1>
@@ -169,8 +280,9 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
       </div>
       <hr className="border w-full h-[1px] my-2" />
       <div className="w-full flex justify-end items-center gap-x-3 pr-2">
-          <button type="button" className="rounded-lg bg-blue-300 hover:bg-blue-100 text-black px-3 py-1 ml-4" onClick={onArchive}><ArchiveIcon display="inline" /> Archive</button>
-          <button type="button" className="rounded-lg bg-blue-300 hover:bg-blue-100 text-black px-3 py-1 ml-4" onClick={onArchive}><PrintIcon display="inline" /> Print</button>
+        <button type="button" className="rounded-lg bg-blue-300 hover:bg-blue-100 text-black px-3 py-1 ml-4" onClick={onArchive}><ArchiveIcon display="inline" /> Archive</button>
+        <button type="button" className="rounded-lg bg-blue-300 hover:bg-blue-100 text-black px-3 py-1 ml-4" onClick={onForwardTo}><FastForwardIcon display="inline" /> Forward To</button>
+        <button type="button" className="rounded-lg bg-blue-300 hover:bg-blue-100 text-black px-3 py-1 ml-4" onClick={onPrint}><PrintIcon display="inline" /> Print</button>
         <button type="button" className="rounded-lg bg-gray-300 hover:bg-yellow-100 text-black px-3 py-1 mr-4" onClick={onBack}>Close</button>
       </div>
     </OCSModal>
