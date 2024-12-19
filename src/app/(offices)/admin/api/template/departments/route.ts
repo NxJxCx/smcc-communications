@@ -1,9 +1,10 @@
 'use server'
 import connectDB from "@/lib/database";
-import { DocumentType, Roles } from "@/lib/modelInterfaces";
+import { DepartmentDocument, DocumentType, Roles } from "@/lib/modelInterfaces";
 import Department from "@/lib/models/Department";
 import User from "@/lib/models/User";
 import { getSession } from "@/lib/session";
+import { HighestPosition } from "@/lib/types";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -15,18 +16,28 @@ export async function GET(request: NextRequest) {
       const user = await User.findById(session.user._id).exec();
       let result = [];
       if (!!user) {
-        result = await Promise.all(JSON.parse(JSON.stringify(user)).departmentIds.map(async (deptId: string) => {
-          let department: any = Department.findById(deptId);
+        if (user.highestPosition === HighestPosition.Admin) {
+          result = await Promise.all(JSON.parse(JSON.stringify(user)).departmentIds.map(async (deptId: string) => {
+            let department: any = Department.findById(deptId);
+            if (doctype === DocumentType.Memo) {
+              department = department.populate('memoTemplates');
+            } else if (doctype === DocumentType.Letter) {
+              department = department.populate('letterTemplates');
+            } else {
+              department = [];
+            }
+            const res = await department.exec();
+            return res
+          }))
+        } else {
+          let dep = Department.find({});
           if (doctype === DocumentType.Memo) {
-            department = department.populate('memoTemplates');
-          } else if (doctype === DocumentType.Letter) {
-            department = department.populate('letterTemplates');
+            dep = dep.populate('memoTemplates');
           } else {
-            department = [];
+            dep = dep.populate('letterTemplates');
           }
-          const res = await department.exec();
-          return res
-        }))
+          result = await dep.lean<DepartmentDocument[]>().exec();
+        }
       }
       return NextResponse.json({ result });
     }

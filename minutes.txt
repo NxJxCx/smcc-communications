@@ -5,7 +5,7 @@
 (DONE) 5. Search by Sender/Memo Series/Title
 (DONE) 6. Put edit/modify option on rejected memo/letter
 (DONE) 7. Delete the rejected copy of memo or letter
-8. Recipient can forward the memo or letter
+(DONE) 8. Recipient can forward the memo or letter
 (PAID SERVICE / Currently IMPOSSIBLE unless another PHP or Node.js server is involved) 9. Notification through email (GSuite account) include link to redirect
 10. Include dynamic report (year, month, series no., sender)
 (DONE) 11. Archive the old memo or letter

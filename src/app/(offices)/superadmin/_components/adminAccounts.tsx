@@ -3,7 +3,7 @@ import { removeAccountDepartment, toogleActiveAccount } from "@/actions/superadm
 import OCSModal from "@/components/ocsModal";
 import OCSTable from "@/components/table";
 import { DepartmentDocument, Roles } from "@/lib/modelInterfaces";
-import type { TableColumnProps } from "@/lib/types";
+import { HighestPosition, type TableColumnProps } from "@/lib/types";
 import clsx from "clsx";
 import {
   AddIcon,
@@ -86,7 +86,7 @@ function getAdminAccountsColumns({ onRemoveDepartment, onAddDepartment, onUpdate
       label: "Departments", field: "departments", align: 'center',
       render: (row: AccountsColumns) => (
         <div className="flex flex-col justify-start items-start min-w-32 gap-y-1">
-          { row.departmentIds.map((department: DepartmentDocument, index: number) => (
+          { row.highestPosition === HighestPosition.Admin && row.departmentIds.map((department: DepartmentDocument, index: number) => (
             <div key={"dep" + index} className={
               clsx(
                 "captitalize flex-grow p-2 rounded-full mx-auto flex w-full justify-center text-wrap gap-x-1",
@@ -99,9 +99,20 @@ function getAdminAccountsColumns({ onRemoveDepartment, onAddDepartment, onUpdate
               </button>
             </div>
           ))}
-          {
+          { row.highestPosition === HighestPosition.Admin &&
             row.departmentIds.length === 0 && (
               <button type="button" title="No Assigned Departments" className="mx-auto text-yellow-500 drop-shadow"><WarningSignIcon size={25} /></button>
+            )
+          }
+          { row.highestPosition !== HighestPosition.Admin && (
+            <div key={"dep_" + row.highestPosition} className={
+              clsx(
+                "captitalize flex-grow p-2 rounded-full mx-auto flex w-full justify-center text-wrap gap-x-1",
+                "bg-green-300 text-black",
+              )}
+            >
+              <span className="flex-grow px-2">{row.highestPosition}</span>
+            </div>
             )
           }
           </div>

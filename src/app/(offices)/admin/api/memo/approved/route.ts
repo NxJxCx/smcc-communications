@@ -1,6 +1,7 @@
 'use server';;
 import connectDB from "@/lib/database";
 import { DocumentType, LetterDocument, LetterIndividualDocument, MemoDocument, MemoIndividualDocument, Roles } from "@/lib/modelInterfaces";
+import Department from "@/lib/models/Department";
 import ESignature from "@/lib/models/ESignature";
 import Letter from "@/lib/models/Letter";
 import LetterIndividual from "@/lib/models/LetterIndividual";
@@ -8,6 +9,7 @@ import Memo from "@/lib/models/Memo";
 import MemoIndividual from "@/lib/models/MemoIndividual";
 import User from "@/lib/models/User";
 import { getSession } from "@/lib/session";
+import { HighestPosition } from "@/lib/types";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -24,6 +26,8 @@ export async function GET(request: NextRequest) {
         const MemoLetter = doctype === DocumentType.Memo ? Memo : Letter;
         const MemoLetterIndividual = doctype === DocumentType.Memo ? MemoIndividual : LetterIndividual;
         const signature_id = signature?._id?.toHexString();
+        let departments = await Department.find({}).select('_id').exec();
+        const departmentIds = departments.map((dp) => dp._id?.toHexString())
         const resultFind = await MemoLetter.find({
           $or: [
             {
@@ -70,7 +74,7 @@ export async function GET(request: NextRequest) {
                 },
                 {
                   departmentId: {
-                    $in: user._doc.departmentIds,
+                    $in: user._doc.highestPosition === HighestPosition.Admin ? user._doc.departmentIds : departmentIds,
                   },
                 },
                 {
