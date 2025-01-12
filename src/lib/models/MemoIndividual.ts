@@ -29,6 +29,25 @@ const MemoIndividualSchema = new Schema({
     },
     required: [true, 'Prepared By is required'],
   },
+  signatureApprovals: {
+    type: [{
+      signature_id: {
+        type: Schema.Types.ObjectId,
+        ref: 'ESignature',
+        required: [true, 'E-Signature ID is required'],
+      },
+      approvedDate: {
+        type: Date,
+        default: null
+      },
+      rejectedDate: {
+        type: Date,
+        default: null
+      },
+      rejectedReason: String
+    }],
+    default: []
+  },
   isRevoked: {
     type: Boolean,
     default: false,

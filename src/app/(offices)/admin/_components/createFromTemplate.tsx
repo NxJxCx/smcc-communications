@@ -193,7 +193,7 @@ export default function CreateFromTemplate({ rejectedId = null, departmentId, in
           </div>
         </SelectMenu>
       </div>
-      <OCSTinyMCE editorRef={editorRef} departmentId={!individual ? departmentId : undefined} fullName={sessionData?.user?.fullName} doctype={!individual ? doctype : undefined} signatoriesList={signatoriesList} initialContentData={template?.content} onContent={onContentChange} withPreparedBy withSignatories={!individual?._id} />
+      <OCSTinyMCE editorRef={editorRef} departmentId={!individual ? departmentId : undefined} fullName={sessionData?.user?.fullName} doctype={!individual ? doctype : undefined} signatoriesList={signatoriesList} initialContentData={template?.content} onContent={onContentChange} withPreparedBy withSignatories />
     </div>
   );
 }

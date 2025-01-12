@@ -91,8 +91,10 @@ export default function CreateMemoLetterFromTemplate({
   }, [])
 
   const selectedSignatoriesList = useMemo(() => {
-    return !!selectedDepartment
-      ? signatoriesList.sort((a: ESignatureDocument & { adminId: UserDocument } | any, b: ESignatureDocument & { adminId: UserDocument } | any) => {
+    return (
+      // !!selectedDepartment
+      // ?
+      signatoriesList.sort((a: ESignatureDocument & { adminId: UserDocument } | any, b: ESignatureDocument & { adminId: UserDocument } | any) => {
         const heri: any = {
           [HighestPosition.Admin]: 1,
           [HighestPosition.VicePresident]: 2,
@@ -117,13 +119,17 @@ export default function CreateMemoLetterFromTemplate({
             )
           )
       })
-      : (!!selectedIndividual
-          ? signatoriesList.filter((signatory: ESignatureDocument & { adminId: UserDocument } | any) => {
-              return signatory.adminId?._id?.toString() === sessionData?.user?._id?.toString()
-            })
-          : []
-      )
-  }, [selectedDepartment, selectedIndividual, signatoriesList, sessionData]);
+      // : (!!selectedIndividual
+      //     ? signatoriesList.filter((signatory: ESignatureDocument & { adminId: UserDocument } | any) => {
+      //         return signatory.adminId?._id?.toString() === sessionData?.user?._id?.toString()
+      //       })
+      //     : []
+      // )
+    )
+  }, [
+    selectedDepartment, signatoriesList,
+    // selectedIndividual, sessionData
+  ]);
 
   const onChangeSelectedIndividual = useCallback((id: string) => {
     setSelectedIndividual(employees.find((d) => d._id === id) || undefined)
