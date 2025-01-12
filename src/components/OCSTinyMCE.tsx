@@ -1,5 +1,5 @@
 'use client';
-import { ESignatureDocument, UserDocument } from "@/lib/modelInterfaces";
+import { DocumentType, ESignatureDocument, UserDocument } from "@/lib/modelInterfaces";
 import { HighestPosition } from "@/lib/types";
 import { useSession } from "@/lib/useSession";
 import { Editor } from "@tinymce/tinymce-react";
@@ -19,7 +19,26 @@ function getPosition(highestPosition: string|HighestPosition) {
     : highestPosition
 }
 
-export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentData, withPreparedBy = false, withSignatories = true, onAddSignatory, onContent }: Readonly<{ editorRef: MutableRefObject<any>, signatoriesList: ESignatureDocument[], initialContentData?: string, withPreparedBy?: boolean, withSignatories?: boolean, onAddSignatory?: () => void, onContent: (editor: any, content: string) => void }>) {
+async function getCurrentSeries(deptId: string, doctype: DocumentType): Promise<number>
+{
+  try {
+    const url = new URL("/admin/api/memo/series", window.location.origin);
+    url.searchParams.append("depid", deptId);
+    url.searchParams.append("doctype", doctype);
+    const response = await fetch(url);
+    if (response.ok) {
+      const { result } = await response.json();
+      if (Number.isInteger(result)) {
+        return result
+      }
+    }
+  } catch (e) {
+    console.log("Error: ", e)
+  }
+  return 0
+}
+
+export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentData, withPreparedBy = false, withSignatories = true, departmentId, fullName, doctype, onAddSignatory, onContent }: Readonly<{ departmentId?: string, doctype?: DocumentType, fullName?: string, editorRef: MutableRefObject<any>, signatoriesList: ESignatureDocument[], initialContentData?: string, withPreparedBy?: boolean, withSignatories?: boolean, onAddSignatory?: () => void, onContent: (editor: any, content: string) => void }>) {
   const { data: sessionData } = useSession({ redirect: false })
   const ppi = 96
   const size = useMemo<{width:number, height:number}>(() => ({
@@ -235,6 +254,51 @@ export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentD
     );
   }, [editorRef])
 
+  const onAddSeries = useCallback(function(deptId: string, fullName: string, doctype: DocumentType, date: Date) {
+    getCurrentSeries(deptId, doctype)
+      .then((series: number) => {
+        editorRef.current?.insertContent(
+          jsxToString(
+            <>
+            <p>
+              {doctype === DocumentType.Memo
+                ? <>MEMORANDUM ORDER NO. {series} Series of {date.getFullYear()}</>
+                : <>LETTER ORDER NO. {series} Series of {date.getFullYear()}</>
+              }
+            </p>
+            <p>
+              DATE:&nbsp;&nbsp;
+              <strong>
+                {date.toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })}
+              </strong>
+            </p>
+            <p>
+              TO:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              <strong>
+                ALL CONCERNED
+              </strong>
+            </p>
+            <p>
+              RE:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              <strong>
+                TITLE OF THE MEMORANDUM/LETTER
+              </strong>
+            </p>
+            <p>
+              FROM:&nbsp;
+              <strong>
+                {fullName.toUpperCase()}
+              </strong>
+            </p>
+            </>
+          )
+        );
+        onAddHorizontal();
+      })
+      .catch(console.log)
+  }, [editorRef, onAddHorizontal])
+
+
   const handleFetchSignatory = useCallback(function (callback: any) {
     const current = editorRef.current;
     const contents = current?.getContent();
@@ -275,9 +339,18 @@ export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentD
   const handleEditorSetup = useCallback((editor: any) => {
     editor.ui.registry.addButton("addHorizontal", {
       icon: 'line',
+      text: 'Horizontal Line',
       tooltip: 'Add horizontal line',
       onAction: onAddHorizontal
     })
+    if (doctype && departmentId && fullName) {
+      editor.ui.registry.addButton("addSeries", {
+        icon: 'ai-prompt',
+        text: 'Series',
+        tooltip: 'Add Memo/Letter Series',
+        onAction: () => onAddSeries(departmentId, fullName, doctype, new Date())
+      })
+    }
     if (withSignatories) {
       editor.ui.registry.addMenuButton('addAdminSignatory', {
         text: 'Add Signatory',
@@ -287,11 +360,12 @@ export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentD
     if (withPreparedBy) {
       editor.ui.registry.addButton("addPreparedBy", {
         icon: 'checkmark',
+        text: 'Prepared By',
         tooltip: !withSignatories && withPreparedBy ? 'Add your signatory' : 'Add Prepared By',
         onAction: onAddPreparedBy,
       });
     }
-  }, [onAddHorizontal, handleFetchSignatory, onAddPreparedBy, withSignatories, withPreparedBy]);
+  }, [onAddHorizontal, handleFetchSignatory, onAddPreparedBy, onAddSeries, withSignatories, withPreparedBy, doctype, fullName, departmentId]);
 
   return (
     <div className={clsx("flex items-start justify-center", "min-w-[" + size.width + "px]", "max-w-[" + size.width + "px]"  , "min-h-[" + size.height + "px]")}>
@@ -306,10 +380,12 @@ export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentD
           'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount',
           'image', 'editimage'
         ]}
-        toolbar={'undo redo | fontfamily fontsize lineheight image table | ' + (withSignatories ? 'addAdminSignatory ' : '') + (withPreparedBy ? 'addPreparedBy ' : '') + ' | ' +
-            'bold italic underline forecolor backcolor | alignleft aligncenter ' +
-            'alignright alignjustify | bullist numlist outdent indent | addHorizontal ' +
-            'removeformat | help'}
+        toolbar={'undo redo | fontfamily fontsize lineheight image table | ' +
+          (doctype && departmentId && fullName ? 'addSeries ' : '') +
+          (withSignatories ? 'addAdminSignatory ' : '') +
+          (withPreparedBy ? 'addPreparedBy ' : '') +
+          'addHorizontal | bold italic underline forecolor backcolor | alignleft aligncenter ' +
+          'alignright alignjustify | bullist numlist outdent indent | removeformat | help'}
         init={{
           height: size.height, // 11 inches
           width: size.width, // 8.5 inches

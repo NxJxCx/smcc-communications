@@ -10,7 +10,7 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import Swal from 'sweetalert2';
 
 export default function CreateFromTemplate({ rejectedId = null, departmentId, individual, template, doctype, signatoriesList, isHighestPosition, onSave, onCancel }: { rejectedId?: string|null, departmentId?: string, individual?: UserDocument, template?: TemplateDocument, doctype: DocumentType, isHighestPosition?: boolean, signatoriesList: ESignatureDocument[], onSave: (memoradumId: string) => void, onCancel: () => void }) {
-  const { status } = useSession({ redirect: false })
+  const { status, data: sessionData } = useSession({ redirect: false })
   // const ppi = 96
   // const size = useMemo<{width:number, height:number}>(() => ({
   //   width: 8.5 * ppi,
@@ -193,7 +193,7 @@ export default function CreateFromTemplate({ rejectedId = null, departmentId, in
           </div>
         </SelectMenu>
       </div>
-      <OCSTinyMCE editorRef={editorRef} signatoriesList={signatoriesList} initialContentData={template?.content} onContent={onContentChange} withPreparedBy withSignatories={!individual?._id} />
+      <OCSTinyMCE editorRef={editorRef} departmentId={!individual ? departmentId : undefined} fullName={sessionData?.user?.fullName} doctype={!individual ? doctype : undefined} signatoriesList={signatoriesList} initialContentData={template?.content} onContent={onContentChange} withPreparedBy withSignatories={!individual?._id} />
     </div>
   );
 }
