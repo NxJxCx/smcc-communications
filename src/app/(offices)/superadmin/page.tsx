@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import DashboardPage from "./_components/dashboard";
 
 export const metadata: Metadata = {
-  title: "Super Admin"
+  title: "Admin"
 };
 
 export default function Page() {

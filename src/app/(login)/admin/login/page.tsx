@@ -3,7 +3,7 @@ import { Roles } from "@/lib/modelInterfaces";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Admin Login",
+  title: "Head Login",
 }
 
 export default function AdminLoginPage() {
