@@ -19,7 +19,7 @@ export default function UpdateAccountModal({
   open?: boolean,
   onRefresh: () => void,
   onClose: () => void,
-  isFaculty: boolean
+  isFaculty?: boolean
 }>) {
   const [data, setData] = useState<AccountsColumns|undefined>(oldData)
   const formRef = useRef<HTMLFormElement>(null)
