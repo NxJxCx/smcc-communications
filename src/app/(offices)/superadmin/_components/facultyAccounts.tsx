@@ -236,7 +236,7 @@ export default function FacultyAccountsPage() {
       ]} />
       <AddFacultyAccountModal open={open} onClose={() => setOpen(false)} onRefresh={() => setTimeout(() => getData(setData, setLoading), 500)} />
       <AddFacultyDepartmentModal id={selectedId} departments={selectedDepartmentNames} open={deptOpen} onClose={() => setDeptOpen(false)} onRefresh={() => setTimeout(() => getData(setData, setLoading), 500)} />
-      <UpdateAccountModal oldData={selectedUpdate} open={!!selectedUpdate} onClose={() => setSelectedUpdate(undefined)} onRefresh={() => setTimeout(() => getData(setData, setLoading), 500)} />
+      <UpdateAccountModal oldData={selectedUpdate} open={!!selectedUpdate} onClose={() => setSelectedUpdate(undefined)} onRefresh={() => setTimeout(() => getData(setData, setLoading), 500)} isFaculty />
     </div>
   )
 }

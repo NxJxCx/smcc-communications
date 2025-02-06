@@ -12,12 +12,14 @@ export default function UpdateAccountModal({
   oldData,
   open,
   onClose = () => {},
-  onRefresh = () => {}
+  onRefresh = () => {},
+  isFaculty = false,
 }: Readonly<{
   oldData: AccountsColumns|undefined,
   open?: boolean,
   onRefresh: () => void,
   onClose: () => void,
+  isFaculty: boolean
 }>) {
   const [data, setData] = useState<AccountsColumns|undefined>(oldData)
   const formRef = useRef<HTMLFormElement>(null)
@@ -48,12 +50,14 @@ export default function UpdateAccountModal({
       <div className="p-4">
         <form action={action} ref={formRef} className="flex flex-col gap-y-2">
           <input type="email" name="email" placeholder="Email Address" value={data?.email} onChange={(e) => setData({ ...data as AccountsColumns, email: e.target.value })} className="px-2 py-1 rounded bg-white border border-slate-400" required />
-          <select name="highestPosition" className="px-2 py-1 rounded bg-white border border-slate-400" value={data?.highestPosition} onChange={(e) => setData({ ...data as AccountsColumns, highestPosition: e.target.value as HighestPosition })} required>
-            <option value="">-- Select Position --</option>
-            <option value={HighestPosition.Admin}>Admin/Dean</option>
-            <option value={HighestPosition.President}>President</option>
-            <option value={HighestPosition.VicePresident}>Vice President</option>
-          </select>
+          {!isFaculty && (
+            <select name="highestPosition" className="px-2 py-1 rounded bg-white border border-slate-400" value={data?.highestPosition} onChange={(e) => setData({ ...data as AccountsColumns, highestPosition: e.target.value as HighestPosition })} required>
+              <option value="">-- Select Position --</option>
+              <option value={HighestPosition.Admin}>Admin/Dean</option>
+              <option value={HighestPosition.President}>President</option>
+              <option value={HighestPosition.VicePresident}>Vice President</option>
+            </select>
+          )}
           <input type="text" name="prefixName" placeholder="Prefix Name e.g: Rev. Fr." value={data?.prefixName} onChange={(e) => setData({ ...data as AccountsColumns, prefixName: e.target.value })} className="px-2 py-1 rounded bg-white border border-slate-400" />
           <input type="text" name="firstName" placeholder="First Name" value={data?.firstName} onChange={(e) => setData({ ...data as AccountsColumns, firstName: e.target.value })} className="px-2 py-1 rounded bg-white border border-slate-400" required />
           <input type="text" name="middleName" placeholder="Middle Name" value={data?.middleName} onChange={(e) => setData({ ...data as AccountsColumns, middleName: e.target.value })} className="px-2 py-1 rounded bg-white border border-slate-400" />

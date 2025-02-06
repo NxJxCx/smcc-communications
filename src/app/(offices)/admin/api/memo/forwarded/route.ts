@@ -29,9 +29,18 @@ export async function GET(request: NextRequest) {
               }
             },
             {
-              departmentId: {
-                $in: user._doc.departmentIds,
-              },
+              $or: [
+                {
+                  departmentId: {
+                    $in: user._doc.departmentIds,
+                  },
+                },
+                {
+                  cc: {
+                    $in: [user?._id?.toHexString()]
+                  }
+                }
+              ]
             },
             {
               signatureApprovals: {
@@ -49,11 +58,6 @@ export async function GET(request: NextRequest) {
                 }
               }
             },
-            {
-              cc: {
-                $in: [user?._id?.toHexString()]
-              }
-            }
           ],
         }).populate('departmentId').exec();
         const resultFindIndividual = await MemoLetterIndividual.find({

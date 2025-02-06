@@ -89,6 +89,7 @@ export default function AdminSignature() {
   const saveSignature = useMemo(() => saveESignature.bind(null, data?._id), [data])
 
   const signaturePadRef = useRef<any>(null)
+  const signaturePadRefCreate = useRef<any>(null)
 
   const handleClear = useCallback(() => {
     signaturePadRef.current?.clear()
@@ -101,7 +102,7 @@ export default function AdminSignature() {
   }, [handleClear])
 
   const handleSave = useCallback(() => {
-    const signatureData = signaturePadRef.current?.toDataURL()
+    const signatureData = signaturePadRefCreate.current?.toDataURL()
     Swal.fire({
       icon: 'question',
       title: 'Confirm Signature?',
@@ -121,7 +122,7 @@ export default function AdminSignature() {
         }
       }
     })
-  }, [signaturePadRef, data, handleClear, getFullName, saveSignature])
+  }, [signaturePadRefCreate, data, handleClear, getFullName, saveSignature])
 
   const handleUpdate = useCallback(() => {
     const signatureData = signaturePadRef.current?.toDataURL()
@@ -206,7 +207,7 @@ export default function AdminSignature() {
         <h3 className="text-lg mb-1">{getFullName(data)} (Employee ID: {data?.employeeId})</h3>
         <h3 className="text-lg mb-1">Please sign here:</h3>
         <div className="bg-white border border-black max-w-fit mx-auto hover:cursor-crosshair" tabIndex={0}>
-          <SignaturePad refer={signaturePadRef} />
+          <SignaturePad refer={signaturePadRefCreate} />
         </div>
       </div>
       <div className="flex gap-x-2 items-center justify-center mt-4 mb-2">

@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
                 title: "The " + (doctype === DocumentType.Memo ? "Memorandum" : "Letter") + " you sent have been read.",
                 message: (user.prefixName ? user.prefixName + " " : "") + user.firstName + " " + user.lastName + (user.suffixName ? ", " + user.suffixName : "") + " has read the "
                   + (doctype === DocumentType.Memo ? "Memorandum" : "Letter") + " you have sent",
-                href: '/' + Roles.Admin + '/' + (doctype === DocumentType.Memo ? "memo" : "letter") + '/approved?id=' + memoLetterIndividual._id.toHexString(),
+                href: '/' + Roles.Admin + '/approved/' + (doctype === DocumentType.Memo ? "memo" : "letter") + '?id=' + memoLetterIndividual._id.toHexString(),
               });
             } catch (err) {
               console.log("ERROR:", err);

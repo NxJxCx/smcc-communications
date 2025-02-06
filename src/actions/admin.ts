@@ -68,7 +68,7 @@ export async function saveMemorandumLetter(departmentId: string, doctype: Docume
             await addNotification(memo.preparedBy.toHexString(), {
               title: 'New Memorandum Pending Approval',
               message: memo.title + ' for ' + departmentName + ' by you',
-              href: '/' + role + '/memo?id=' + memo._id
+              href: '/' + role + '/approvals/memo?id=' + memo._id
             })
           } catch (e) {
             console.log(e)
@@ -81,7 +81,7 @@ export async function saveMemorandumLetter(departmentId: string, doctype: Docume
               await addNotification(userSig._id.toHexString(), {
                 title: 'New Memorandum Pending Approval',
                 message: memo.title + ' for ' + departmentName + ' by ' + preparedByUser.fullName,
-                href: '/' + role + '/memo?id=' + memo._id
+                href: '/' + role + '/approvals/memo?id=' + memo._id
               })
             } catch (e) {
               console.log(e)
@@ -120,7 +120,7 @@ export async function saveMemorandumLetter(departmentId: string, doctype: Docume
             await addNotification(letter.preparedBy.toHexString(), {
               title: 'New Letter Pending Approval',
               message: letter.title + ' for ' + departmentName + ' by you',
-              href: '/' + role + '/letter?id=' + letter._id
+              href: '/' + role + '/approvals/letter?id=' + letter._id
             })
           } catch (e) {
             console.log(e)
@@ -133,7 +133,7 @@ export async function saveMemorandumLetter(departmentId: string, doctype: Docume
               await addNotification(userSig._id.toHexString(), {
                 title: 'New Letter Pending Approval',
                 message: letter.title + ' for ' + departmentName + ' by ' + preparedByUser.fullName,
-                href: '/' + role + '/letter?id=' + letter._id
+                href: '/' + role + '/approvals/letter?id=' + letter._id
               })
             } catch (e) {
               console.log(e)
@@ -189,7 +189,7 @@ export async function saveMemorandumLetterToIndividual(individualId: string, doc
         })
         if (!!memo?._id) {
           try {
-            const href = individual.role === role ? '/' + role + '/memo/receive?id=' + memo._id : '/' + Roles.Faculty + '/memo?id=' + memo._id;
+            const href = individual.role === role ? '/' + role + '/received/memo?id=' + memo._id : '/' + Roles.Faculty + '/memo?id=' + memo._id;
             await addNotification(individual._id!.toString(), {
               title: 'New Memorandum Sent to you',
               message: memo.title + ' for ' + individual.firstName + ' ' + individual.lastName,
@@ -202,7 +202,7 @@ export async function saveMemorandumLetterToIndividual(individualId: string, doc
             await addNotification(preparedBy._id.toString(), {
               title: 'New Memorandum Sent to ' + individual.firstName + ' ' + individual.lastName,
               message: memo.title + ' for ' + individual.firstName + ' ' + individual.lastName,
-              href: '/' + role + '/memo?id=' + memo._id
+              href: '/' + role + '/forwarded/memo?id=' + memo._id
             })
           } catch (e) {
             console.log(e);
@@ -221,7 +221,7 @@ export async function saveMemorandumLetterToIndividual(individualId: string, doc
           preparedBy,
         })
         try {
-          const href = individual.role === role ? '/' + role + '/letter/receive?id=' + letter._id : '/' + Roles.Faculty + '/letter?id=' + letter._id;
+          const href = individual.role === role ? '/' + role + '/received/letter?id=' + letter._id : '/' + Roles.Faculty + '/letter?id=' + letter._id;
           await addNotification(individual._id!.toString(), {
             title: 'New Memorandum Sent to you',
             message: letter.title + ' for ' + individual.firstName + ' ' + individual.lastName,
@@ -234,7 +234,7 @@ export async function saveMemorandumLetterToIndividual(individualId: string, doc
           await addNotification(preparedBy._id.toString(), {
             title: 'New Memorandum Sent to ' + individual.firstName + ' ' + individual.lastName,
             message: letter.title + ' for ' + individual.firstName + ' ' + individual.lastName,
-            href: '/' + role + '/letter?id=' + letter._id
+            href: '/' + role + '/forwarded/letter?id=' + letter._id
           })
         } catch (e) {
           console.log(e);
@@ -282,7 +282,7 @@ export async function approveMemorandumLetter(doctype: DocumentType, memoLetterI
               }
               const titleAdmin = 'Memorandum'
               const messageAdmin = memo.title
-              const hrefAdmin = '/' + role + '/memo/approved?id=' + memo._id.toHexString()
+              const hrefAdmin = '/' + role + '/approved/memo?id=' + memo._id.toHexString()
               try {
                 await broadcastNotification({ role: role, departmentId: memo.departmentId as string, title: titleAdmin, message: messageAdmin, href: hrefAdmin })
               } catch (e) {
@@ -309,7 +309,7 @@ export async function approveMemorandumLetter(doctype: DocumentType, memoLetterI
               }
               const titleAdmin = 'Letter Approved'
               const messageAdmin = letter.title
-              const hrefAdmin = '/' + role + '/memo/approved?id=' + letter._id.toHexString()
+              const hrefAdmin = '/' + role + '/approved/memo?id=' + letter._id.toHexString()
               try {
                 await broadcastNotification({ role: role, departmentId: letter.departmentId as string, title: titleAdmin, message: messageAdmin, href: hrefAdmin })
               } catch (e) {
@@ -353,7 +353,7 @@ export async function rejectMemorandumLetter(doctype: DocumentType, memoLetterId
           if (!!updated?._id) {
             const title = 'Memorandum Rejected'
             const message = memo.title + ' for ' + departmentName + ' by '+ session.user.fullName
-            const href = '/' + role + '/memo?id=' + memo._id.toHexString() + '&show=rejected'
+            const href = '/' + role + '/approvals/memo?id=' + memo._id.toHexString() + '&show=rejected'
             try {
               await addNotification(memo.preparedBy.toHexString(), {
                 title,
@@ -388,7 +388,7 @@ export async function rejectMemorandumLetter(doctype: DocumentType, memoLetterId
           if (!!updated?._id) {
             const title = 'Letter Rejected'
             const message = letter.title + ' for ' + departmentName + ' by '+ session.user.fullName
-            const href = '/' + role + '/memo?id=' + letter._id.toHexString() + '&show=rejected'
+            const href = '/' + role + '/approvals/memo?id=' + letter._id.toHexString() + '&show=rejected'
             try {
               await addNotification(letter.preparedBy.toHexString(), {
                 title,
@@ -633,7 +633,7 @@ export async function forwardMemorandumLetter(memoLetterId: string, doctype: Doc
             await addNotification(forwardTo, {
               title: 'A memorandum has been forwarded to you',
               message: user?.firstName + ' ' + user?.lastName + ' has forwarded a memorandum.',
-              href: '/' + role + '/memo?id=' + memoLetterId
+              href: '/' + role + '/forwarded/memo?id=' + memoLetterId
             })
           } catch (e) {
             console.log(e)
@@ -658,7 +658,7 @@ export async function forwardMemorandumLetter(memoLetterId: string, doctype: Doc
             await addNotification(forwardTo, {
               title: 'A letter has been forwarded to you',
               message: user?.firstName + ' ' + user?.lastName + ' has forwarded a letter.',
-              href: '/' + role + '/letter?id=' + memoLetterId
+              href: '/' + role + '/forwarded/letter?id=' + memoLetterId
             })
           } catch (e) {
             console.log(e)
