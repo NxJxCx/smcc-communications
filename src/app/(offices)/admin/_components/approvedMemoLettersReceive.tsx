@@ -13,9 +13,10 @@ import {
   Roles,
   UserDocument,
 } from "@/lib/modelInterfaces";
+import { ViewLayout } from "@/lib/types";
 import { useSession } from "@/lib/useSession";
 import clsx from "clsx";
-import { ArchiveIcon, FastForwardIcon, PrintIcon, RefreshIcon } from "evergreen-ui";
+import { ArchiveIcon, FastForwardIcon, GridViewIcon, ListColumnsIcon, PrintIcon, RefreshIcon } from "evergreen-ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
 import ThumbnailItemWithDepartmentReceive from "./thumbnailItemWithDepartmentReceive";
@@ -249,6 +250,7 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
     })
   }, [allUsers, selectedMemo, getFullName, sessionData, onBack, getData, doctype])
 
+  const [viewLayout, setViewLayout] = useState<ViewLayout>("list");
 
   return (<>
     <div className="p-6">
@@ -258,17 +260,20 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
           <label htmlFor="searchMemo" className="font-[500] mr-2 items-center flex">Search:</label>
           <input type="search" onChange={(e) => setSearch(e.target.value)} value={search} id="searchMemo" placeholder="Search Memorandum" className="border-2 max-w-64 border-gray-300 px-2 py-1 rounded" />
         </div>
-        <div className="flex mt-2 lg:mt-0 lg:justify-end flex-grow pr-2 lg:pr-0">
+        <div className="flex mt-2 lg:mt-0 lg:justify-end flex-grow pr-2 lg:pr-0 gap-x-2">
+          <button type="button" onClick={() => setViewLayout(viewLayout === "grid" ? "list" : "grid")} title={viewLayout === "grid" ? "List View" : "Grid View"} className="max-w-32 aspect-square p-1 rounded border border-blue-900 flex items-center justify-center text-blue-900 bg-white hover:bg-blue-200/50">
+            {viewLayout === "list" ? <GridViewIcon /> : <ListColumnsIcon />}
+          </button>
           <button type="button" onClick={getData} title="Refresh List" className="max-w-32 aspect-square p-1 rounded border border-blue-900 flex items-center justify-center text-blue-900 bg-white hover:bg-blue-200/50"><RefreshIcon /></button>
         </div>
       </div>
       <div className="min-h-[200px] min-w-[300px] bg-white w-full p-4 lg:min-w-[800px]">
         <div className="border min-w-[300px] rounded-md p-2 lg:min-w-[780px]">
-          <div className="p-3 grid grid-cols-1 lg:grid-cols-3 lg:min-w-[750px] gap-3">
+          <div className={clsx(viewLayout === "grid" ? "grid grid-cols-1 lg:grid-cols-3 lg:min-w-[750px] p-3 gap-3" : "w-full grid grid-cols-1 gap-2")}>
             { loading && <LoadingComponent /> }
             { !loading && filteredData.length === 0 && <div className="text-center">No approved {doctype === DocumentType.Memo ? "memorandum" : "letter"}.</div>}
             { !loading && filteredData.map((memoLetter: any, i: any) => (
-              <ThumbnailItemWithDepartmentReceive onClick={() => onReadMemoLetter(memoLetter)} preparedByMe={false} isRead={memoLetter.isRead} key={memoLetter._id} thumbnailSrc="/thumbnail-document.png" department={(memoLetter.departmentId as DepartmentDocument)?.name} label={memoLetter.title} createdAt={memoLetter.createdAt} updatedAt={memoLetter.updatedAt} />
+              <ThumbnailItemWithDepartmentReceive layout={viewLayout} onClick={() => onReadMemoLetter(memoLetter)} preparedByMe={false} isRead={memoLetter.isRead} key={memoLetter._id} thumbnailSrc="/thumbnail-document.png" department={(memoLetter.departmentId as DepartmentDocument)?.name} label={memoLetter.title} createdAt={memoLetter.createdAt} updatedAt={memoLetter.updatedAt} />
             ))}
           </div>
         </div>

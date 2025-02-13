@@ -36,11 +36,13 @@ export default function LoginForm({
       <form action={formAction} className="flex-grow flex flex-col gap-y-8 px-4 justify-start text-start pt-8">
         <div className="grid grid-cols-5 items-center">
           <label htmlFor="employeeId" className="text-right pr-4 col-span-2">Employee ID</label>
-          <input type="text" id="employeeId" name="employeeId" placeholder="" className="rounded col-span-3 px-2 py-1" />
+          {status === "loading" && <div className="cursor-wait bg-gray-400 rounded animate-pulse h-full col-span-3 py-4" />}
+          {status === "unauthenticated" && <input type="text" id="employeeId" name="employeeId" className="rounded col-span-3 px-2 py-1" />}
         </div>
         <div className="grid grid-cols-5 items-center">
           <label htmlFor="password" className="text-right pr-4 col-span-2">Password</label>
-          <input type="password" id="password" name="password" placeholder="" className="rounded col-span-3 px-2 py-1" />
+          {status === "loading" && <div className="cursor-wait bg-gray-400 rounded animate-pulse h-full col-span-3 py-4" />}
+          {status === "unauthenticated" && <input type="password" id="password" name="password" className="rounded col-span-3 px-2 py-1" />}
         </div>
         <div className="flex flex-wrap justify-evenly items-center">
           <button type="submit" className="border border-black rounded-full text-white bg-blue-800 px-6 py-1">Login</button>

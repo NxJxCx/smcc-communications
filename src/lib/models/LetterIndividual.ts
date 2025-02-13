@@ -44,7 +44,8 @@ const LetterIndividualSchema = new Schema({
         type: Date,
         default: null
       },
-      rejectedReason: String
+      rejectedReason: String,
+      priority: Number
     }],
     default: []
   },

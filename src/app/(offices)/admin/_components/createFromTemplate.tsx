@@ -9,7 +9,7 @@ import { Button, CrossIcon, Icon, SelectMenu, SendMessageIcon, toaster } from 'e
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Swal from 'sweetalert2';
 
-export default function CreateFromTemplate({ rejectedId = null, departmentId, individual, template, doctype, signatoriesList, isHighestPosition, onSave, onCancel }: { rejectedId?: string|null, departmentId?: string, individual?: UserDocument, template?: TemplateDocument, doctype: DocumentType, isHighestPosition?: boolean, signatoriesList: ESignatureDocument[], onSave: (memoradumId: string) => void, onCancel: () => void }) {
+export default function CreateFromTemplate({ editingId, rejectedId = null, departmentId, individual, template, doctype, signatoriesList, isHighestPosition, onSave, onCancel }: { editingId?: string, rejectedId?: string|null, departmentId?: string, individual?: UserDocument, template?: TemplateDocument, doctype: DocumentType, isHighestPosition?: boolean, signatoriesList: ESignatureDocument[], onSave: (memoradumId: string) => void, onCancel: () => void }) {
   const { status, data: sessionData } = useSession({ redirect: false })
   // const ppi = 96
   // const size = useMemo<{width:number, height:number}>(() => ({
@@ -42,6 +42,8 @@ export default function CreateFromTemplate({ rejectedId = null, departmentId, in
 
   const editorRef = useRef<any>(null);
   const [content, setContent] = useState<string>("");
+
+  const [series, setSeries] = useState<string>("");
 
   const onContentChange = useCallback((editor: any, content: string) => {
     setContent(content);
@@ -99,38 +101,53 @@ export default function CreateFromTemplate({ rejectedId = null, departmentId, in
         showLoaderOnConfirm: false,
       }).then(async ({ isConfirmed }) => {
         if (isConfirmed) {
-          Swal.fire({
-            title: 'Enter ' + (doctype === DocumentType.Memo ? 'Memorandum' : 'Letter') + ' title:',
-            input: 'text',
-            inputValue: template?.title || '',
-            showCancelButton: true,
-            confirmButtonText: 'Submit and Send',
-            cancelButtonText: 'Cancel',
-            showLoaderOnConfirm: false,
-          }).then(async ({ isConfirmed, value: title }) => {
-            if (isConfirmed) {
-              if (!title) {
-                toaster.danger('Please enter a ' + (doctype === DocumentType.Memo ? 'Memorandum' : 'Letter') + ' title')
-                return;
-              }
-              const eSignatures = getSignatureIdsFromContent(content);
-              const formData = new FormData()
-              formData.append('title', title)
-              formData.append('content', content)
-              const { success, memorandumId, letterId, error } = await saveMyTemplateDept(cc, eSignatures, formData)
-              if (error) {
-                toaster.danger(error)
-              } else if (success) {
-                toaster.success(success)
-                onSave && doctype === DocumentType.Memo && onSave(memorandumId as string)
-                onSave && doctype === DocumentType.Letter && onSave(letterId as string)
-              }
+          if (!!rejectedId) {
+            const eSignatures = getSignatureIdsFromContent(content);
+            const formData = new FormData()
+            formData.append('content', content)
+            const { success, memorandumId, letterId, error } = await saveMyTemplateDept(cc, eSignatures, formData)
+            if (error) {
+              toaster.danger(error)
+            } else if (success) {
+              toaster.success(success)
+              onSave && doctype === DocumentType.Memo && onSave(memorandumId as string)
+              onSave && doctype === DocumentType.Letter && onSave(letterId as string)
             }
-          })
+          } else {
+            Swal.fire({
+              title: 'Enter ' + (doctype === DocumentType.Memo ? 'Memorandum' : 'Letter') + ' title:',
+              input: 'text',
+              inputValue: template?.title || '',
+              showCancelButton: true,
+              confirmButtonText: 'Submit and Send',
+              cancelButtonText: 'Cancel',
+              showLoaderOnConfirm: false,
+            }).then(async ({ isConfirmed, value: title }) => {
+              if (isConfirmed) {
+                if (!title) {
+                  toaster.danger('Please enter a ' + (doctype === DocumentType.Memo ? 'Memorandum' : 'Letter') + ' title')
+                  return;
+                }
+                const eSignatures = getSignatureIdsFromContent(content);
+                const formData = new FormData()
+                formData.append('title', title)
+                formData.append('content', content)
+                formData.append('series', series)
+                const { success, memorandumId, letterId, error } = await saveMyTemplateDept(cc, eSignatures, formData)
+                if (error) {
+                  toaster.danger(error)
+                } else if (success) {
+                  toaster.success(success)
+                  onSave && doctype === DocumentType.Memo && onSave(memorandumId as string)
+                  onSave && doctype === DocumentType.Letter && onSave(letterId as string)
+                }
+              }
+            })
+          }
         }
       })
     }
-  }, [onSave, departmentId, doctype, template?.title, individual, cc, content, saveMyTemplateDept, saveMyTemplateIndiv])
+  }, [onSave, departmentId, doctype, template?.title, individual, cc, content, saveMyTemplateDept, saveMyTemplateIndiv, series])
   if (status === 'loading') return <LoadingComponent />;
 
   return (
@@ -193,7 +210,7 @@ export default function CreateFromTemplate({ rejectedId = null, departmentId, in
           </div>
         </SelectMenu>
       </div>
-      <OCSTinyMCE editorRef={editorRef} departmentId={!individual ? departmentId : undefined} fullName={sessionData?.user?.fullName} doctype={!individual ? doctype : undefined} signatoriesList={signatoriesList} initialContentData={template?.content} onContent={onContentChange} withPreparedBy withSignatories />
+      <OCSTinyMCE editorRef={editorRef} onSeries={setSeries} departmentId={!individual ? departmentId : undefined} fullName={sessionData?.user?.fullName} doctype={!individual ? doctype : undefined} signatoriesList={signatoriesList} initialContentData={template?.content} onContent={onContentChange} withPreparedBy withSignatories />
     </div>
   );
 }

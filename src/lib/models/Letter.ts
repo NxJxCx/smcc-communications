@@ -58,6 +58,7 @@ const LetterSchema = new Schema({
         default: null
       },
       rejectedReason: String,
+      priority: Number
     }],
   },
   cc: {

@@ -1,6 +1,6 @@
 'use server';;
 import connectDB from "@/lib/database";
-import { DepartmentDocument, DocumentType, Roles } from "@/lib/modelInterfaces";
+import { DocumentType, LetterDocument, MemoDocument, Roles } from "@/lib/modelInterfaces";
 import Department from "@/lib/models/Department";
 import ESignature from "@/lib/models/ESignature";
 import Letter from "@/lib/models/Letter";
@@ -11,11 +11,16 @@ import User from "@/lib/models/User";
 import { getSession } from "@/lib/session";
 import { isObjectIdOrHexString } from "mongoose";
 import { SignatureApprovals, UserDocument } from '../lib/modelInterfaces';
+import { HighestPosition } from '../lib/types';
 import { addNotification, broadcastNotification } from "./notifications";
 import { ActionResponseType } from "./superadmin";
 
 
 const role = Roles.Admin;
+
+function getFullName(admin?: UserDocument) {
+  return !!admin ? ((admin.prefixName || "") + " " + admin.firstName + " " + (admin.middleName ? admin.middleName[0].toUpperCase() + ". " : "") + admin.lastName + (admin.suffixName ? ", " + admin.suffixName : "")).trim() : ""
+}
 
 export async function saveMemorandumLetter(departmentId: string, doctype: DocumentType, rejectedId: string|null, cc: string[], eSignatures: string[], formData: FormData): Promise<ActionResponseType & { memorandumId?: string, letterId?: string }>
 {
@@ -33,19 +38,79 @@ export async function saveMemorandumLetter(departmentId: string, doctype: Docume
       const departmentName = department.name
       const content = formData.get('content')
       const title = formData.get('title')
+      const series = formData.get('series')
       if (!content) {
         return {
           error: 'Memorandum title should not be empty'
         }
       }
-      const signatureApprovals = eSignatures.map(signatureId => ({ signature_id: signatureId, approvedDate: null }))
+      const signatureApprovals = await Promise.all(eSignatures.map(async (signatureId: string) => {
+        const es = await ESignature.findOne({ _id: signatureId }).populate('adminId').exec();
+        return {
+            signature_id: signatureId,
+            priority: es.adminId?.highestPosition === HighestPosition.Admin ? 1 : (
+              es.adminId?.highestPosition === HighestPosition.VicePresident ? 2 : 3
+            )
+        }
+      }));
+      if (doctype === DocumentType.Memo && !signatureApprovals.some((sa) => sa.priority === 2) && !signatureApprovals.some((sa) => sa.priority === 3)) {
+        return {
+          error: "President's Signature approval should be required"
+        }
+      }
       if (doctype === DocumentType.Memo) {
-        const dept = await Department.findOne({ _id: departmentId }).lean<DepartmentDocument>().exec();
-        const count = await Memo.countDocuments({
-          departmentId
-        }).exec();
-        const deptName = dept?.name.split(' ').filter((v: string) => v?.toLowerCase() !== "and" && v?.toLowerCase() !== "or" && v?.toLowerCase() !== "of" && v?.toLowerCase() !== "the" && v !== "").map((v: string) => v.length === 1 || /[A-Z]/.test(v) ? v?.toUpperCase() : v[0]?.toUpperCase()).join("")
-        const series = `${deptName}${doctype?.[0]?.toUpperCase()}${doctype?.substring(1)?.toLowerCase()}${(count + 1).toString().padStart(3, "0")}_Series`;
+        if (!!rejectedId) {
+          try {
+            const memo = await Memo.findByIdAndUpdate(
+              rejectedId,
+              {
+                content,
+                signatureApprovals,
+                $addToSet: {
+                  cc: { $each: cc }
+                }
+              },
+              { upsert: false, runValidators: true, new: true }
+            ).exec();
+            try {
+              await addNotification(memo.preparedBy.toHexString(), {
+                title: 'Revised Memorandum Pending Approval',
+                message: memo.title + ' for ' + departmentName + ' by you',
+                href: '/' + role + '/approvals/memo?id=' + memo._id
+              })
+            } catch (e) {
+              console.log(e)
+            }
+            let saproves = signatureApprovals.filter((sa) => sa.priority === 1);
+            if (saproves.length === 0) {
+              saproves = signatureApprovals.filter((sa) => sa.priority === 2);
+            }
+            if (saproves.length === 0) {
+              saproves = signatureApprovals.filter((sa) => sa.priority === 3);
+            }
+            await Promise.all(saproves.map(async (sa) => {
+              try {
+                const eSig = await ESignature.findById(sa.signature_id).exec();
+                const userSig = await User.findById(eSig.adminId.toHexString()).exec();
+                const preparedByUser = await User.findById(memo.preparedBy).lean<UserDocument>().exec();
+                const fullName = preparedByUser ? getFullName(preparedByUser) : "";
+                await addNotification(userSig._id.toHexString(), {
+                  title: 'Revised Memorandum Pending Approval',
+                  message: memo.title + ' for ' + departmentName + ' by ' + fullName,
+                  href: '/' + role + '/approvals/memo?id=' + memo._id
+                });
+              } catch (e) {
+                console.log(e)
+              }
+            }));
+            return {
+              success: 'Revised Memorandum Saved and Sent for Approval',
+              memorandumId: memo._id.toHexString()
+            }
+          } catch (e) {
+            console.log("Failed to updated and revise memo: ", e);
+          }
+        }
         const memo = await Memo.create({
           departmentId,
           title,
@@ -56,14 +121,6 @@ export async function saveMemorandumLetter(departmentId: string, doctype: Docume
           signatureApprovals
         })
         if (!!memo?._id) {
-          if (!!rejectedId) {
-            try {
-              const deleted = await Memo.deleteOne({ _id: rejectedId }, { runValidators: true }).exec();
-              console.log("deleted", deleted)
-            } catch (e) {
-              console.log("Failed to delete rejected memo: ", e);
-            }
-          }
           try {
             await addNotification(memo.preparedBy.toHexString(), {
               title: 'New Memorandum Pending Approval',
@@ -73,7 +130,14 @@ export async function saveMemorandumLetter(departmentId: string, doctype: Docume
           } catch (e) {
             console.log(e)
           }
-          await Promise.all(signatureApprovals.map(async (sa) => {
+          let saproves = signatureApprovals.filter((sa) => sa.priority === 1);
+          if (saproves.length === 0) {
+            saproves = signatureApprovals.filter((sa) => sa.priority === 2);
+          }
+          if (saproves.length === 0) {
+            saproves = signatureApprovals.filter((sa) => sa.priority === 3);
+          }
+          await Promise.all(saproves.map(async (sa) => {
             try {
               const eSig = await ESignature.findById(sa.signature_id).exec();
               const userSig = await User.findById(eSig.adminId.toHexString()).exec();
@@ -86,19 +150,65 @@ export async function saveMemorandumLetter(departmentId: string, doctype: Docume
             } catch (e) {
               console.log(e)
             }
-          }))
+          }));
           return {
             success: 'Memorandum Saved and Sent for Approval',
             memorandumId: memo._id.toHexString()
           }
         }
       } else if (doctype === DocumentType.Letter) {
-        const dept = await Department.findOne({ _id: departmentId }).lean<DepartmentDocument>().exec();
-        const count = await Letter.countDocuments({
-          departmentId
-        }).exec();
-        const deptName = dept?.name.split(' ').filter((v: string) => v?.toLowerCase() !== "and" && v?.toLowerCase() !== "or" && v?.toLowerCase() !== "of" && v?.toLowerCase() !== "the" && v !== "").map((v: string) => v.length === 1 || /[A-Z]/.test(v) ? v?.toUpperCase() : v[0]?.toUpperCase()).join("")
-        const series = `${deptName}${doctype?.[0]?.toUpperCase()}${doctype?.substring(1)?.toLowerCase()}${(count + 1).toString().padStart(3, "0")}_Series`;
+        if (!!rejectedId) {
+          try {
+            const letter = await Letter.findByIdAndUpdate(
+              rejectedId,
+              {
+                content,
+                signatureApprovals,
+                $addToSet: {
+                  cc: { $each: cc }
+                }
+              },
+              { upsert: false, runValidators: true, new: true }
+            ).exec();
+            try {
+              await addNotification(letter.preparedBy.toHexString(), {
+                title: 'Revised Memorandum Pending Approval',
+                message: letter.title + ' for ' + departmentName + ' by you',
+                href: '/' + role + '/approvals/letter?id=' + letter._id
+              })
+            } catch (e) {
+              console.log(e)
+            }
+            let saproves = signatureApprovals.filter((sa) => sa.priority === 1);
+            if (saproves.length === 0) {
+              saproves = signatureApprovals.filter((sa) => sa.priority === 2);
+            }
+            if (saproves.length === 0) {
+              saproves = signatureApprovals.filter((sa) => sa.priority === 3);
+            }
+            await Promise.all(saproves.map(async (sa) => {
+              try {
+                const eSig = await ESignature.findById(sa.signature_id).exec();
+                const userSig = await User.findById(eSig.adminId.toHexString()).exec();
+                const preparedByUser = await User.findById(letter.preparedBy).lean<UserDocument>().exec();
+                const fullName = preparedByUser ? getFullName(preparedByUser) : "";
+                await addNotification(userSig._id.toHexString(), {
+                  title: 'Revised Letter Pending Approval',
+                  message: letter.title + ' for ' + departmentName + ' by ' + fullName,
+                  href: '/' + role + '/approvals/letter?id=' + letter._id
+                })
+              } catch (e) {
+                console.log(e)
+              }
+            }));
+            return {
+              success: 'Revised Letter Saved and Sent for Approval',
+              memorandumId: letter._id.toHexString()
+            }
+          } catch (e) {
+            console.log("Failed to updated and revise memo: ", e);
+          }
+        }
         const letter = await Letter.create({
           departmentId,
           title,
@@ -109,13 +219,6 @@ export async function saveMemorandumLetter(departmentId: string, doctype: Docume
           signatureApprovals
         })
         if (!!letter?._id) {
-          if (!!rejectedId) {
-            try {
-              await Letter.deleteOne({ _id: rejectedId }, { runValidators: true }).exec();
-            } catch (e) {
-              console.log("Failed to delete rejected memo: ", e);
-            }
-          }
           try {
             await addNotification(letter.preparedBy.toHexString(), {
               title: 'New Letter Pending Approval',
@@ -125,7 +228,14 @@ export async function saveMemorandumLetter(departmentId: string, doctype: Docume
           } catch (e) {
             console.log(e)
           }
-          await Promise.all(signatureApprovals.map(async (sa) => {
+          let saproves = signatureApprovals.filter((sa) => sa.priority === 1);
+          if (saproves.length === 0) {
+            saproves = signatureApprovals.filter((sa) => sa.priority === 2);
+          }
+          if (saproves.length === 0) {
+            saproves = signatureApprovals.filter((sa) => sa.priority === 3);
+          }
+          await Promise.all(saproves.map(async (sa) => {
             try {
               const eSig = await ESignature.findById(sa.signature_id).exec();
               const userSig = await User.findById(eSig.adminId.toHexString()).exec();
@@ -271,8 +381,9 @@ export async function approveMemorandumLetter(doctype: DocumentType, memoLetterI
           memo.signatureApprovals.find((signatureApproval: any) => signatureApproval.signature_id.toHexString() === sid).approvedDate = new Date()
           const updated = await memo.save({ new: true, upsert: false, runValidators: true })
           if (!!updated?._id) {
-            if (JSON.parse(JSON.stringify(updated)).signatureApprovals.every((signatureApproval: any) => !!signatureApproval.approvedDate)) {
-              const title = 'New Memorandum'
+            const jsonizedUpdated: MemoDocument = JSON.parse(JSON.stringify(updated));
+            if (jsonizedUpdated.signatureApprovals.every((signatureApproval: any) => !!signatureApproval.approvedDate)) {
+              const title = 'New Memorandum Release'
               const message = memo.title
               const href = '/' + Roles.Faculty + '/memo?id=' + memo._id.toHexString()
               try {
@@ -280,11 +391,36 @@ export async function approveMemorandumLetter(doctype: DocumentType, memoLetterI
               } catch (e) {
                 console.log(e)
               }
-              const titleAdmin = 'Memorandum'
+              const titleAdmin = 'Memorandum Released'
               const messageAdmin = memo.title
               const hrefAdmin = '/' + role + '/approved/memo?id=' + memo._id.toHexString()
               try {
                 await broadcastNotification({ role: role, departmentId: memo.departmentId as string, title: titleAdmin, message: messageAdmin, href: hrefAdmin })
+              } catch (e) {
+                console.log(e)
+              }
+            } else {
+              try {
+                let prio = jsonizedUpdated.signatureApprovals.filter((sa) => sa.priority === 1 && !sa.approvedDate);
+                if (prio.length === 0) {
+                  prio = jsonizedUpdated.signatureApprovals.filter((sa) => sa.priority === 2 && !sa.approvedDate);
+                }
+                if (prio.length === 0) {
+                  prio = jsonizedUpdated.signatureApprovals.filter((sa) => sa.priority === 3 && !sa.approvedDate);
+                }
+                const department = await Department.findById(jsonizedUpdated.departmentId).exec()
+                const departmentName = department?.name
+                await Promise.all(prio.map(async (sa) => {
+                  const eSig = await ESignature.findById(sa.signature_id).exec();
+                  const userSig = await User.findById(eSig.adminId.toHexString()).exec();
+                  const preparedByUser = await User.findById(jsonizedUpdated.preparedBy).lean<UserDocument>().exec();
+                  const fullName = preparedByUser ? getFullName(preparedByUser) : "";
+                  await addNotification(userSig._id.toHexString(), {
+                    title: 'New Memorandum Pending Approval',
+                    message: memo.title + ' for ' + departmentName + ' by ' + fullName,
+                    href: '/' + role + '/approvals/memo?id=' + memo._id
+                  })
+                }))
               } catch (e) {
                 console.log(e)
               }
@@ -298,8 +434,9 @@ export async function approveMemorandumLetter(doctype: DocumentType, memoLetterI
           letter.signatureApprovals.find((signatureApproval: any) => signatureApproval.signature_id.toHexString() === sid).approvedDate = new Date()
           const updated = await letter.save({ new: true, upsert: false, runValidators: true })
           if (!!updated?._id) {
-            if (JSON.parse(JSON.stringify(updated)).signatureApprovals.every((signatureApproval: any) => !!signatureApproval.approvedDate)) {
-              const title = 'New Letter'
+            const jsonizedUpdated: LetterDocument = JSON.parse(JSON.stringify(updated));
+            if (jsonizedUpdated.signatureApprovals.every((signatureApproval: any) => !!signatureApproval.approvedDate)) {
+              const title = 'New Letter Release'
               const message = letter.title
               const href = '/' + Roles.Faculty + '/memo?id=' + letter._id.toHexString()
               try {
@@ -312,6 +449,31 @@ export async function approveMemorandumLetter(doctype: DocumentType, memoLetterI
               const hrefAdmin = '/' + role + '/approved/memo?id=' + letter._id.toHexString()
               try {
                 await broadcastNotification({ role: role, departmentId: letter.departmentId as string, title: titleAdmin, message: messageAdmin, href: hrefAdmin })
+              } catch (e) {
+                console.log(e)
+              }
+            } else {
+              try {
+                let prio = jsonizedUpdated.signatureApprovals.filter((sa) => sa.priority === 1 && !sa.approvedDate);
+                if (prio.length === 0) {
+                  prio = jsonizedUpdated.signatureApprovals.filter((sa) => sa.priority === 2 && !sa.approvedDate);
+                }
+                if (prio.length === 0) {
+                  prio = jsonizedUpdated.signatureApprovals.filter((sa) => sa.priority === 3 && !sa.approvedDate);
+                }
+                const department = await Department.findById(jsonizedUpdated.departmentId).exec()
+                const departmentName = department?.name
+                await Promise.all(prio.map(async (sa) => {
+                  const eSig = await ESignature.findById(sa.signature_id).exec();
+                  const userSig = await User.findById(eSig.adminId.toHexString()).exec();
+                  const preparedByUser = await User.findById(jsonizedUpdated.preparedBy).exec();
+                  const fullName = preparedByUser ? getFullName(preparedByUser) : ""
+                  await addNotification(userSig._id.toHexString(), {
+                    title: 'New Letter Pending Approval',
+                    message: letter.title + ' for ' + departmentName + ' by ' + fullName,
+                    href: '/' + role + '/approvals/letter?id=' + letter._id
+                  })
+                }))
               } catch (e) {
                 console.log(e)
               }
@@ -363,19 +525,25 @@ export async function rejectMemorandumLetter(doctype: DocumentType, memoLetterId
             } catch (e) {
               console.log(e)
             }
-            await Promise.all(JSON.parse(JSON.stringify(memo)).signatureApprovals.map(async (signatureApproval: SignatureApprovals) => {
-              try {
-                const eSig = await ESignature.findById(signatureApproval.signature_id).exec()
-                const userSign = await User.findById(eSig.adminId.toHexString()).exec()
-                await addNotification(userSign._id.toHexString(), {
-                  title,
-                  message,
-                  href
-                })
-              } catch (e) {
-                console.log(e)
+            await Promise.all(
+              JSON.parse(JSON.stringify(memo))
+              .signatureApprovals
+              .filter((sa: SignatureApprovals) => !!sa.approvedDate || !!sa.rejectedDate)
+              .map(async (signatureApproval: SignatureApprovals) => {
+                try {
+                  const eSig = await ESignature.findById(signatureApproval.signature_id).exec()
+                  const userSign = await User.findById(eSig.adminId.toHexString()).exec()
+                  await addNotification(userSign._id.toHexString(), {
+                    title,
+                    message,
+                    href
+                  })
+                } catch (e) {
+                  console.log(e)
+                }
               }
-            }))
+              )
+            )
             return {
               success: "Memorandum rejected successfully",
             }
@@ -398,7 +566,11 @@ export async function rejectMemorandumLetter(doctype: DocumentType, memoLetterId
             } catch (e) {
               console.log(e)
             }
-            await Promise.all(JSON.parse(JSON.stringify(letter)).signatureApprovals.map(async (signatureApproval: SignatureApprovals) => {
+            await Promise.all(
+              JSON.parse(JSON.stringify(letter))
+              .signatureApprovals
+              .filter((sa: SignatureApprovals) => !!sa.approvedDate || !!sa.rejectedDate)
+              .map(async (signatureApproval: SignatureApprovals) => {
               try {
                 const eSig = await ESignature.findById(signatureApproval.signature_id).exec()
                 const userSign = await User.findById(eSig.adminId.toHexString()).exec()

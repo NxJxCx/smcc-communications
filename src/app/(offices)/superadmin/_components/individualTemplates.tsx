@@ -3,8 +3,9 @@ import LoadingComponent from "@/components/loading";
 import OCSModal from "@/components/ocsModal";
 import ParseHTMLTemplate from "@/components/parseHTML";
 import { ESignatureDocument, Roles, TemplateDocument } from "@/lib/modelInterfaces";
+import { ViewLayout } from "@/lib/types";
 import clsx from "clsx";
-import { KeyEscapeIcon, PlusIcon } from "evergreen-ui";
+import { GridViewIcon, KeyEscapeIcon, ListColumnsIcon, PlusIcon } from "evergreen-ui";
 import { useCallback, useEffect, useState } from "react";
 import AddTemplate from "./addTemplate";
 import EditTemplate from "./editTemplate";
@@ -54,6 +55,8 @@ export default function IndividualTemplates() {
       .catch(console.log)
   }, [])
 
+  const [viewLayout, setViewLayout] = useState<ViewLayout>("list");
+
   return (<>
     <div className="w-full">
       <h1 className="w-fit mx-auto text-2xl mt-4 font-[500]">For Individual Templates</h1>
@@ -62,15 +65,20 @@ export default function IndividualTemplates() {
         <button type="button" onClick={() => onBack()} className="px-2 py-1 border rounded bg-gray-300 text-black my-2 mr-2"><KeyEscapeIcon display="inline" /> Back</button>
         <button type="button" onClick={() => setOpenAddTemplate(true)} className="px-2 py-1 border rounded bg-sky-500 text-black my-2"><PlusIcon display="inline" /> Add Template</button>
       </div>
-      {!openAddTemplate && !openEditTemplate && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8 border rounded-xl mt-4 mx-4">
+      {!openAddTemplate && !openEditTemplate && (<>
+        <div className="flex justify-end items-end pr-8">
+          <button type="button" onClick={() => setViewLayout(viewLayout === "grid" ? "list" : "grid")} title={viewLayout === "grid" ? "List View" : "Grid View"} className="max-w-32 aspect-square p-1 rounded border border-blue-900 flex items-center justify-center text-blue-900 bg-white hover:bg-blue-200/50">
+            {viewLayout === "list" ? <GridViewIcon /> : <ListColumnsIcon />}
+          </button>
+        </div>
+        <div className={clsx(viewLayout === "grid" ? "grid grid-cols-1 lg:grid-cols-3 lg:min-w-[750px] p-3 gap-3" : "w-full grid grid-cols-1 gap-2")}>
           {loading && <div className="col-span-2 min-h-[200px]"><LoadingComponent /></div>}
           {!loading && !selectedTemplate && templates.length === 0 && <p className="text-center text-gray-600">No Templates</p>}
           {!loading && !selectedTemplate && templates.map((template: TemplateDocument) => (
-            <ThumbnailItem key={template._id} thumbnailSrc={"/thumbnail-document.png"} onClick={() => setSelectedTemplate(template)} label={template.title} createdAt={template.createdAt} updatedAt={template.updatedAt} />
+            <ThumbnailItem layout={viewLayout} key={template._id} thumbnailSrc={"/thumbnail-document.png"} onClick={() => setSelectedTemplate(template)} label={template.title} createdAt={template.createdAt} updatedAt={template.updatedAt} />
           ))}
         </div>
-      )}
+      </>)}
       {openEditTemplate && !openAddTemplate && !!selectedTemplate && (
         <EditTemplate withSignatories={false} template={selectedTemplate} signatoriesList={signatoriesList} onSave={(templateId: string) => onBack()} onCancel={onBack} />
       )}

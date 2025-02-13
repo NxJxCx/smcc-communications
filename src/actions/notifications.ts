@@ -3,6 +3,7 @@ import { Roles } from "@/lib/modelInterfaces";
 import User from "@/lib/models/User";
 import { getMyNotifications, getSession } from "@/lib/session";
 import { NextRequest } from "next/server";
+import { HighestPosition } from '../lib/types';
 
 export async function getNotifications(request: NextRequest) {
   const role = request.nextUrl.pathname.split('/')[1] as Roles;
@@ -166,6 +167,17 @@ export async function broadcastNotification({ role = Roles.Faculty, departmentId
         runValidators: true,
       }
     );
+    if (role === Roles.Admin) {
+      await User.updateMany(
+        { role, highestPosition: { $in: [HighestPosition.President, HighestPosition.VicePresident] } },
+        { $push: { notification }},
+        {
+          new: true,
+          upsert: false,
+          runValidators: true,
+        }
+      );
+    }
     return updated.acknowledged && updated.modifiedCount > 0
   } catch (e) {
     console.log(e)

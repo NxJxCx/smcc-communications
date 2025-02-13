@@ -72,7 +72,7 @@ export default function NotificationsPage() {
   }, [authenticated]);
 
   if (status === 'loading') {
-    return <div className="h-screen w-full"><LoadingComponent /></div>
+    return <div className="h-full w-full"><LoadingComponent /></div>
   }
 
   return status === 'authenticated' && (

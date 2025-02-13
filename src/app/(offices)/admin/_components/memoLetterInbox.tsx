@@ -4,21 +4,21 @@ import LoadingComponent from "@/components/loading";
 import OCSModal from "@/components/ocsModal";
 import ParseHTMLTemplate from "@/components/parseHTML";
 import { DepartmentDocument, DocumentType, ESignatureDocument, LetterDocument, MemoDocument, Roles, SignatureApprovals, UserDocument } from "@/lib/modelInterfaces";
-import { HighestPosition } from "@/lib/types";
+import { HighestPosition, ViewLayout } from "@/lib/types";
 import clsx from "clsx";
-import { ConfirmIcon, CrossIcon, DocumentIcon, EditIcon, RefreshIcon, toaster, } from "evergreen-ui";
+import { ConfirmIcon, CrossIcon, DocumentIcon, EditIcon, GridViewIcon, ListColumnsIcon, RefreshIcon, toaster, } from "evergreen-ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
 import CreateFromTemplate from "./createFromTemplate";
 import ThumbnailItemWithDepartment from "./thumbnailItemWithDepartment";
 
 export default function MemoLetterInbox({ doctype, searchParam, showRejected = false }: Readonly<{ doctype: DocumentType, searchParam: string, showRejected?: boolean }>) {
-  const [data, setData] = useState<(MemoDocument & { isPreparedByMe: boolean; isPending: boolean; isRejected: boolean; }|any)[]|(LetterDocument & { isPreparedByMe: boolean; isPending: boolean; isRejected: boolean; }|any)[]>([]);
+  const [data, setData] = useState<(MemoDocument & { isPreparedByMe: boolean; isPending: boolean; isRejected: boolean; nextQueue: boolean, hasResponded: boolean, highestPosition: HighestPosition })[]|(LetterDocument & { isPreparedByMe: boolean; isPending: boolean; isRejected: boolean; nextQueue: boolean, hasResponded: boolean, highestPosition: HighestPosition }|any)[]>([]);
   const [hideRejected, setHideRejected] = useState(!showRejected);
-  const [hidePreparedByMe, setHidePreparedByMe] = useState(true);
-  const [hidePending, setHidePending] = useState(true);
+  const [hidePreparedByMe, setHidePreparedByMe] = useState(false);
+  const [hidePending, setHidePending] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [selectedMemo, setSelectedMemo] = useState<(MemoDocument|LetterDocument) & { isPreparedByMe: boolean; isPending: boolean; isRejected: boolean; }|any>();
+  const [selectedMemo, setSelectedMemo] = useState<(MemoDocument|LetterDocument) & { isPreparedByMe: boolean; isPending: boolean; isRejected: boolean; nextQueue: boolean, hasResponded: boolean, highestPosition: HighestPosition }>();
   const [search, setSearch] = useState<string>(searchParam || '');
   const [isEditingRejected, setIsEditingRejected] = useState<boolean>(false);
   const isRejectedMemo = useMemo(() => selectedMemo && selectedMemo.isRejected, [selectedMemo])
@@ -26,21 +26,15 @@ export default function MemoLetterInbox({ doctype, searchParam, showRejected = f
   const isPending = useMemo(() => selectedMemo && selectedMemo.isPending, [selectedMemo])
 
   const filteredData = useMemo(() => {
-    let filtered = data;
-    if (hideRejected && hidePreparedByMe && hidePending) {
-      filtered = filtered.filter((doc) => !doc.isRejected && !doc.isPreparedByMe && !doc.isPending)
-    } else if (hideRejected && hidePending && !hidePreparedByMe) {
-      filtered = filtered.filter((doc) => doc.isPreparedByMe || (!doc.isPreparedByMe && !doc.isRejected && !doc.isPending))
-    } else if (hideRejected && !hidePending && hidePreparedByMe) {
-      filtered = filtered.filter((doc) => (doc.isPending && !doc.isRejected && !doc.isPreparedByMe) || (!doc.isPending && !doc.isRejected && !doc.isPending))
-    } else if (!hideRejected && hidePending && hidePreparedByMe) {
-      filtered = filtered.filter((doc) => doc.isRejected || (!doc.isPending && !doc.isRejected && !doc.isPending))
-    } else if (!hideRejected && hidePending && hidePreparedByMe) {
-      filtered = filtered.filter((doc) => doc.isRejected || (!doc.isPending && !doc.isRejected && !doc.isPending))
-    } else if (!hideRejected && hidePending && !hidePreparedByMe) {
-      filtered = filtered.filter((doc) => doc.isPreparedByMe || doc.isRejected || (!doc.isPreparedByMe && !doc.isRejected && !doc.isPending))
-    } else if (!hideRejected && !hidePending && hidePreparedByMe) {
-      filtered = filtered.filter((doc) => doc.isPending || doc.isRejected || (!doc.isPreparedByMe && !doc.isRejected && !doc.isPending))
+    let filtered = data.filter((doc) => (doc.isPreparedByMe || !!doc.hasResponded || !!doc.nextQueue));
+    if (hideRejected) {
+      filtered = filtered.filter((doc) => !doc.isRejected)
+    }
+    if (hidePreparedByMe) {
+      filtered = filtered.filter((doc) => !doc.isPreparedByMe)
+    }
+    if (hidePending) {
+      filtered = filtered.filter((doc) => (hidePreparedByMe && !doc.isPreparedByMe && !doc.isPending) || (!hidePreparedByMe && (doc.isPreparedByMe || !doc.isPending)))
     }
     if (search && search.length > 0) {
       filtered = filtered.filter((item) => (
@@ -162,11 +156,11 @@ export default function MemoLetterInbox({ doctype, searchParam, showRejected = f
 
   const onShowReason = useCallback(() => {
     if (!!selectedMemo) {
-      const rejected: SignatureApprovals = selectedMemo.signatureApprovals?.find((v: SignatureApprovals) => !!v.rejectedReason);
+      const rejected: SignatureApprovals|undefined = selectedMemo.signatureApprovals?.find((v: SignatureApprovals) => !!v.rejectedReason);
 
       Swal.fire({
         title: 'Reason for Rejection',
-        text: rejected.rejectedReason,
+        text: rejected!.rejectedReason,
         showConfirmButton: false
       })
     }
@@ -214,6 +208,10 @@ export default function MemoLetterInbox({ doctype, searchParam, showRejected = f
       })
   }, [signatoriesList, selectedMemo]);
 
+  const [viewLayout, setViewLayout] = useState<ViewLayout>("list");
+
+  const approveRejectDisabled = useMemo(() => !selectedMemo?.nextQueue, [selectedMemo]);
+
   return (<>
     <div className="p-6">
       <h1 className="text-2xl font-[500]">{doctype === DocumentType.Memo ? "Memorandum for approval list" : "Letter for approval list"}</h1>
@@ -234,17 +232,20 @@ export default function MemoLetterInbox({ doctype, searchParam, showRejected = f
             <label htmlFor="hidePending" className="font-[500] text-sm">Hide Pending Others</label>
           </div>
         </div>
-        <div className="flex mt-2 lg:mt-0 lg:justify-end flex-grow pr-2 lg:pr-0">
+        <div className="flex mt-2 lg:mt-0 lg:justify-end flex-grow pr-2 lg:pr-0 gap-x-2">
+          <button type="button" onClick={() => setViewLayout(viewLayout === "grid" ? "list" : "grid")} title={viewLayout === "grid" ? "List View" : "Grid View"} className="max-w-32 aspect-square p-1 rounded border border-blue-900 flex items-center justify-center text-blue-900 bg-white hover:bg-blue-200/50">
+            {viewLayout === "list" ? <GridViewIcon /> : <ListColumnsIcon />}
+          </button>
           <button type="button" onClick={getData} title="Refresh List" className="max-w-32 aspect-square p-1 rounded border border-blue-900 flex items-center justify-center text-blue-900 bg-white hover:bg-blue-200/50"><RefreshIcon /></button>
         </div>
       </div>
       <div className="min-h-[200px] min-w-[300px] bg-white w-full p-4 lg:min-w-[800px]">
         <div className="border min-w-[300px] rounded-md p-2 lg:min-w-[780px]">
-          <div className="p-3 grid grid-cols-1 lg:grid-cols-3 lg:min-w-[750px] gap-3">
+          <div className={clsx(viewLayout === "grid" ? "grid grid-cols-1 lg:grid-cols-3 lg:min-w-[750px] p-3 gap-3" : "w-full grid grid-cols-1 gap-2")}>
             { loading && <LoadingComponent /> }
             { !loading && filteredData.length === 0 && <div className="text-center">No {doctype === DocumentType.Memo ? "memorandum" : "letter"} for approval.</div>}
             { !loading && filteredData.map((memoLetter, i) => (
-              <ThumbnailItemWithDepartment key={memoLetter._id} onClick={() => setSelectedMemo(memoLetter)} isRejected={memoLetter.isRejected} preparedByMe={memoLetter.isPreparedByMe} isPending={memoLetter.isPending} thumbnailSrc="/thumbnail-document.png" department={(memoLetter.departmentId as DepartmentDocument).name} label={memoLetter.title} series={memoLetter.series} createdAt={memoLetter.createdAt} updatedAt={memoLetter.updatedAt} />
+              <ThumbnailItemWithDepartment layout={viewLayout} key={memoLetter._id} onClick={() => setSelectedMemo(memoLetter)} isRejected={memoLetter.isRejected} preparedByMe={memoLetter.isPreparedByMe} isPending={memoLetter.isPending} thumbnailSrc="/thumbnail-document.png" department={(memoLetter.departmentId as DepartmentDocument).name} label={memoLetter.title} series={memoLetter.series} createdAt={memoLetter.createdAt} updatedAt={memoLetter.updatedAt} />
             ))}
           </div>
         </div>
@@ -253,17 +254,28 @@ export default function MemoLetterInbox({ doctype, searchParam, showRejected = f
     <OCSModal title={selectedMemo?.title} open={!!selectedMemo} onClose={onBack} allowOutsideClick={!isEditingRejected}>
       {isEditingRejected ? (
         <div className="max-h-[calc(100vh-100px)] overflow-y-auto">
-          <CreateFromTemplate rejectedId={selectedMemo?._id} doctype={doctype} signatoriesList={selectedSignatoriesList} departmentId={selectedMemo?.departmentId} key={selectedMemo?._id} template={selectedMemo} onSave={(memoId) => {
-            Swal.fire({
-              icon: 'success',
-              title: (doctype === DocumentType.Memo ? "Memorandum" : "Letter") + ' modified and sent for approval',
-              text: (doctype === DocumentType.Memo ? "Memorandum" : "Letter")  + ' saved successfully',
-              showConfirmButton: false,
-              timer: 1500
-            })
-            onBack();
-            setTimeout(() => getData())
-          }} onCancel={() => setIsEditingRejected(false)} />
+          <CreateFromTemplate
+            key={selectedMemo?._id}
+            editingId={selectedMemo?._id}
+            rejectedId={selectedMemo?._id}
+            // isHighestPosition={selectedMemo?.highestPosition === HighestPosition.President}
+            departmentId={selectedMemo?.departmentId as any}
+            template={selectedMemo as any}
+            doctype={doctype}
+            signatoriesList={selectedSignatoriesList}
+            onSave={(memoId) => {
+              Swal.fire({
+                icon: 'success',
+                title: (doctype === DocumentType.Memo ? "Memorandum" : "Letter") + ' modified and sent for approval',
+                text: (doctype === DocumentType.Memo ? "Memorandum" : "Letter")  + ' saved successfully',
+                showConfirmButton: false,
+                timer: 1500
+              })
+              onBack();
+              setTimeout(() => getData())
+            }}
+            onCancel={() => setIsEditingRejected(false)}
+          />
         </div>
       ) : (<>
       <div className={clsx("min-w-[" + (8.5 * 96) + "px]", "max-w-[" + (8.5 * 96) + "px]", "min-h-[" + (1 * 96) + "px]")}>
@@ -279,8 +291,8 @@ export default function MemoLetterInbox({ doctype, searchParam, showRejected = f
           {isPending && !isRejectedMemo && <div className="text-gray-500">This {doctype === DocumentType.Memo ? "memorandum" : "letter"} is pending for others</div>}
           {isPreparedByMe && <div className="text-blue-500">This {doctype === DocumentType.Memo ? "memorandum" : "letter"} is prepared by you</div>}
           {!(isRejectedMemo || isPreparedByMe || isPending) && (<>
-            <button type="button" className="rounded-lg bg-green-600 hover:bg-green-500 text-white px-3 py-1 disabled:bg-gray-300" onClick={onApprove}><ConfirmIcon display="inline" /> Approve</button>
-            <button type="button" className="rounded-lg bg-red-600 hover:bg-red-500 text-white px-3 py-1 disabled:bg-gray-300" onClick={onReject}><CrossIcon display="inline" />Reject</button>
+            <button type="button" className="rounded-lg bg-green-600 hover:bg-green-500 text-white px-3 py-1 disabled:bg-gray-300" onClick={onApprove} disabled={approveRejectDisabled}><ConfirmIcon display="inline" /> Approve</button>
+            <button type="button" className="rounded-lg bg-red-600 hover:bg-red-500 text-white px-3 py-1 disabled:bg-gray-300" onClick={onReject} disabled={approveRejectDisabled}><CrossIcon display="inline" />Reject</button>
           </>)}
           <button type="button" className="rounded-lg bg-gray-300 hover:bg-yellow-100 text-black px-3 py-1" onClick={onBack}>Close</button>
         </div>

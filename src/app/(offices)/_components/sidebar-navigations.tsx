@@ -74,6 +74,10 @@ const adminSidebarNavList: any[] = [
     url: '/admin/archive',
   },
   {
+    name: 'Reports',
+    url: '/admin/reports',
+  },
+  {
     name: 'Account',
     url: '/admin/account',
   },

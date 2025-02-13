@@ -76,13 +76,25 @@ export default function HeaderComponent() {
         <div className="flex h-full gap-x-2 mb-3 flex-between items-center flex-nowrap pl-3 pr-8">
           <div className="flex-grow justify-start">
             <button type="button" title="Toggle Sidebar" onClick={toggleSidebar} className="flex-shrink flex items-center px-2 py-1 text-sm font-medium text-slate-800 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-slate-300">
-              <ListIcon />
+              {status === "loading" && <div className="animate-pulse w-6 h-6 bg-black/50 rounded-full" />}
+              {status === "authenticated" && <ListIcon />}
             </button>
           </div>
           <button onClick={toggleShown} className="flex-shrink flex flex-nowrap relative">
+            {status === "loading" && (
+              <>
+              <div className="flex-grow justify-end text-right items-end flex flex-col space-y-2">
+                <div className="h-4 w-40 animate-pulse bg-black/50 rounded-lg" />
+                <div className="h-3 w-20 animate-pulse bg-black/50 rounded-lg" />
+              </div>
+              <div className="min-h-full items-center justify-center flex pl-2">
+                <div className="animate-pulse bg-black/50 w-10 h-10 rounded-full"></div>
+              </div>
+              </>
+            )}
             {status === 'authenticated' && (
               <>
-                <div className="flex-grow justify-end text-right">
+              <div className="flex-grow justify-end text-right">
                 <div className="text-sm font-semibold text-slate-800 uppercase">
                   {session?.user?.fullName}
                 </div>

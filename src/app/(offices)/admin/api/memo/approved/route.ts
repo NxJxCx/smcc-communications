@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
     const session = await getSession(Roles.Admin)
     if (!!session?.user) {
       const doctype = request.nextUrl.searchParams.get('doctype');
+      const populate = request.nextUrl.searchParams.get('populate');
       if ([DocumentType.Memo, DocumentType.Letter].includes(doctype as DocumentType)) {
         const memoLetterField = doctype === DocumentType.Memo ? "archivedMemos" : "archivedLetters";
         const memoLetterIndividualField = doctype === DocumentType.Memo ? "archivedMemoIndividuals" : "archivedLetterIndividuals";
@@ -28,6 +29,10 @@ export async function GET(request: NextRequest) {
         const signature_id = signature?._id?.toHexString();
         let departments = await Department.find({}).select('_id').exec();
         const departmentIds = departments.map((dp) => dp._id?.toHexString())
+        let populate_args = 'departmentId';
+        if (!!populate) {
+          populate_args += ` ${populate.replaceAll(","," ")}`;
+        }
         const resultFind = await MemoLetter.find({
           $or: [
             {
@@ -96,7 +101,7 @@ export async function GET(request: NextRequest) {
               ],
             }
           ]
-        }).populate('departmentId').exec();
+        }).populate(populate_args).exec();
         const resultFindIndividual = await MemoLetterIndividual.find({
           _id: {
             $nin: [...(user._doc[memoLetterIndividualField] || [])]

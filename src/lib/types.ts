@@ -14,6 +14,9 @@ export interface TableColumnProps {
 
 export type SortDirection = 'asc' | 'desc'
 
+export type ViewLayout = "grid"|"list"
+
+
 export const SignupFormSchema = z.object({
   employeeId: z.string().trim(),
   password: z.string(),

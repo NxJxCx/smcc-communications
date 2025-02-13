@@ -11,8 +11,9 @@ import {
   MemoIndividualDocument,
   Roles,
 } from "@/lib/modelInterfaces";
+import { ViewLayout } from "@/lib/types";
 import clsx from "clsx";
-import { PrintIcon, RefreshIcon, ResetIcon } from "evergreen-ui";
+import { GridViewIcon, ListColumnsIcon, PrintIcon, RefreshIcon, ResetIcon } from "evergreen-ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
 import ThumbnailItemWithDepartment from "./thumbnailItemWithDepartment";
@@ -129,6 +130,8 @@ export default function ArchivedMemoLetter({ doctype, searchParam }: Readonly<{ 
     })
   }, [selectedMemo, doctype, getData, onBack])
 
+  const [viewLayout, setViewLayout] = useState<ViewLayout>("list");
+
   return (<>
     <div className="p-6">
       <h1 className="text-2xl font-[500]">{doctype === DocumentType.Memo ? <>Archived Memorandums</> : <>Archived Letters</>}</h1>
@@ -137,17 +140,20 @@ export default function ArchivedMemoLetter({ doctype, searchParam }: Readonly<{ 
           <label htmlFor="searchMemo" className="font-[500] mr-2 items-center flex">Search:</label>
           <input type="search" onChange={(e) => setSearch(e.target.value)} value={search} id="searchMemo" placeholder="Search Memorandum" className="border-2 max-w-64 border-gray-300 px-2 py-1 rounded" />
         </div>
-        <div className="flex mt-2 lg:mt-0 lg:justify-end flex-grow pr-2 lg:pr-0">
+        <div className="flex mt-2 lg:mt-0 lg:justify-end flex-grow pr-2 lg:pr-0 gap-x-2">
+          <button type="button" onClick={() => setViewLayout(viewLayout === "grid" ? "list" : "grid")} title={viewLayout === "grid" ? "List View" : "Grid View"} className="max-w-32 aspect-square p-1 rounded border border-blue-900 flex items-center justify-center text-blue-900 bg-white hover:bg-blue-200/50">
+            {viewLayout === "list" ? <GridViewIcon /> : <ListColumnsIcon />}
+          </button>
           <button type="button" onClick={getData} title="Refresh List" className="max-w-32 aspect-square p-1 rounded border border-blue-900 flex items-center justify-center text-blue-900 bg-white hover:bg-blue-200/50"><RefreshIcon /></button>
         </div>
       </div>
       <div className="min-h-[200px] min-w-[300px] bg-white w-full p-4 lg:min-w-[800px]">
         <div className="border min-w-[300px] rounded-md p-2 lg:min-w-[780px]">
-          <div className="p-3 grid grid-cols-1 lg:grid-cols-3 lg:min-w-[750px] gap-3">
+          <div className={clsx(viewLayout === "grid" ? "grid grid-cols-1 lg:grid-cols-3 lg:min-w-[750px] p-3 gap-3" : "w-full grid grid-cols-1 gap-2")}>
             { loading && <LoadingComponent /> }
             { !loading && filteredData.length === 0 && <div className="text-center">No archived {doctype === DocumentType.Memo ? "memorandum" : "letter"}.</div>}
             { !loading && filteredData.map((memoLetter, i) => (
-              <ThumbnailItemWithDepartment series={memoLetter?.series} onClick={() => setSelectedMemo(memoLetter)} preparedByMe={memoLetter.isPreparedByMe} key={memoLetter._id} thumbnailSrc="/thumbnail-document.png" department={(memoLetter as any).departmentId?.name} label={memoLetter.title} createdAt={memoLetter.createdAt} updatedAt={memoLetter.updatedAt} />
+              <ThumbnailItemWithDepartment layout={viewLayout} series={memoLetter?.series} onClick={() => setSelectedMemo(memoLetter)} preparedByMe={memoLetter.isPreparedByMe} key={memoLetter._id} thumbnailSrc="/thumbnail-document.png" department={(memoLetter as any).departmentId?.name} label={memoLetter.title} createdAt={memoLetter.createdAt} updatedAt={memoLetter.updatedAt} />
             ))}
           </div>
         </div>

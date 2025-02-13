@@ -3,11 +3,11 @@ import LoadingComponent from "@/components/loading";
 import OCSModal from "@/components/ocsModal";
 import ParseHTMLTemplate from "@/components/parseHTML";
 import { DepartmentDocument, DocumentType, ESignatureDocument, Roles, TemplateDocument, UserDocument } from "@/lib/modelInterfaces";
-import { HighestPosition } from "@/lib/types";
+import { HighestPosition, ViewLayout } from "@/lib/types";
+import { useSession } from '@/lib/useSession';
 import clsx from "clsx";
-import { ArrowLeftIcon, KeyEscapeIcon, PlusIcon } from "evergreen-ui";
+import { ArrowLeftIcon, GridViewIcon, KeyEscapeIcon, ListColumnsIcon, PlusIcon } from "evergreen-ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useSession } from '../../../../lib/useSession';
 import CreateFromTemplate from "./createFromTemplate";
 import ThumbnailItem from "./thumbnailItem";
 
@@ -91,7 +91,7 @@ export default function CreateMemoLetterFromTemplate({
   }, [])
 
   const selectedSignatoriesList = useMemo(() => {
-    return (
+    const afterSig = (
       // !!selectedDepartment
       // ?
       signatoriesList.sort((a: ESignatureDocument & { adminId: UserDocument } | any, b: ESignatureDocument & { adminId: UserDocument } | any) => {
@@ -126,6 +126,7 @@ export default function CreateMemoLetterFromTemplate({
       //     : []
       // )
     )
+    return afterSig;
   }, [
     selectedDepartment, signatoriesList,
     // selectedIndividual, sessionData
@@ -134,6 +135,8 @@ export default function CreateMemoLetterFromTemplate({
   const onChangeSelectedIndividual = useCallback((id: string) => {
     setSelectedIndividual(employees.find((d) => d._id === id) || undefined)
   }, [employees])
+
+  const [viewLayout, setViewLayout] = useState<ViewLayout>("list");
 
   return (<>
     <div className="w-full relative">
@@ -168,7 +171,14 @@ export default function CreateMemoLetterFromTemplate({
       {step === "individual" &&  !openAddTemplate && (<>
         <div className="w-full mt-2">
           {loading && <div className="col-span-2 min-h-[200px]"><LoadingComponent /></div>}
-          {!loading && !!selectedIndividual && <h1 className="text-center">Send {doctype === DocumentType.Memo ? "Memorandum" : "Letter"} to Individual</h1>}
+          {!loading && !!selectedIndividual && (
+            <div className="flex justify-between items-end px-8 pt-4">
+              <h1 className="text-center font-semibold text-xl">Send {doctype === DocumentType.Memo ? "Memorandum" : "Letter"} to Individual</h1>
+              <button type="button" onClick={() => setViewLayout(viewLayout === "grid" ? "list" : "grid")} title={viewLayout === "grid" ? "List View" : "Grid View"} className="max-w-32 aspect-square p-1 rounded border border-blue-900 flex items-center justify-center text-blue-900 bg-white hover:bg-blue-200/50">
+                {viewLayout === "list" ? <GridViewIcon /> : <ListColumnsIcon />}
+              </button>
+            </div>
+          )}
           {!loading && !selectedIndividual && employees?.length === 0 && <p className="text-center text-gray-600">No Employees/Faculty/Staff</p>}
           {!loading && !selectedIndividual && (
             <div className="w-full h-[calc(100vh-300px)] flex flex-col justify-center items-center">
@@ -181,21 +191,26 @@ export default function CreateMemoLetterFromTemplate({
               </select>
             </div>
           )}
-          {!loading && !!selectedIndividual && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8 border rounded-xl mt-4 mx-4">
+          {!loading && !!selectedIndividual && (<>
+            <div className={clsx(viewLayout === "grid" ? "grid grid-cols-1 lg:grid-cols-3 lg:min-w-[750px] p-3 gap-3" : "w-full grid grid-cols-1 gap-2")}>
               {!loading && !!selectedIndividual && individualTemplates.length === 0 && <p className="text-center text-gray-600">No Individual Templates</p>}
               {!loading && !!selectedIndividual && individualTemplates.map((template: TemplateDocument) => (
-                <ThumbnailItem key={template._id} thumbnailSrc={"/thumbnail-document.png"} onClick={() => setSelectedTemplate(template)} label={template.title} createdAt={template.createdAt} updatedAt={template.updatedAt} />
+                <ThumbnailItem layout={viewLayout} key={template._id} thumbnailSrc={"/thumbnail-document.png"} onClick={() => setSelectedTemplate(template)} label={template.title} createdAt={template.createdAt} updatedAt={template.updatedAt} />
               ))}
             </div>
-          )}
+          </>)}
         </div>
       </>)}
       { (!!selectedDepartment && !selectedIndividual) && !openAddTemplate && (
-        <h1 className="pl-4 mt-8 text-xl font-[600]">Create {doctype === DocumentType.Memo ? "Memorandum" : "Letter"} from template</h1>
+        <div className="flex justify-between items-end pr-8">
+          <h1 className="pl-4 mt-8 text-xl font-[600]">Create {doctype === DocumentType.Memo ? "Memorandum" : "Letter"} from template</h1>
+          <button type="button" onClick={() => setViewLayout(viewLayout === "grid" ? "list" : "grid")} title={viewLayout === "grid" ? "List View" : "Grid View"} className="max-w-32 aspect-square p-1 rounded border border-blue-900 flex items-center justify-center text-blue-900 bg-white hover:bg-blue-200/50">
+            {viewLayout === "list" ? <GridViewIcon /> : <ListColumnsIcon />}
+          </button>
+        </div>
       )}
       { step === "department" && !openAddTemplate && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8 border rounded-xl mt-4 mx-4">
+        <div className={clsx(viewLayout === "grid" ? "grid grid-cols-1 lg:grid-cols-3 lg:min-w-[750px] p-3 gap-3" : "w-full grid grid-cols-1 gap-2")}>
           {loading && <div className="col-span-2 min-h-[200px]"><LoadingComponent /></div>}
           {!loading && !selectedDepartment && departments?.length === 0 && <p className="text-center text-gray-600">No Departments</p>}
           {!loading && !selectedDepartment && departments?.map((department: DepartmentDocument) => (
@@ -208,7 +223,7 @@ export default function CreateMemoLetterFromTemplate({
           ))}
           {!loading && !!selectedDepartment && templates.length === 0 && <p className="text-center text-gray-600">No Templates</p>}
           {!loading && !!selectedDepartment && templates.map((template: TemplateDocument) => (
-            <ThumbnailItem key={template._id} thumbnailSrc={"/thumbnail-document.png"} onClick={() => setSelectedTemplate(template)} label={template.title} createdAt={template.createdAt} updatedAt={template.updatedAt} />
+            <ThumbnailItem layout={viewLayout} key={template._id} thumbnailSrc={"/thumbnail-document.png"} onClick={() => setSelectedTemplate(template)} label={template.title} createdAt={template.createdAt} updatedAt={template.updatedAt} />
           ))}
         </div>
       )}

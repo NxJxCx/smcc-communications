@@ -1,6 +1,7 @@
 'use client';
 import { Roles } from "@/lib/modelInterfaces";
 import { destroySession } from "@/lib/session";
+import { useSession } from "@/lib/useSession";
 import clsx from "clsx";
 import { LogOutIcon } from "evergreen-ui";
 import Image from "next/image";
@@ -11,6 +12,7 @@ import { useSidebar } from "./sidebar-context";
 import smccLogo from "./smcc-logo.webp";
 
 export default function SidebarComponent() {
+  const { status: sessionStatus } = useSession({ redirect: false })
   const { isSidebarOpen, sidebarNavigations, user } = useSidebar();
   const pathname = usePathname();
   const role = useMemo(() => pathname.substring(1).split('/')[0], [pathname])
@@ -38,8 +40,11 @@ export default function SidebarComponent() {
             </div>
           </div>
           {/* <!-- Side Navigation Bars --> */}
-          <div className="w-full flex flex-col justify-start items-center gap-y-3 font-[600] flex-grow">
-            { sidebarNavigations.map((sn, i: number) => (
+          <div className="w-full flex flex-col justify-start items-center space-y-3 font-[600] flex-grow">
+            <div role="status" className="animate-pulse h-full flex-col justify-start items-center space-y-6">
+              {sessionStatus === "loading" && Array.from({length: 7}, (_, i) => <div key={`skeleton_sidebar_${i}`} className={clsx("w-[155px] rounded-full h-8 bg-sky-400", i === 5 ? "opacity-0" : "")} />)}
+            </div>
+            { sessionStatus === "authenticated" && sidebarNavigations.map((sn, i: number) => (
               <Link key={i} href={sn.url || '#'} className={clsx(
                 "w-full rounded-full text-left hover:border hover:border-yellow-500 pl-3 pr-1 py-1",
                 sn.url === `/${role}` && pathname.split("?")[0] === sn.url || sn.url !== `/${role}` && pathname.split("?")[0].startsWith(sn.url as any) ? "border border-black bg-sky-400 text-black" : "",
@@ -50,7 +55,7 @@ export default function SidebarComponent() {
           </div>
           <div className="w-full flex flex-col justify-start items-center gap-y-4 font-[600] flex-shrink py-8">
             <button type="button" title="Logout" onClick={onLogout} className="w-full rounded-full text-left hover:border hover:border-yellow-500 pl-4 py-1">
-              <div className="flex flex-nowrap gap-x-2 items-center"><LogOutIcon /><span>Logout</span></div>
+              <div className="flex flex-nowrap gap-x-2 items-center">{sessionStatus === "authenticated" && <><LogOutIcon /><span>Logout</span></>}</div>
             </button>
           </div>
         </div>

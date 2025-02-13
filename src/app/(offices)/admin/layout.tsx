@@ -9,5 +9,5 @@ export default async function Layout({
   if (!session) {
     return redirect("/" + Roles.Admin + "/login");
   }
-  return <>{children}</>
+  return children
 }

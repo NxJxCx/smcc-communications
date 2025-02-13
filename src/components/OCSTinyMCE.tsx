@@ -1,5 +1,5 @@
 'use client';
-import { DocumentType, ESignatureDocument, UserDocument } from "@/lib/modelInterfaces";
+import { DepartmentDocument, DocumentType, ESignatureDocument, UserDocument } from "@/lib/modelInterfaces";
 import { HighestPosition } from "@/lib/types";
 import { useSession } from "@/lib/useSession";
 import { Editor } from "@tinymce/tinymce-react";
@@ -19,7 +19,7 @@ function getPosition(highestPosition: string|HighestPosition) {
     : highestPosition
 }
 
-async function getCurrentSeries(deptId: string, doctype: DocumentType): Promise<number>
+async function getCurrentSeries(deptId: string, doctype: DocumentType): Promise<[number, string]>
 {
   try {
     const url = new URL("/admin/api/memo/series", window.location.origin);
@@ -27,18 +27,19 @@ async function getCurrentSeries(deptId: string, doctype: DocumentType): Promise<
     url.searchParams.append("doctype", doctype);
     const response = await fetch(url);
     if (response.ok) {
-      const { result } = await response.json();
+      const { result, department_name } = await response.json();
       if (Number.isInteger(result)) {
-        return result
+        const depName = department_name.split(' ').filter((v: string) => v?.toLowerCase() !== "and" && v?.toLowerCase() !== "or" && v?.toLowerCase() !== "of" && v?.toLowerCase() !== "the" && v !== "").map((v: string) => v.length === 1 || /[A-Z]/.test(v) ? v?.toUpperCase() : v[0]?.toUpperCase()).join("")
+        return [result, depName]
       }
     }
   } catch (e) {
     console.log("Error: ", e)
   }
-  return 0
+  return [0, ""]
 }
 
-export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentData, withPreparedBy = false, withSignatories = true, departmentId, fullName, doctype, onAddSignatory, onContent }: Readonly<{ departmentId?: string, doctype?: DocumentType, fullName?: string, editorRef: MutableRefObject<any>, signatoriesList: ESignatureDocument[], initialContentData?: string, withPreparedBy?: boolean, withSignatories?: boolean, onAddSignatory?: () => void, onContent: (editor: any, content: string) => void }>) {
+export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentData, withPreparedBy = false, withSignatories = true, departmentId, fullName, doctype, onAddSignatory, onContent, onSeries }: Readonly<{ departmentId?: string, doctype?: DocumentType, fullName?: string, editorRef: MutableRefObject<any>, signatoriesList: ESignatureDocument[], initialContentData?: string, withPreparedBy?: boolean, withSignatories?: boolean, onAddSignatory?: () => void, onContent: (editor: any, content: string) => void, onSeries?: (series: string) => void }>) {
   const { data: sessionData } = useSession({ redirect: false })
   const ppi = 96
   const size = useMemo<{width:number, height:number}>(() => ({
@@ -51,6 +52,16 @@ export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentD
     const fn = (user?.prefixName || '') + ' ' + user?.firstName + ' ' + (!!user?.middleName ? user?.middleName[0].toUpperCase() + '. ' : '') + user?.lastName + (user?.suffixName? ', ' + user?.suffixName : '')
     return fn.trim()
   }, [])
+
+  useEffect(() => {
+    if (!!departmentId && !!doctype && onSeries) {
+      getCurrentSeries(departmentId, doctype)
+        .then(([series, depName]: [number, string]) => {
+          onSeries(`${depName}${doctype?.[0]?.toUpperCase()}${doctype?.substring(1)?.toLowerCase()}_Order${series.toString().padStart(3, "0")}_Series${(new Date()).getFullYear()}`)
+        })
+        .catch(console.log)
+    }
+  }, [departmentId, doctype, onSeries])
 
   useEffect(() => {
     onContent && onContent(editorRef.current, content)
@@ -256,7 +267,8 @@ export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentD
 
   const onAddSeries = useCallback(function(deptId: string, fullName: string, doctype: DocumentType, date: Date) {
     getCurrentSeries(deptId, doctype)
-      .then((series: number) => {
+      .then(([series, depName]: [number, string]) => {
+        onSeries && onSeries(`${depName}${doctype?.[0]?.toUpperCase()}${doctype?.substring(1)?.toLowerCase()}_Order${series.toString().padStart(3, "0")}_Series${date.getFullYear()}`)
         editorRef.current?.insertContent(
           jsxToString(
             <>
@@ -307,9 +319,48 @@ export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentD
     const items = Object.keys(inputOptions).map((item) => ({
       type: 'menuitem',
       text: inputOptions[item],
+      _position_: (signatoriesList.find((signatory) => item === signatory._id!.toString())?.adminId as UserDocument)?.highestPosition,
+      _departments_: (signatoriesList.find((signatory) => item === signatory._id!.toString())?.adminId as UserDocument & { allDepartments: DepartmentDocument[] })?.allDepartments,
       onAction: () => onAddSignatories(item, inputOptions[item], getPosition((signatoriesList.find((signatory) => item === signatory._id!.toString())?.adminId as UserDocument)?.highestPosition))
     }));
-    callback(items);
+    const reduced = items.filter(item => item._position_ === HighestPosition.Admin).reduce((caller: any, it: any) => {
+      for (let i = 0; i < it._departments_.length; i++) {
+        let depName = it._departments_[i].name;
+        if (!Object.keys(caller).includes(depName)) {
+          caller[depName] = [];
+        }
+        caller[depName].push(it)
+      }
+      return {...caller};
+    }, {});
+    const itemsFinal = [
+      {
+        type: 'nestedmenuitem',
+        text: "President",
+        getSubmenuItems: () => items.filter(item => item._position_ === HighestPosition.President)
+      },
+      {
+        type: "separator",
+      },
+      {
+        type: 'nestedmenuitem',
+        text: "Vice-President",
+        getSubmenuItems: () => items.filter(item => item._position_ === HighestPosition.VicePresident)
+      },
+      {
+        type: "separator",
+      },
+      {
+        type: 'nestedmenuitem',
+        text: "Admins/Deans",
+        getSubmenuItems: () => Object.entries(reduced).map(([ik, iv]: any[]) => ({
+          type: 'nestedmenuitem',
+          text: ik,
+          getSubmenuItems: () => iv
+        }))
+      }
+    ];
+    callback(itemsFinal);
   }, [signatoriesList, editorRef, getFullName, onAddSignatories, sessionData])
 
   const handleFilePicker = useCallback((cb: any, value: any, meta: any) => {

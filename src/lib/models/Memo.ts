@@ -57,7 +57,8 @@ const MemoSchema = new Schema({
         type: Date,
         default: null
       },
-      rejectedReason: String
+      rejectedReason: String,
+      priority: Number,
     }],
   },
   cc: {

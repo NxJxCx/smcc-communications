@@ -94,15 +94,17 @@ export default function OCSTable({ data = [], columns = [], loading = false, sor
   }, [sortBy, sortDirection, onSortDirection]);
 
   const tools = useMemo<React.ReactElement[]>(() => searchable ? [
-      <div key={"search_1"} className="max-w-64 relative">
-        <input
-          className="appearance-none w-full bg-transparent border border-gray-300 text-gray-700 rounded-md py-2 px-4 block pl-8"
-          type="search"
-          placeholder="Search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <SearchIcon position="absolute" left={10} top={8} color={"gray"} />
+      <div key={"search_1"} className="max-w-64 inline-flex items-center">
+        <div className="relative max-w-64">
+          <input
+            className="appearance-none w-full bg-transparent border border-gray-300 text-gray-700 rounded-md py-2 px-4 block pl-8"
+            type="search"
+            placeholder="Search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <SearchIcon position="absolute" left={10} top={8} color={"gray"} />
+        </div>
       </div>,
       ...toolbars
     ] : toolbars

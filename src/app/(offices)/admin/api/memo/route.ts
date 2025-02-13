@@ -1,6 +1,6 @@
 'use server';;
 import connectDB from "@/lib/database";
-import { DocumentType, LetterDocument, MemoDocument, Roles } from "@/lib/modelInterfaces";
+import { DocumentType, LetterDocument, MemoDocument, Roles, UserDocument } from "@/lib/modelInterfaces";
 import ESignature from "@/lib/models/ESignature";
 import Letter from "@/lib/models/Letter";
 import Memo from "@/lib/models/Memo";
@@ -31,12 +31,24 @@ export async function GET(request: NextRequest) {
               ] },
             ]
           }).populate('departmentId').exec();
-          const result = (JSON.parse(JSON.stringify(resultFind)) as MemoDocument[]|LetterDocument[]|any[]).map((item, i) => ({
-            ...item,
-            isPreparedByMe: item.preparedBy === session.user._id,
-            isPending: item.signatureApprovals.some((s: any) => !s.approvedDate) && ((item.preparedBy === session.user._id) || (item.preparedBy !== session.user._id && !!item.signatureApprovals.find((s: any) => s.signature_id == signature_id)?.approvedDate)),
-            isRejected: item.signatureApprovals.some((s: any) => !!s.rejectedDate)
-          }))
+          const result = (JSON.parse(JSON.stringify(resultFind)) as MemoDocument[]|LetterDocument[]|any[]).map((item, i) => {
+            let prio = item.signatureApprovals.filter((s: any) => s.priority === 1 && !s.approvedDate);
+            if (prio.length === 0) {
+              prio = item.signatureApprovals.filter((s: any) => s.priority === 2 && !s.approvedDate);
+            }
+            if (prio.length === 0) {
+              prio = item.signatureApprovals.filter((s: any) => s.priority === 3 && !s.approvedDate);
+            }
+            return {
+              ...item,
+              isPreparedByMe: item.preparedBy === session.user._id,
+              isPending: item.signatureApprovals.some((s: any) => !s.approvedDate) && ((item.preparedBy === session.user._id) || (item.preparedBy !== session.user._id && !!item.signatureApprovals.find((s: any) => s.signature_id == signature_id)?.approvedDate)),
+              isRejected: item.signatureApprovals.some((s: any) => !!s.rejectedDate),
+              nextQueue: prio.length > 0 && item.preparedBy !== session.user._id && prio.some((s: any) => s.signature_id == signature_id),
+              hasResponded: item.signatureApprovals.some((s: any) => s.signature_id == signature_id && (!!s.approvedDate || !!s.rejectedDate)),
+              highestPosition: (session.user as UserDocument).highestPosition
+            };
+          });
           return NextResponse.json({ result })
         }
       }
