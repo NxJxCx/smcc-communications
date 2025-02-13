@@ -173,8 +173,8 @@ export default function AdminReports() {
       <h1 className="text-xl font-semibold mb-2">Reports</h1>
       <OCSTable loading={loading} columns={columns} data={finalData} searchable toolbars={[
         (<div key={"adminsreporttoolbar"} className="flex flex-nowrap gap-x-2 justify-end items-center">
-          <TextInputField type="date" maxWidth={130} description="From" onChange={(e) => setSelectedDateFrom(e.target.value)}/>
-          <TextInputField type="date" maxWidth={130} description="To" onChange={(e) => setSelectedDateTo(e.target.value)} />
+          <TextInputField type="date" maxWidth={130} description="From" onChange={(e: any) => setSelectedDateFrom(e.target.value)}/>
+          <TextInputField type="date" maxWidth={130} description="To" onChange={(e: any) => setSelectedDateTo(e.target.value)} />
           <SelectField maxWidth={100} minWidth={100}  onChange={e => setSelectedDateFilter(e.target.value as any)} description="Filter Range:  ">
             <option value="day">By Days</option>
             <option value="month">By Months</option>
