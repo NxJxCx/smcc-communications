@@ -1,8 +1,11 @@
 'use client';;
 import LoadingComponent from '@/components/loading';
+import OCSModal from '@/components/ocsModal';
+import ParseHTMLTemplate from '@/components/parseHTML';
 import OCSTable from '@/components/table';
-import { DocumentType, Roles, UserDocument } from '@/lib/modelInterfaces';
+import { DocumentType, LetterDocument, MemoDocument, Roles, UserDocument } from '@/lib/modelInterfaces';
 import { TableColumnProps } from '@/lib/types';
+import clsx from 'clsx';
 import { Button, EyeOpenIcon, IconButton, PrintIcon, SelectField, SelectMenu, TextInputField } from 'evergreen-ui';
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -14,9 +17,9 @@ export default function AdminReports() {
   const [doctype, setDoctype] = useState<DocumentType>(DocumentType.Memo)
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<any[]>([])
-  const [openView, setOpenView] = useState<any>();
+  const [selectedMemo, setSelectedMemo] = useState<(MemoDocument|LetterDocument|any) & { isPreparedByMe: boolean }>();
 
-  const columns: TableColumnProps[] = [
+  const columns: TableColumnProps[] = useMemo(() => [
     {
       label: "Title", field: "title", sortable: true, searchable: true
     },
@@ -41,10 +44,10 @@ export default function AdminReports() {
     {
       label: "View", field: "view", sortable: false, searchable: false,
       render(row: any) {
-        return <div><IconButton icon={EyeOpenIcon} onClick={() => setOpenView(row)} /></div>
+        return <div><IconButton icon={EyeOpenIcon} onClick={() => setSelectedMemo(data.find((item: any) => row._id === item._id))} /></div>
       }
     }
-  ];
+  ], [data]);
 
   const [selectedDateFrom, setSelectedDateFrom] = useState<string>("");
   const [selectedDateTo, setSelectedDateTo] = useState<string>("");
@@ -69,7 +72,6 @@ export default function AdminReports() {
     }
     return [...caller, item];
   }, []), [data]);
-
 
   const finalData = useMemo(() => (data?.map((r) => ({
     _id: r._id?.toString(),
@@ -134,6 +136,7 @@ export default function AdminReports() {
 
   useEffect(() => {
     getData();
+    // eslint-disable-next-line
   }, []);
 
   const onPrint = useCallback(() => {
@@ -164,7 +167,26 @@ export default function AdminReports() {
     if (docWindow) {
       docWindow.onbeforeunload = () => window.location.reload();
     }
-  }, [doctype, selectedDateFrom, selectedDateTo, selectedDateFilter, selectedSeriesFilter, selectedSenderFilter]);
+  }, [doctype, selectedDateFrom, selectedDateTo, selectedDateFilter, selectedSeriesFilter, selectedSenderFilter, selectedDepartmentFilter]);
+
+  const onPrintDocument = useCallback(() => {
+    const url = new URL('/print', window.location.origin)
+    url.searchParams.set('doc', doctype)
+    url.searchParams.set('id', selectedMemo?._id!)
+    url.searchParams.set('role', Roles.Admin)
+    url.searchParams.set('title', selectedMemo?.title!)
+    if (selectedMemo?.userId) {
+      url.searchParams.set('isForIndividual', 'true');
+    }
+    const docWindow = window.open(url, '_blank', 'width=1000,height=1000, menubar=no, toolbar=no, scrollbars=yes, location=no, status=no');
+    if (docWindow) {
+      docWindow.onbeforeunload = () => window.location.reload();
+    }
+  }, [doctype, selectedMemo])
+
+  const onBack = useCallback(() => {
+    setSelectedMemo(undefined);
+  }, [])
 
   return (<>
     {loading && <LoadingComponent />}
@@ -251,5 +273,19 @@ export default function AdminReports() {
         ]} />
     </div>
     )}
+    <OCSModal title={selectedMemo?.title} open={!!selectedMemo} onClose={onBack}>
+      <div className={clsx("min-w-[" + (8.5 * 96) + "px]", "max-w-[" + (8.5 * 96) + "px]", "min-h-[" + (1 * 96) + "px]")}>
+        {<ParseHTMLTemplate isForIndividual={!!selectedMemo?.userId} role={Roles.Admin} htmlString={selectedMemo?.content || ''} memoLetterId={selectedMemo?._id} showApprovedSignatories />}
+      </div>
+      <hr className="border w-full h-[1px] my-2" />
+      <div className="w-full flex justify-between items-center gap-x-3 pr-2">
+        <div className="flex items-center justify-start gap-x-3">
+        </div>
+        <div className="flex items-center justify-end gap-x-3">
+          <button type="button" className="rounded-lg bg-blue-300 hover:bg-blue-100 text-black px-3 py-1 ml-4" onClick={onPrint}><PrintIcon display="inline" /> Print</button>
+          <button type="button" className="rounded-lg bg-gray-300 hover:bg-yellow-100 text-black px-3 py-1" onClick={onBack}>Close</button>
+        </div>
+      </div>
+    </OCSModal>
   </>)
 }
