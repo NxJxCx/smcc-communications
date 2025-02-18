@@ -1,5 +1,5 @@
 'use client';;
-import { archiveMemorandumLetter } from "@/actions/admin";
+import { archiveMemorandumLetter, signMemoLetterIndividual } from "@/actions/admin";
 import LoadingComponent from "@/components/loading";
 import OCSModal from "@/components/ocsModal";
 import ParseHTMLTemplate from "@/components/parseHTML";
@@ -14,7 +14,16 @@ import {
 } from "@/lib/modelInterfaces";
 import { ViewLayout } from "@/lib/types";
 import clsx from "clsx";
-import { ArchiveIcon, GridViewIcon, ListColumnsIcon, ListIcon, PrintIcon, RefreshIcon } from "evergreen-ui";
+import {
+  ArchiveIcon,
+  EditIcon,
+  GridViewIcon,
+  ListColumnsIcon,
+  ListIcon,
+  PrintIcon,
+  RefreshIcon,
+  toaster,
+} from "evergreen-ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { renderToString } from "react-dom/server";
 import Swal from "sweetalert2";
@@ -247,6 +256,32 @@ export default function ForwardedMemoLetter({ doctype, searchParam }: Readonly<{
 
   const [viewLayout, setViewLayout] = useState<ViewLayout>("list");
 
+  const onSignSignature = useCallback(() => {
+    if (!!selectedMemo) {
+      Swal.fire({
+        title: 'Sign your signature part?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#61a118',
+        cancelButtonColor: '#474747',
+        confirmButtonText: 'Yes'
+      }).then(async ({ isConfirmed }) => {
+        if (isConfirmed) {
+          const save = signMemoLetterIndividual.bind(null, doctype, selectedMemo._id as string)
+          const { success, error } = await save()
+          if (error) {
+            toaster.danger(error)
+          } else if (success) {
+            toaster.success(success)
+            setTimeout(() => getData(), 500)
+            onBack();
+          }
+        }
+      })
+    }
+  }, [selectedMemo, doctype, getData, onBack])
+
+
   return (<>
     <div className="p-6">
       <h1 className="text-2xl font-[500]">{doctype === DocumentType.Memo ? <>Forwarded Memorandums</> : <>Forwarded Letters</>}</h1>
@@ -268,7 +303,7 @@ export default function ForwardedMemoLetter({ doctype, searchParam }: Readonly<{
             { loading && <LoadingComponent /> }
             { !loading && filteredData.length === 0 && <div className="text-center">No forwarded released {doctype === DocumentType.Memo ? "memorandum" : "letter"}.</div>}
             { !loading && filteredData.map((memoLetter, i) => (
-              <ThumbnailItemWithDepartment layout={viewLayout} series={memoLetter?.series} onClick={() => setSelectedMemo(memoLetter)} preparedByMe={memoLetter.isPreparedByMe} key={memoLetter._id} thumbnailSrc="/thumbnail-document.png" department={(memoLetter as any).departmentId?.name} label={memoLetter.title} createdAt={memoLetter.createdAt} updatedAt={memoLetter.updatedAt} />
+              <ThumbnailItemWithDepartment layout={viewLayout} series={memoLetter?.series || ' '} onClick={() => setSelectedMemo(memoLetter)} preparedByMe={memoLetter.isPreparedByMe} key={memoLetter._id} thumbnailSrc="/thumbnail-document.png" department={(memoLetter as any).departmentId?.name} label={memoLetter.title} createdAt={memoLetter.createdAt} updatedAt={memoLetter.updatedAt} />
             ))}
           </div>
         </div>
@@ -290,6 +325,7 @@ export default function ForwardedMemoLetter({ doctype, searchParam }: Readonly<{
           )}
         </div>
         <div className="flex items-center justify-end gap-x-3">
+          {selectedMemo?.hasSignatureNotSigned && <button type="button" className="rounded-lg bg-blue-300 hover:bg-blue-100 text-black px-3 py-1 ml-4" onClick={onSignSignature}><EditIcon display="inline" /> Sign Your Signature</button>}
           <button type="button" className="rounded-lg bg-blue-300 hover:bg-blue-100 text-black px-3 py-1 ml-4" onClick={onArchive}><ArchiveIcon display="inline" /> Archive</button>
           <button type="button" className="rounded-lg bg-blue-300 hover:bg-blue-100 text-black px-3 py-1 ml-4" onClick={onPrint}><PrintIcon display="inline" /> Print</button>
           <button type="button" className="rounded-lg bg-gray-300 hover:bg-yellow-100 text-black px-3 py-1" onClick={onBack}>Close</button>

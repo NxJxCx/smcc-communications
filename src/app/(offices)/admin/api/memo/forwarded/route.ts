@@ -1,6 +1,7 @@
 'use server';;
 import connectDB from "@/lib/database";
-import { DocumentType, LetterDocument, LetterIndividualDocument, MemoDocument, MemoIndividualDocument, Roles } from "@/lib/modelInterfaces";
+import { DocumentType, ESignatureDocument, LetterDocument, LetterIndividualDocument, MemoDocument, MemoIndividualDocument, Roles, SignatureApprovals } from "@/lib/modelInterfaces";
+import ESignature from "@/lib/models/ESignature";
 import Letter from "@/lib/models/Letter";
 import LetterIndividual from "@/lib/models/LetterIndividual";
 import Memo from "@/lib/models/Memo";
@@ -64,15 +65,33 @@ export async function GET(request: NextRequest) {
           _id: {
             $nin: [...(user._doc[memoLetterIndividualField] || [])]
           },
-          cc: {
-            $in: [user?._id?.toHexString()]
-          }
+          $or: [
+            {
+              preparedBy: {
+                $in: [user?._id?.toHexString()]
+              }
+            },
+            {
+              cc: {
+                $in: [user?._id?.toHexString()]
+              }
+            }
+          ]
         }).exec();
         const departmentalMemoLetter = (JSON.parse(JSON.stringify(resultFind)) as MemoDocument[]|LetterDocument[]).map((item, i) => ({
           ...item,
           isPreparedByMe: item.preparedBy === session.user._id
         }))
-        const individualMemoLetter = (JSON.parse(JSON.stringify(resultFindIndividual)) as MemoIndividualDocument[]|LetterIndividualDocument[])
+        const mySig = session.user!.role === Roles.Admin ? (await ESignature.findOne({ adminId: session.user!._id }).lean<ESignatureDocument>().exec()) : null;
+        const individualMemoLetter = (JSON.parse(JSON.stringify(resultFindIndividual)) as MemoIndividualDocument[]|LetterIndividualDocument[]).map((item) => {
+          const hasSignatureNotSigned = mySig !== null && item && (item.signatureApprovals as SignatureApprovals[]).some((esig) => {
+            return esig.signature_id.toString() === mySig._id?.toString() && !esig.approvedDate
+          });
+          return {
+            ...item,
+            hasSignatureNotSigned
+          }
+        })
         return NextResponse.json({
           result: {
             departments: departmentalMemoLetter,

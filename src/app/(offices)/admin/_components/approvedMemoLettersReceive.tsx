@@ -1,5 +1,5 @@
 'use client';;
-import { archiveMemorandumLetter, forwardMemorandumLetter } from "@/actions/admin";
+import { archiveMemorandumLetter, forwardMemorandumLetter, signMemoLetterIndividual } from "@/actions/admin";
 import LoadingComponent from "@/components/loading";
 import OCSModal from "@/components/ocsModal";
 import ParseHTMLTemplate from "@/components/parseHTML";
@@ -16,7 +16,7 @@ import {
 import { ViewLayout } from "@/lib/types";
 import { useSession } from "@/lib/useSession";
 import clsx from "clsx";
-import { ArchiveIcon, FastForwardIcon, GridViewIcon, ListColumnsIcon, PrintIcon, RefreshIcon } from "evergreen-ui";
+import { ArchiveIcon, EditIcon, FastForwardIcon, GridViewIcon, ListColumnsIcon, PrintIcon, RefreshIcon, toaster } from "evergreen-ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
 import ThumbnailItemWithDepartmentReceive from "./thumbnailItemWithDepartmentReceive";
@@ -31,6 +31,8 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
     department: DepartmentDocument,
     users: (UserDocument & { signatureId: string|null })[],
   }}>({})
+
+  const [hasSignatureAvailable, setHasSignatureAvailable] = useState(false);
 
   const fetchAllUsers = useCallback(() => {
     const url = new URL('/' + Roles.Admin + '/api/users', window.location.origin)
@@ -112,9 +114,12 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
     url.searchParams.set('isForIndividual', "true");
     fetch(url)
       .then((response) => response.json())
-      .then(({ success, error }) => {
-        console.log("success",success);
-        console.log("error",error);
+      .then(({ success, error, hasSignatureNotSigned }) => {
+        if (error) {
+          console.log("Failed to read")
+        } else if (success) {
+          setHasSignatureAvailable(hasSignatureNotSigned)
+        }
       })
       .catch(console.log);
     setSelectedMemo(memoLetter);
@@ -252,6 +257,31 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
 
   const [viewLayout, setViewLayout] = useState<ViewLayout>("list");
 
+  const onSignSignature = useCallback(() => {
+      if (!!selectedMemo) {
+        Swal.fire({
+          title: 'Sign your signature part?',
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonColor: '#61a118',
+          cancelButtonColor: '#474747',
+          confirmButtonText: 'Yes'
+        }).then(async ({ isConfirmed }) => {
+          if (isConfirmed) {
+            const save = signMemoLetterIndividual.bind(null, doctype, selectedMemo._id as string)
+            const { success, error } = await save()
+            if (error) {
+              toaster.danger(error)
+            } else if (success) {
+              toaster.success(success)
+              setTimeout(() => getData(), 500)
+              onBack();
+            }
+          }
+        })
+      }
+    }, [selectedMemo, doctype, getData, onBack])
+
   return (<>
     <div className="p-6">
       <h1 className="text-2xl font-[500]">{doctype === DocumentType.Memo ? "Received Memorandum" : "Received Letter"}</h1>
@@ -285,6 +315,7 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
       </div>
       <hr className="border w-full h-[1px] my-2" />
       <div className="w-full flex justify-end items-center gap-x-3 pr-2">
+        {hasSignatureAvailable && <button type="button" className="rounded-lg bg-blue-300 hover:bg-blue-100 text-black px-3 py-1 ml-4" onClick={onSignSignature}><EditIcon display="inline" /> Sign Your Signature</button>}
         <button type="button" className="rounded-lg bg-blue-300 hover:bg-blue-100 text-black px-3 py-1 ml-4" onClick={onArchive}><ArchiveIcon display="inline" /> Archive</button>
         <button type="button" className="rounded-lg bg-blue-300 hover:bg-blue-100 text-black px-3 py-1 ml-4" onClick={onForwardTo}><FastForwardIcon display="inline" /> Forward To</button>
         <button type="button" className="rounded-lg bg-blue-300 hover:bg-blue-100 text-black px-3 py-1 ml-4" onClick={onPrint}><PrintIcon display="inline" /> Print</button>

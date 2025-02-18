@@ -86,6 +86,7 @@ export default function AdminReports() {
     if (!!selectedDateFrom || !!selectedDateTo || selectedSenderFilter.length > 0 || selectedSeriesFilter.length > 0) {
       if (selectedDateFrom) {
         rfr = new Date(selectedDateFrom);
+        rfr.setHours(0)
         isFiltered.push(
           selectedDateFilter === "day"
           ? (rfr.getTime() <= item.createdAt.getTime())
@@ -95,6 +96,23 @@ export default function AdminReports() {
         )
         if (selectedDateTo) {
           rto = new Date(selectedDateTo);
+          rto.setHours(23);
+          rto.setMinutes(59);
+          rto.setSeconds(59);
+          isFiltered.push(
+            selectedDateFilter === "day"
+            ? (rto.getTime() >= item.createdAt.getTime())
+            : selectedDateFilter === "month"
+            ? (Number.parseInt(`${rto.getMonth()}${rto.getFullYear()}`) >= Number.parseInt(`${item.createdAt.getMonth()}${item.createdAt.getFullYear()}`))
+            : (rto.getFullYear() >= item.createdAt.getFullYear())
+          );
+        }
+      } else {
+        if (selectedDateTo) {
+          rto = new Date(selectedDateTo);
+          rto.setHours(23);
+          rto.setMinutes(59);
+          rto.setSeconds(59);
           isFiltered.push(
             selectedDateFilter === "day"
             ? (rto.getTime() >= item.createdAt.getTime())

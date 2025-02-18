@@ -32,6 +32,7 @@ export default function Print({ title, role, id, doctype, isForIndividual, isAtt
     if (!!filters?.rfrom || !!filters?.rto || !!filters?.series || !!filters?.senders) {
       if (!!filters?.rfrom) {
         rfr = new Date(filters?.rfrom);
+        rfr.setHours(0);
         isFiltered.push(
           filters?.rfilter === "day"
           ? (rfr.getTime() <= item.createdAt.getTime())
@@ -41,6 +42,23 @@ export default function Print({ title, role, id, doctype, isForIndividual, isAtt
         )
         if (!!filters?.rto) {
           rto = new Date(filters?.rto);
+          rto.setHours(23);
+          rto.setMinutes(59);
+          rto.setSeconds(59);
+          isFiltered.push(
+            filters?.rfilter === "day"
+            ? (rto.getTime() >= item.createdAt.getTime())
+            : filters?.rfilter === "month"
+            ? (Number.parseInt(`${rto.getMonth()}${rto.getFullYear()}`) >= Number.parseInt(`${item.createdAt.getMonth()}${item.createdAt.getFullYear()}`))
+            : (rto.getFullYear() >= item.createdAt.getFullYear())
+          );
+        }
+      } else {
+        if (!!filters?.rto) {
+          rto = new Date(filters?.rto);
+          rto.setHours(23);
+          rto.setMinutes(59);
+          rto.setSeconds(59);
           isFiltered.push(
             filters?.rfilter === "day"
             ? (rto.getTime() >= item.createdAt.getTime())
@@ -86,7 +104,7 @@ export default function Print({ title, role, id, doctype, isForIndividual, isAtt
         .then(({ success, error }) => { console.log("success", success); setContent(success); error && setError(true); setLoading(false) })
         .catch((e) => { console.log("ERROR:", e); setError(true); setLoading(false)})
     }
-  }, [doctype, id, role, isForIndividual, isAttendance])
+  }, [doctype, id, role, isForIndividual, isAttendance, isReport])
 
   useEffect(() => {
     if (!isAttendance && isReport) {
@@ -99,7 +117,7 @@ export default function Print({ title, role, id, doctype, isForIndividual, isAtt
         .then(({ result }) => { setReport(result?.departments); setLoading(false) })
         .catch((e) => { console.log(e); setLoading(false) })
     }
-  }, [doctype])
+  }, [doctype, isReport, isAttendance])
 
   useEffect(() => {
     window.document.title = title;

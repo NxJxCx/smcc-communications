@@ -75,10 +75,12 @@ export default function CreateFromTemplate({ editingId, rejectedId = null, depar
                 toaster.danger('Please enter a ' + (doctype === DocumentType.Memo ? 'Memorandum' : 'Letter') + ' title')
                 return;
               }
+              const eSignatures = getSignatureIdsFromContent(content);
               const formData = new FormData()
               formData.append('title', value)
               formData.append('content', content)
-              const { success, memorandumId, letterId, error } = await saveMyTemplateIndiv(cc, formData)
+              formData.append('series', series)
+              const { success, memorandumId, letterId, error } = await saveMyTemplateIndiv(cc, eSignatures, formData)
               if (error) {
                 toaster.danger(error)
               } else if (success) {
@@ -147,7 +149,7 @@ export default function CreateFromTemplate({ editingId, rejectedId = null, depar
         }
       })
     }
-  }, [onSave, departmentId, doctype, template?.title, individual, cc, content, saveMyTemplateDept, saveMyTemplateIndiv, series])
+  }, [onSave, departmentId, doctype, template?.title, individual, cc, content, saveMyTemplateDept, saveMyTemplateIndiv, series, rejectedId])
   if (status === 'loading') return <LoadingComponent />;
 
   return (
@@ -210,7 +212,7 @@ export default function CreateFromTemplate({ editingId, rejectedId = null, depar
           </div>
         </SelectMenu>
       </div>
-      <OCSTinyMCE editorRef={editorRef} onSeries={setSeries} departmentId={!individual ? departmentId : undefined} fullName={sessionData?.user?.fullName} doctype={!individual ? doctype : undefined} signatoriesList={signatoriesList} initialContentData={template?.content} onContent={onContentChange} withPreparedBy withSignatories />
+      <OCSTinyMCE editorRef={editorRef} onSeries={setSeries} departmentId={!individual ? departmentId : undefined} fullName={sessionData?.user?.fullName} doctype={doctype} signatoriesList={signatoriesList} initialContentData={template?.content} onContent={onContentChange} withPreparedBy withSignatories />
     </div>
   );
 }

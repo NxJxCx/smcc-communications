@@ -53,7 +53,7 @@ export async function saveMemorandumLetter(departmentId: string, doctype: Docume
             )
         }
       }));
-      if (doctype === DocumentType.Memo && !signatureApprovals.some((sa) => sa.priority === 2) && !signatureApprovals.some((sa) => sa.priority === 3)) {
+      if (doctype === DocumentType.Memo && session.user.highestPosition !== HighestPosition.President && !signatureApprovals.some((sa) => sa.priority === 2) && !signatureApprovals.some((sa) => sa.priority === 3)) {
         return {
           error: "President's Signature approval should be required"
         }
@@ -269,7 +269,7 @@ export async function saveMemorandumLetter(departmentId: string, doctype: Docume
 }
 
 
-export async function saveMemorandumLetterToIndividual(individualId: string, doctype: DocumentType, cc: string[], formData: FormData): Promise<ActionResponseType & { memorandumId?: string, letterId?: string }>
+export async function saveMemorandumLetterToIndividual(individualId: string, doctype: DocumentType, cc: string[], eSignatures: string[], formData: FormData): Promise<ActionResponseType & { memorandumId?: string, letterId?: string }>
 {
   await connectDB()
   try {
@@ -284,16 +284,28 @@ export async function saveMemorandumLetterToIndividual(individualId: string, doc
       }
       const content = formData.get('content')
       const title = formData.get('title')
+      const series = formData.get('series')
       if (!content) {
         return {
           error: 'Memorandum title should not be empty'
         }
       }
+      const signatureApprovals = await Promise.all(eSignatures.map(async (signatureId: string) => {
+        const es = await ESignature.findOne({ _id: signatureId }).populate('adminId').exec();
+        return {
+            signature_id: signatureId,
+            priority: es.adminId?.highestPosition === HighestPosition.Admin ? 1 : (
+              es.adminId?.highestPosition === HighestPosition.VicePresident ? 2 : 3
+            )
+        }
+      }));
       if (doctype === DocumentType.Memo) {
         const memo = await MemoIndividual.create({
           userId: individual._id?.toString(),
           title,
+          series,
           cc,
+          signatureApprovals,
           content: content,
           preparedBy,
         })
@@ -326,7 +338,9 @@ export async function saveMemorandumLetterToIndividual(individualId: string, doc
         const letter = await LetterIndividual.create({
           userId: individual._id?.toString(),
           title,
+          series,
           cc,
+          signatureApprovals,
           content: content,
           preparedBy,
         })
@@ -364,6 +378,44 @@ export async function saveMemorandumLetterToIndividual(individualId: string, doc
   }
   return {
     error: 'Failed to save'
+  }
+}
+
+export async function signMemoLetterIndividual(doctype: DocumentType, memoLetterIndividualId: string): Promise<ActionResponseType>
+{
+  await connectDB()
+  try {
+    const session = await getSession(role)
+    if (!!session?.user) {
+      const eSignature = await ESignature.findOne({ adminId: session.user._id }).exec()
+      if (!!eSignature?._id) {
+        const sid = eSignature._id.toHexString()
+        if (doctype === DocumentType.Memo) {
+          const memo = await MemoIndividual.findById(memoLetterIndividualId).exec()
+          memo.signatureApprovals.find((signatureApproval: any) => signatureApproval.signature_id.toHexString() === sid).approvedDate = new Date()
+          const updated = await memo.save({ new: true, upsert: false, runValidators: true })
+          if (!!updated?._id) {
+            return {
+              success: "Memorandum signed successfully",
+            }
+          }
+        } else if (doctype === DocumentType.Letter) {
+          const letter = await LetterIndividual.findById(memoLetterIndividualId).exec()
+          letter.signatureApprovals.find((signatureApproval: any) => signatureApproval.signature_id.toHexString() === sid).approvedDate = new Date()
+          const updated = await letter.save({ new: true, upsert: false, runValidators: true })
+          if (!!updated?._id) {
+            return {
+              success: "Letter signed successfully",
+            }
+          }
+        }
+      }
+    }
+  }  catch (e) {
+    console.log(e)
+  }
+  return {
+    error: 'Failed to sign'
   }
 }
 

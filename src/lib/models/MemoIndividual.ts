@@ -13,6 +13,11 @@ const MemoIndividualSchema = new Schema({
     type: String,
     required: [true, 'Memorandum Title is required'],
   },
+  series: {
+    type: String,
+    required: [true, 'Memorandum Series is required'],
+    unique: true,
+  },
   content: {
     type: String,
     required: [true, 'Memorandum Content is required'],

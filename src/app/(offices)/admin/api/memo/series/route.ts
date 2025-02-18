@@ -2,7 +2,10 @@
 import connectDB from "@/lib/database";
 import { DepartmentDocument, DocumentType, Roles } from "@/lib/modelInterfaces";
 import Department from "@/lib/models/Department";
+import Letter from "@/lib/models/Letter";
+import LetterIndividual from "@/lib/models/LetterIndividual";
 import Memo from "@/lib/models/Memo";
+import MemoIndividual from "@/lib/models/MemoIndividual";
 import { getSession } from "@/lib/session";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -16,11 +19,15 @@ export async function GET(request: NextRequest) {
       const currentYear = new Date().getFullYear();
       const startOfYear = new Date(currentYear, 0, 1);
       const endOfYear = new Date(currentYear + 1, 0, 1);
-      const dept = await Department.findById(depid).select("name").lean<DepartmentDocument>().exec();
-      const department_name = dept?.name;
+      let dept, department_name;
+      if (depid) {
+        dept = await Department.findById(depid).select("name").lean<DepartmentDocument>().exec();
+        department_name = dept?.name;
+      }
       if (doctype === DocumentType.Memo) {
-        const memoSeriesLastest = await Memo.countDocuments({
-          departmentId: depid,
+        const MemoModel = !!depid ? Memo : MemoIndividual;
+        const memoSeriesLastest = await MemoModel.countDocuments({
+          ...(!!depid ? {departmentId: depid} : {}),
           preparedBy: session.user._id,
           createdAt: { $gte: startOfYear, $lt: endOfYear }
         }).exec();
@@ -29,8 +36,9 @@ export async function GET(request: NextRequest) {
           department_name
         })
       } else if (doctype === DocumentType.Letter) {
-        const letterSeriesLastest = await Memo.countDocuments({
-          departmentId: depid,
+        const LetterModel = !!depid ? Letter : LetterIndividual;
+        const letterSeriesLastest = await LetterModel.countDocuments({
+          ...(!!depid ? {departmentId: depid} : {}),
           preparedBy: session.user._id,
           createdAt: { $gte: startOfYear, $lt: endOfYear }
         }).exec();

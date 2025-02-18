@@ -105,6 +105,7 @@ export interface MemoDocument extends Documents {
 export interface MemoIndividualDocument extends Documents {
   userId: UserDocument|string
   title: string
+  series: string
   content: string
   preparedBy: UserDocument|string
   signatureApprovals: SignatureApprovals[]
@@ -125,6 +126,7 @@ export interface LetterIndividualDocument extends Documents {
   userId: UserDocument|string
   title: string
   content: string
+  series: string
   preparedBy: UserDocument|string
   isRevoked: boolean
   isRead: boolean

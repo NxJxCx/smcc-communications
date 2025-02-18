@@ -1,7 +1,8 @@
 'use server';;
 import { addNotification } from "@/actions/notifications";
 import connectDB from "@/lib/database";
-import { DocumentType, Roles } from "@/lib/modelInterfaces";
+import { DocumentType, ESignatureDocument, Roles, SignatureApprovals } from "@/lib/modelInterfaces";
+import ESignature from "@/lib/models/ESignature";
 import LetterIndividual from "@/lib/models/LetterIndividual";
 import MemoIndividual from "@/lib/models/MemoIndividual";
 import User from "@/lib/models/User";
@@ -38,6 +39,14 @@ export async function GET(request: NextRequest) {
               console.log("ERROR:", err);
             }
           }
+          const mySig = session.user.role === Roles.Admin ? (await ESignature.findOne({ adminId: session.user._id }).lean<ESignatureDocument>().exec()) : null;
+          const hasSignatureNotSigned = mySig !== null && memoLetterIndividual && (memoLetterIndividual._doc.signatureApprovals as SignatureApprovals[]).some((esig) => {
+            return esig.signature_id.toString() === mySig._id?.toString() && !esig.approvedDate
+          });
+          return NextResponse.json({
+            success: true,
+            hasSignatureNotSigned,
+          })
         }
       }
     }

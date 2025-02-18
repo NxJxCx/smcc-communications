@@ -57,9 +57,12 @@ export default function ParseHTMLTemplate({ isForIndividual, role, htmlString, s
     return new Promise((resolve: (value?:any) => void, reject: (error?: any) => void) => {
       const parser = new DOMParser();
       const htmlDoc = parser.parseFromString(htmlDocString, "text/html");
-      if (!isForIndividual && showApprovedSignatories && !!memoLetterId) {
+      if (showApprovedSignatories && !!memoLetterId) {
         const url = new URL('/' + role + '/api/memo/signatory', window.location.origin)
         url.searchParams.set('mlid', memoLetterId || '')
+        if (!!isForIndividual) {
+          url.searchParams.set('isForIndividual', 'true');
+        }
         fetch(url)
         .then(response => response.json())
         .then(({ result }) => { resolve({ htmlDocString: htmlDoc.documentElement.innerHTML, approvedSignatories: result }) })

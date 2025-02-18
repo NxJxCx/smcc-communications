@@ -1,5 +1,5 @@
 'use client';
-import { DepartmentDocument, DocumentType, ESignatureDocument, UserDocument } from "@/lib/modelInterfaces";
+import { DepartmentDocument, DocumentType, ESignatureDocument, Roles, UserDocument } from "@/lib/modelInterfaces";
 import { HighestPosition } from "@/lib/types";
 import { useSession } from "@/lib/useSession";
 import { Editor } from "@tinymce/tinymce-react";
@@ -19,17 +19,19 @@ function getPosition(highestPosition: string|HighestPosition) {
     : highestPosition
 }
 
-async function getCurrentSeries(deptId: string, doctype: DocumentType): Promise<[number, string]>
+async function getCurrentSeries(doctype: DocumentType, deptId?: string): Promise<[number, string]>
 {
   try {
-    const url = new URL("/admin/api/memo/series", window.location.origin);
-    url.searchParams.append("depid", deptId);
+    const url = new URL("/" + Roles.Admin + "/api/memo/series", window.location.origin);
+    if (deptId) {
+      url.searchParams.append("depid", deptId);
+    }
     url.searchParams.append("doctype", doctype);
     const response = await fetch(url);
     if (response.ok) {
       const { result, department_name } = await response.json();
       if (Number.isInteger(result)) {
-        const depName = department_name.split(' ').filter((v: string) => v?.toLowerCase() !== "and" && v?.toLowerCase() !== "or" && v?.toLowerCase() !== "of" && v?.toLowerCase() !== "the" && v !== "").map((v: string) => v.length === 1 || /[A-Z]/.test(v) ? v?.toUpperCase() : v[0]?.toUpperCase()).join("")
+        const depName = department_name?.split(' ')?.filter((v: string) => v?.toLowerCase() !== "and" && v?.toLowerCase() !== "or" && v?.toLowerCase() !== "of" && v?.toLowerCase() !== "the" && v !== "")?.map((v: string) => v.length === 1 || /[A-Z]/.test(v) ? v?.toUpperCase() : v[0]?.toUpperCase())?.join("")
         return [result, depName]
       }
     }
@@ -54,8 +56,8 @@ export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentD
   }, [])
 
   useEffect(() => {
-    if (!!departmentId && !!doctype && onSeries) {
-      getCurrentSeries(departmentId, doctype)
+    if (!!doctype && onSeries) {
+      getCurrentSeries(doctype, departmentId)
         .then(([series, depName]: [number, string]) => {
           onSeries(`${depName}${doctype?.[0]?.toUpperCase()}${doctype?.substring(1)?.toLowerCase()}_Order${series.toString().padStart(3, "0")}_Series${(new Date()).getFullYear()}`)
         })
@@ -265,10 +267,10 @@ export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentD
     );
   }, [editorRef])
 
-  const onAddSeries = useCallback(function(deptId: string, fullName: string, doctype: DocumentType, date: Date) {
-    getCurrentSeries(deptId, doctype)
+  const onAddSeries = useCallback(function(fullName: string, doctype: DocumentType, date: Date, deptId?: string) {
+    getCurrentSeries(doctype, deptId)
       .then(([series, depName]: [number, string]) => {
-        onSeries && onSeries(`${depName}${doctype?.[0]?.toUpperCase()}${doctype?.substring(1)?.toLowerCase()}_Order${series.toString().padStart(3, "0")}_Series${date.getFullYear()}`)
+        onSeries && onSeries(`${depName ? depName : "Individual"}${doctype?.[0]?.toUpperCase()}${doctype?.substring(1)?.toLowerCase()}_Order${series.toString().padStart(3, "0")}_Series${date.getFullYear()}`)
         editorRef.current?.insertContent(
           jsxToString(
             <>
@@ -308,7 +310,7 @@ export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentD
         onAddHorizontal();
       })
       .catch(console.log)
-  }, [editorRef, onAddHorizontal])
+  }, [editorRef, onAddHorizontal, onSeries])
 
 
   const handleFetchSignatory = useCallback(function (callback: any) {
@@ -394,12 +396,12 @@ export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentD
       tooltip: 'Add horizontal line',
       onAction: onAddHorizontal
     })
-    if (doctype && departmentId && fullName) {
+    if (doctype && fullName) {
       editor.ui.registry.addButton("addSeries", {
         icon: 'ai-prompt',
         text: 'Series',
         tooltip: 'Add Memo/Letter Series',
-        onAction: () => onAddSeries(departmentId, fullName, doctype, new Date())
+        onAction: () => onAddSeries(fullName, doctype, new Date(), departmentId)
       })
     }
     if (withSignatories) {
@@ -417,7 +419,7 @@ export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentD
       });
     }
   }, [onAddHorizontal, handleFetchSignatory, onAddPreparedBy, onAddSeries, withSignatories, withPreparedBy, doctype, fullName, departmentId]);
-
+  console.log(doctype, "vs", departmentId, "vs", fullName)
   return (
     <div className={clsx("flex items-start justify-center", "min-w-[" + size.width + "px]", "max-w-[" + size.width + "px]"  , "min-h-[" + size.height + "px]")}>
       <Editor
@@ -432,7 +434,7 @@ export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentD
           'image', 'editimage'
         ]}
         toolbar={'undo redo | fontfamily fontsize lineheight image table | ' +
-          (doctype && departmentId && fullName ? 'addSeries ' : '') +
+          (doctype && fullName ? 'addSeries ' : '') +
           (withSignatories ? 'addAdminSignatory ' : '') +
           (withPreparedBy ? 'addPreparedBy ' : '') +
           'addHorizontal | bold italic underline forecolor backcolor | alignleft aligncenter ' +
