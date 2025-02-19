@@ -17,7 +17,6 @@ const LetterSchema = new Schema({
   series: {
     type: String,
     required: [true, 'Letter Series is required'],
-    unique: true,
   },
   content: {
     type: String,

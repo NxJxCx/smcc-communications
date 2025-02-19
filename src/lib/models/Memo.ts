@@ -17,7 +17,6 @@ const MemoSchema = new Schema({
   series: {
     type: String,
     required: [true, 'Memorandum Series is required'],
-    unique: true,
   },
   content: {
     type: String,
