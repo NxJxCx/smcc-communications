@@ -33,7 +33,6 @@ export async function GET(request: NextRequest) {
           }))
         })));
         allResult.sort((a, b) => (new Date(b.updatedAt!)).getTime() - (new Date(a.updatedAt!)).getTime())
-        console.log(allResult)
         return NextResponse.json({ result: allResult, user })
       }
     }
