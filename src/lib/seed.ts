@@ -24,36 +24,36 @@ export async function seed() {
       })
     }
   } catch (e) {}
-  try {
-    const admin = await User.findOne({
-      role: Roles.Admin,
-    })
-    if (!admin) {
-      await User.create({
-        employeeId: 2,
-        password: 'password',
-        role: Roles.Admin,
-        email: 'admin@gmail.com',
-        firstName: 'Admin',
-        lastName: 'User',
-      })
-    }
-  } catch (e) {}
-  try {
-    const faculty = await User.findOne({
-      role: Roles.Faculty,
-    })
-    if (!faculty) {
-      await User.create({
-        employeeId: 3,
-        password: 'password',
-        role: Roles.Faculty,
-        email: 'faculty@gmail.com',
-        firstName: 'Faculty',
-        lastName: 'Admin',
-      })
-    }
-  } catch (e) {}
+  // try {
+  //   const admin = await User.findOne({
+  //     role: Roles.Admin,
+  //   })
+  //   if (!admin) {
+  //     await User.create({
+  //       employeeId: 2,
+  //       password: 'password',
+  //       role: Roles.Admin,
+  //       email: 'admin@gmail.com',
+  //       firstName: 'Admin',
+  //       lastName: 'User',
+  //     })
+  //   }
+  // } catch (e) {}
+  // try {
+  //   const faculty = await User.findOne({
+  //     role: Roles.Faculty,
+  //   })
+  //   if (!faculty) {
+  //     await User.create({
+  //       employeeId: 3,
+  //       password: 'password',
+  //       role: Roles.Faculty,
+  //       email: 'faculty@gmail.com',
+  //       firstName: 'Faculty',
+  //       lastName: 'Admin',
+  //     })
+  //   }
+  // } catch (e) {}
   try {
     await PhotoFile.countDocuments()
   } catch (e) {}
