@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
               ],
             }
           ]
-        }).populate(populate_args).exec();
+        }).populate(populate_args).lean<MemoDocument[]|LetterDocument[]>().exec();
         const resultFindIndividual = await MemoLetterIndividual.find({
           _id: {
             $nin: [...(user._doc[memoLetterIndividualField] || [])]
@@ -115,8 +115,8 @@ export async function GET(request: NextRequest) {
             $ne: user._doc._id,
           },
           preparedBy: user._doc._id,
-        }).exec();
-        const departmentalMemoLetter = await Promise.all((JSON.parse(JSON.stringify(resultFind)) as MemoDocument[]|LetterDocument[]).map(async (item, i) => ({
+        }).lean<MemoIndividualDocument[]|LetterIndividualDocument[]>().exec();
+        const departmentalMemoLetter = await Promise.all(resultFind.map(async (item, i) => ({
           ...item,
           isPreparedByMe: item.preparedBy === session.user._id,
           preparedByName: (await new Promise(async (resolve) => {
@@ -125,7 +125,7 @@ export async function GET(request: NextRequest) {
           }))
         })))
         const individualMemoLetter = await Promise.all(
-          (JSON.parse(JSON.stringify(resultFindIndividual)) as MemoIndividualDocument[]|LetterIndividualDocument[]).map(async (item) => ({
+          resultFindIndividual.map(async (item) => ({
             ...item,
             isPreparedByMe: item.preparedBy === session.user._id,
             preparedByName: (await new Promise(async (resolve) => {

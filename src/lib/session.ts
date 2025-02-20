@@ -3,7 +3,7 @@ import type { SessionPayload } from '@/lib/types';
 import { type JWTPayload, SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import connectDB from './database';
-import { NotificationDocument, Roles } from './modelInterfaces';
+import { NotificationDocument, Roles, UserDocument } from './modelInterfaces';
 import User from './models/User';
 const secretKey = process.env.SESSION_SECRET
 const encodedKey = new TextEncoder().encode(secretKey)
@@ -31,12 +31,15 @@ export async function decrypt(session: string | undefined = ''): Promise<Session
 export async function generateSessionPayload(role: Roles, userId: string, expHours: number = 8) {
   await connectDB();
   try {
-    const user = await User.findOne({ role, _id: userId }).select('-password -departmentIds -readMemos -readLetters -deactivated -notification').exec()
+    const user = await User.findOne({ role, _id: userId })
+      .select('-password -departmentIds -readMemos -readLetters -deactivated -notification')
+      .lean<UserDocument>()
+      .exec()
     if (user) {
       return {
         user: {
+          ...user,
           fullName: [user.prefixName, user.firstName, user.middleName?.[0] ? user.middleName[0] + "." : '', user.lastName, user.suffixName].filter((v) => !!v).join(" "),
-          ...JSON.parse(JSON.stringify(user))
         },
         expiresAt: new Date(Date.now() + expHours * 60 * 60 * 1000)
       }
@@ -107,16 +110,15 @@ export async function getMyNotifications(role: Roles, unreadOnly?: boolean): Pro
       return null
     }
     // correct this code next line
-    const user = await User.findOne({ email: session.user.email, role });
+    const user = await User.findOne({ email: session.user.email, role }).lean<UserDocument>().exec();
     if (!user) {
       return []
     }
     const notifications = user.notification.reverse()
     if (!unreadOnly) {
-      const notifs = JSON.parse(JSON.stringify(notifications)) as NotificationDocument[];
-      return notifs;
+      return notifications;
     }
-    const filtered = JSON.parse(JSON.stringify(notifications.filter((n: any) => !n.read))) as NotificationDocument[];
+    const filtered = notifications.filter((n: any) => !n.read);
     return filtered
   } catch (e) {
     console.log("ERROR:", e);

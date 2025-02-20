@@ -1,6 +1,6 @@
 'use server';
 import connectDB from "@/lib/database";
-import { Roles } from "@/lib/modelInterfaces";
+import { ESignatureDocument, Roles } from "@/lib/modelInterfaces";
 import Department from "@/lib/models/Department";
 import ESignature from "@/lib/models/ESignature";
 import { getSession } from "@/lib/session";
@@ -11,9 +11,8 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getSession(Roles.Admin);
     if (!!session?.user) {
-      const signatories = await ESignature.find({}).populate('adminId').exec();
-      let result = JSON.parse(JSON.stringify(signatories))
-      result = await Promise.all(result.filter((r: any) => !!r.adminId).map(async (r: any) => ({ ...r, adminId: {...r.adminId, allDepartments: await Promise.all(r.adminId.departmentIds.map((async (did: string) => await Department.findById(did).exec())))} })));
+      const esign = await ESignature.find({}).populate('adminId').lean<ESignatureDocument[]>().exec();
+      const result = await Promise.all(esign.filter((r: any) => !!r.adminId).map(async (r: any) => ({ ...r, adminId: {...r.adminId, allDepartments: await Promise.all(r.adminId.departmentIds.map((async (did: string) => await Department.findById(did).exec())))} })));
       return NextResponse.json({ result })
     }
   } catch (e) {

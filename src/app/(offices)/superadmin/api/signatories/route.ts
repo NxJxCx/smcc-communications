@@ -1,6 +1,6 @@
 'use server';
 import connectDB from "@/lib/database";
-import { Roles } from "@/lib/modelInterfaces";
+import { ESignatureDocument, Roles } from "@/lib/modelInterfaces";
 import ESignature from "@/lib/models/ESignature";
 import { getSession } from "@/lib/session";
 import { NextRequest, NextResponse } from "next/server";
@@ -10,8 +10,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getSession(Roles.SuperAdmin);
     if (!!session?.user) {
-      const signatories = await ESignature.find({}).populate('adminId').exec();
-      const result = JSON.parse(JSON.stringify(signatories))
+      const result = await ESignature.find({}).populate('adminId').lean<ESignatureDocument[]>().exec();
       return NextResponse.json({ result })
     }
   } catch (e) {

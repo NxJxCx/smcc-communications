@@ -35,8 +35,8 @@ export async function GET(request: NextRequest) {
                 { signatureApprovals: { $elemMatch: { approvedDate: null, signature_id: { $ne: signature_id } }}}
               ] },
             ]
-          }).populate('departmentId').exec();
-          const result = await Promise.all((JSON.parse(JSON.stringify(resultFind)) as MemoDocument[]|LetterDocument[]|any[]).map(async (item, i) => {
+          }).populate('departmentId').lean<MemoDocument[]|LetterDocument[]>().exec();
+          const result = await Promise.all(resultFind.map(async (item) => {
             let prio = item.signatureApprovals.filter((s: any) => s.priority === 1 && !s.approvedDate);
             if (prio.length === 0) {
               prio = item.signatureApprovals.filter((s: any) => s.priority === 2 && !s.approvedDate);

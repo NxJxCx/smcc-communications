@@ -1,6 +1,6 @@
 'use server';
 import connectDB from "@/lib/database";
-import { Roles, UserDocument } from "@/lib/modelInterfaces";
+import { PhotoFileDocument, Roles, UserDocument } from "@/lib/modelInterfaces";
 import ESignature from "@/lib/models/ESignature";
 import PhotoFile from "@/lib/models/PhotoFile";
 import User from "@/lib/models/User";
@@ -12,8 +12,12 @@ export async function GET(request: NextRequest) {
     await connectDB()
     const session = await getSession(Roles.SuperAdmin);
     if (!!session?.user) {
-      const users = await User.find({ role: Roles.Admin }).select('-role -readMemos -readLetters -notification').populate('departmentIds').exec();
-      const result = await Promise.all(JSON.parse(JSON.stringify(users)).map(async (user: UserDocument) => ({ ...user, photo: user.photo ? JSON.parse(JSON.stringify(await PhotoFile.findById(user.photo))) : undefined, hasRegisteredSignature: (await ESignature.find({ adminId: user._id }).countDocuments().exec()) > 0 })));
+      const users = await User.find({ role: Roles.Admin })
+        .select('-role -readMemos -readLetters -notification')
+        .populate('departmentIds')
+        .lean<UserDocument[]>()
+        .exec();
+      const result = await Promise.all(users.map(async (user) => ({ ...user, photo: user.photo ? await PhotoFile.findById(user.photo).lean<PhotoFileDocument>().exec() : undefined, hasRegisteredSignature: (await ESignature.find({ adminId: user._id }).countDocuments().exec()) > 0 })));
       return NextResponse.json({ result });
     }
   } catch (e) {}

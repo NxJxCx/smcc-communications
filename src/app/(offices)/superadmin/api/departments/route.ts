@@ -10,8 +10,8 @@ export async function GET(request: NextRequest) {
     await connectDB()
     const session = await getSession(Roles.SuperAdmin);
     if (!!session?.user) {
-      const departments = await Department.find({});
-      const result = JSON.parse(JSON.stringify(departments)).map((department: DepartmentDocument) => ({
+      const departments = await Department.find({}).lean<DepartmentDocument[]>().exec();
+      const result = departments.map((department: DepartmentDocument) => ({
         _id: department._id,
         name: department.name,
         memorandums: department.memoTemplates.length,

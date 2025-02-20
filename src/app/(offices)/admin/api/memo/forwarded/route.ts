@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
               }
             },
           ],
-        }).populate('departmentId').exec();
+        }).populate('departmentId').lean<MemoDocument[]|LetterDocument[]>().exec();
         const resultFindIndividual = await MemoLetterIndividual.find({
           _id: {
             $nin: [...(user._doc[memoLetterIndividualField] || [])]
@@ -81,8 +81,8 @@ export async function GET(request: NextRequest) {
               }
             }
           ]
-        }).exec();
-        const departmentalMemoLetter = await Promise.all((JSON.parse(JSON.stringify(resultFind)) as MemoDocument[]|LetterDocument[]).map(async (item, i) => ({
+        }).lean<MemoIndividualDocument[]|LetterIndividualDocument[]>().exec();
+        const departmentalMemoLetter = await Promise.all(resultFind.map(async (item, i) => ({
             ...item,
             isPreparedByMe: item.preparedBy === session.user._id,
             preparedByName: (await new Promise(async (resolve) => {
@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
             }))
           })))
         const mySig = session.user!.role === Roles.Admin ? (await ESignature.findOne({ adminId: session.user!._id }).lean<ESignatureDocument>().exec()) : null;
-        const individualMemoLetter = await Promise.all((JSON.parse(JSON.stringify(resultFindIndividual)) as MemoIndividualDocument[]|LetterIndividualDocument[]).map(async (item) => {
+        const individualMemoLetter = await Promise.all(resultFindIndividual.map(async (item) => {
           const hasSignatureNotSigned = mySig !== null && item && (item.signatureApprovals as SignatureApprovals[]).some((esig) => {
             return esig.signature_id.toString() === mySig._id?.toString() && !esig.approvedDate
           });

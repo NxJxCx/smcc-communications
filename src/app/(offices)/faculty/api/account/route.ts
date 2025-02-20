@@ -1,6 +1,6 @@
 'use server';
 import connectDB from "@/lib/database";
-import { Roles } from "@/lib/modelInterfaces";
+import { PhotoFileDocument, Roles, UserDocument } from "@/lib/modelInterfaces";
 import PhotoFile from "@/lib/models/PhotoFile";
 import User from "@/lib/models/User";
 import { getSession } from "@/lib/session";
@@ -11,11 +11,13 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getSession(Roles.Faculty)
     if (!!session?.user) {
-      const users = await User.findOne({ _id: session.user._id }).select('-password -departmentIds -readMemos -readLetters -deactivated -notification').exec()
-      const parsed = JSON.parse(JSON.stringify(users))
-      const photo = parsed?.photo ? await PhotoFile.findById(parsed.photo) : undefined
-      parsed.photo = photo
-      const result = JSON.parse(JSON.stringify(parsed))
+      const result = await User.findOne({ _id: session.user._id })
+        .select('-password -departmentIds -readMemos -readLetters -deactivated -notification')
+        .lean<UserDocument>()
+        .exec();
+      if (!!result) {
+        result.photo = !!result.photo ? await PhotoFile.findById(result.photo).lean<PhotoFileDocument>().exec() : null;
+      }
       return NextResponse.json({ result })
     }
   } catch (e) {}

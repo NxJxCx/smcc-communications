@@ -29,13 +29,13 @@ export async function GET(request: NextRequest) {
           _id: {
             $in: [...(user._doc[memoLetterField] || [])]
           }
-        }).populate('departmentId').exec();
+        }).populate('departmentId').lean<MemoDocument[]|LetterDocument[]>().exec();
         const resultFindIndividual = await MemoLetterIndividual.find({
           _id: {
             $in: [...(user._doc[memoLetterIndividualField] || [])]
           }
-        }).exec();
-        const departmentalMemoLetter = await Promise.all((JSON.parse(JSON.stringify(resultFind)) as MemoDocument[]|LetterDocument[]).map(async (item, i) => ({
+        }).lean<MemoIndividualDocument[]|LetterIndividualDocument[]>().exec();
+        const departmentalMemoLetter = await Promise.all(resultFind.map(async (item, i) => ({
           ...item,
           isPreparedByMe: item.preparedBy === session.user._id,
           preparedByName: (await new Promise(async (resolve) => {
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
           }))
         })))
         const individualMemoLetter = await Promise.all(
-          (JSON.parse(JSON.stringify(resultFindIndividual)) as MemoIndividualDocument[]|LetterIndividualDocument[]).map(async (item) => ({
+          resultFindIndividual.map(async (item) => ({
             ...item,
             isPreparedByMe: item.preparedBy === session.user._id,
             preparedByName: (await new Promise(async (resolve) => {

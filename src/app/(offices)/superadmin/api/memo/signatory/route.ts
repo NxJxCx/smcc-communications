@@ -1,7 +1,7 @@
 'use server'
 
 import connectDB from "@/lib/database";
-import { Roles, SignatureApprovals } from "@/lib/modelInterfaces";
+import { LetterDocument, MemoDocument, Roles } from "@/lib/modelInterfaces";
 import Letter from "@/lib/models/Letter";
 import Memo from "@/lib/models/Memo";
 import { getSession } from "@/lib/session";
@@ -13,14 +13,21 @@ export async function GET(request: NextRequest) {
     const session = await getSession(Roles.SuperAdmin)
     if (!!session?.user) {
       const mlid = request.nextUrl.searchParams.get('mlid');
-      const memo = await Memo.findById(mlid).select('signatureApprovals').populate('signatureApprovals.signature_id').exec();
+      const memo = await Memo.findById(mlid).select('signatureApprovals')
+        .populate('signatureApprovals.signature_id')
+        .lean<MemoDocument>()
+        .exec();
       if (!!memo) {
-        const result = (JSON.parse(JSON.stringify(memo)).signatureApprovals as SignatureApprovals[]).map(({ approvedDate }) => !!approvedDate);
+        const result = memo.signatureApprovals.map(({ approvedDate }) => !!approvedDate);
         return NextResponse.json({ result })
       }
-      const letter = await Letter.findById(mlid).select('signatureApprovals').populate('signatureApprovals.signature_id').exec();
+      const letter = await Letter.findById(mlid)
+        .select('signatureApprovals')
+        .populate('signatureApprovals.signature_id')
+        .lean<LetterDocument>()
+        .exec();
       if (!!letter) {
-        const result = (JSON.parse(JSON.stringify(letter)).signatureApprovals as SignatureApprovals[]).map(({ approvedDate }) => !!approvedDate);
+        const result = letter.signatureApprovals.map(({ approvedDate }) => !!approvedDate);
         return NextResponse.json({ result })
       }
     }

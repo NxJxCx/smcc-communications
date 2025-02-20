@@ -1,6 +1,6 @@
 'use server'
 import connectDB from "@/lib/database";
-import { DepartmentDocument, DocumentType, Roles } from "@/lib/modelInterfaces";
+import { DepartmentDocument, DocumentType, Roles, UserDocument } from "@/lib/modelInterfaces";
 import Department from "@/lib/models/Department";
 import User from "@/lib/models/User";
 import { getSession } from "@/lib/session";
@@ -13,22 +13,22 @@ export async function GET(request: NextRequest) {
     const session = await getSession(Roles.Admin);
     if (!!session?.user) {
       const doctype = request.nextUrl.searchParams.get('doctype');
-      const user = await User.findById(session.user._id).exec();
-      let result = [];
+      const user = await User.findById(session.user._id).lean<UserDocument>().exec();
+      let result: any[] = [];
       if (!!user) {
         if (user.highestPosition === HighestPosition.Admin) {
-          result = await Promise.all(JSON.parse(JSON.stringify(user)).departmentIds.map(async (deptId: string) => {
-            let department: any = Department.findById(deptId).lean<DepartmentDocument>();
+          result = await Promise.all((user.departmentIds as string[]).map(async (deptId: string) => {
+            let department = Department.findById(deptId);
             if (doctype === DocumentType.Memo) {
               department = department.populate('memoTemplates');
             } else if (doctype === DocumentType.Letter) {
               department = department.populate('letterTemplates');
             } else {
-              department = [];
+              return [];
             }
-            const res = await department.exec();
+            const res = await department.lean<DepartmentDocument>().exec();
             return res
-          }))
+          }));
         } else {
           let dep = Department.find({});
           if (doctype === DocumentType.Memo) {

@@ -1,7 +1,7 @@
 'use server'
 
 import connectDB from "@/lib/database";
-import { Roles, UserDocument } from "@/lib/modelInterfaces";
+import { PhotoFileDocument, Roles, UserDocument } from "@/lib/modelInterfaces";
 import PhotoFile from "@/lib/models/PhotoFile";
 import User from "@/lib/models/User";
 import { getSession } from "@/lib/session";
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
           $match: { hasRegisteredSignature: false }
         }
       ]);
-      const result = await Promise.all(JSON.parse(JSON.stringify(user)).map(async (u: UserDocument) => ({ ...u, photo: u.photo ? await PhotoFile.findById(u.photo) : undefined })));
+      const result = await Promise.all(user.map(async (u: UserDocument) => ({ ...JSON.parse(JSON.stringify(u)), photo: u.photo ? await PhotoFile.findById(u.photo).lean<PhotoFileDocument>().exec() : undefined })));
       return NextResponse.json({ result });
     }
   } catch (e) {

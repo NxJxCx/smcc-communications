@@ -50,7 +50,7 @@ export interface UserDocument extends Documents {
   firstName: string
   middleName?: string
   lastName: string
-  departmentIds: DepartmentDocument[]
+  departmentIds: DepartmentDocument[]|string[]
   readMemos: ReadMemoDocument[]
   readLetters: ReadLetterDocument[]
   photo: PhotoFileDocument|string|null

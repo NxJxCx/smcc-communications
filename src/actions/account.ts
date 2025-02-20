@@ -31,7 +31,7 @@ export async function uploadProfilePhoto(role: Roles, id: string, prevState: Act
       }
     }
     if (user.photo) {
-      await PhotoFile.findByIdAndDelete(user.photo)
+      await PhotoFile.findByIdAndDelete(user.photo);
     }
     const photoArrayBuffer = await (photoFile as File).arrayBuffer()
     const file = Buffer.from(photoArrayBuffer)
@@ -41,7 +41,7 @@ export async function uploadProfilePhoto(role: Roles, id: string, prevState: Act
       file,
       mimeType,
       size
-    })
+    });
     if (!uploaded) {
       return {
         error: 'Failed to upload photo'
