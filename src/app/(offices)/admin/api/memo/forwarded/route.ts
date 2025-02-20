@@ -1,6 +1,6 @@
 'use server';;
 import connectDB from "@/lib/database";
-import { DocumentType, ESignatureDocument, LetterDocument, LetterIndividualDocument, MemoDocument, MemoIndividualDocument, Roles, SignatureApprovals } from "@/lib/modelInterfaces";
+import { DocumentType, ESignatureDocument, LetterDocument, LetterIndividualDocument, MemoDocument, MemoIndividualDocument, Roles, SignatureApprovals, UserDocument } from "@/lib/modelInterfaces";
 import ESignature from "@/lib/models/ESignature";
 import Letter from "@/lib/models/Letter";
 import LetterIndividual from "@/lib/models/LetterIndividual";
@@ -9,6 +9,10 @@ import MemoIndividual from "@/lib/models/MemoIndividual";
 import User from "@/lib/models/User";
 import { getSession } from "@/lib/session";
 import { NextRequest, NextResponse } from "next/server";
+
+function getFullName(admin?: UserDocument) {
+  return !!admin ? ((admin.prefixName || "") + " " + admin.firstName + " " + (admin.middleName ? admin.middleName[0].toUpperCase() + ". " : "") + admin.lastName + (admin.suffixName ? ", " + admin.suffixName : "")).trim() : ""
+}
 
 export async function GET(request: NextRequest) {
   await connectDB()
@@ -78,20 +82,28 @@ export async function GET(request: NextRequest) {
             }
           ]
         }).exec();
-        const departmentalMemoLetter = (JSON.parse(JSON.stringify(resultFind)) as MemoDocument[]|LetterDocument[]).map((item, i) => ({
-          ...item,
-          isPreparedByMe: item.preparedBy === session.user._id
-        }))
+        const departmentalMemoLetter = await Promise.all((JSON.parse(JSON.stringify(resultFind)) as MemoDocument[]|LetterDocument[]).map(async (item, i) => ({
+            ...item,
+            isPreparedByMe: item.preparedBy === session.user._id,
+            preparedByName: (await new Promise(async (resolve) => {
+              const u = await User.findById(item.preparedBy).lean<UserDocument>().exec();
+              resolve(getFullName(u as UserDocument))
+            }))
+          })))
         const mySig = session.user!.role === Roles.Admin ? (await ESignature.findOne({ adminId: session.user!._id }).lean<ESignatureDocument>().exec()) : null;
-        const individualMemoLetter = (JSON.parse(JSON.stringify(resultFindIndividual)) as MemoIndividualDocument[]|LetterIndividualDocument[]).map((item) => {
+        const individualMemoLetter = await Promise.all((JSON.parse(JSON.stringify(resultFindIndividual)) as MemoIndividualDocument[]|LetterIndividualDocument[]).map(async (item) => {
           const hasSignatureNotSigned = mySig !== null && item && (item.signatureApprovals as SignatureApprovals[]).some((esig) => {
             return esig.signature_id.toString() === mySig._id?.toString() && !esig.approvedDate
           });
           return {
             ...item,
-            hasSignatureNotSigned
+            hasSignatureNotSigned,
+            preparedByName: (await new Promise(async (resolve) => {
+              const u = await User.findById(item.preparedBy).lean<UserDocument>().exec();
+              resolve(getFullName(u as UserDocument))
+            }))
           }
-        })
+        }))
         return NextResponse.json({
           result: {
             departments: departmentalMemoLetter,

@@ -99,7 +99,9 @@ export default function HeaderComponent() {
                   {session?.user?.fullName}
                 </div>
                 <div className="text-xs text-slate-700 capitalize">
-                  {session?.user?.role === Roles.Admin && (session?.user?.highestPosition === HighestPosition.President || session?.user?.highestPosition === HighestPosition.VicePresident) ? session?.user?.highestPosition : (session?.user?.role === Roles.SuperAdmin ? "Super Admin" : session?.user?.role)}
+                  {session?.user?.role === Roles.Admin && (session?.user?.highestPosition === HighestPosition.President || session?.user?.highestPosition === HighestPosition.VicePresident) ? session?.user?.highestPosition : (session?.user?.role === Roles.SuperAdmin ? "Admin" : (
+                    session?.user?.role === Roles.Admin ? 'Dean/Head' : 'Faculty/Staff'
+                  ))}
                 </div>
               </div>
               <div className="min-h-full items-center justify-center flex pl-2">

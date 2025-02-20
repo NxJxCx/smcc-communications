@@ -18,9 +18,9 @@ export async function seed() {
         employeeId: 1,
         password: 'password',
         role: Roles.SuperAdmin,
-        email: 'superadmin@gmail.com',
-        firstName: 'Super',
-        lastName: 'Admin',
+        email: 'admin@smccnasipit.edu.ph',
+        firstName: 'Admin',
+        lastName: 'EDP',
       })
     }
   } catch (e) {}

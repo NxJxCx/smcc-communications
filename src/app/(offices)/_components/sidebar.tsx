@@ -24,6 +24,7 @@ export default function SidebarComponent() {
         window.location.href = '/' + role
       })
   }, [signout, role])
+
   return (
     <aside className={clsx(
       "float-left min-w-[220px] max-w-[220px] bg-[#004aad] shadow flex-shrink text-white",
@@ -35,8 +36,14 @@ export default function SidebarComponent() {
             <Image src={smccLogo} alt="SMCC Logo" width={60} height={60} className="mx-auto mt-4" />
             <h1 className="text-center mt-1 mb-2 font-[700] text-[22px]">OCS</h1>
             <div className="font-bold text-center text-blue-900 drop-shadow-lg rounded-lg mb-8 uppercase bg-sky-300 py-1">
-              {role === Roles.Admin && <>{user?.highestPosition || "Loading..."}</>}
-              {role !== Roles.Admin && <>{role}</>}
+              {sessionStatus === "loading" ? <>Loading...</> : (
+                <>
+                  {role === Roles.Admin && !!user?.highestPosition && <>{user.highestPosition}</>}
+                  {role === Roles.Admin && !user?.highestPosition && <>{'Dean/Head'}</>}
+                  {role === Roles.SuperAdmin && <>{'Admin'}</>}
+                  {role === Roles.Faculty && <>{'Faculty/Staff'}</>}
+                </>
+              )}
             </div>
           </div>
           {/* <!-- Side Navigation Bars --> */}

@@ -4,8 +4,13 @@ import { DocumentType, LetterDocument, MemoDocument, Roles, UserDocument } from 
 import ESignature from "@/lib/models/ESignature";
 import Letter from "@/lib/models/Letter";
 import Memo from "@/lib/models/Memo";
+import User from "@/lib/models/User";
 import { getSession } from "@/lib/session";
 import { NextRequest, NextResponse } from "next/server";
+
+function getFullName(admin?: UserDocument) {
+  return !!admin ? ((admin.prefixName || "") + " " + admin.firstName + " " + (admin.middleName ? admin.middleName[0].toUpperCase() + ". " : "") + admin.lastName + (admin.suffixName ? ", " + admin.suffixName : "")).trim() : ""
+}
 
 export async function GET(request: NextRequest) {
   await connectDB()
@@ -31,7 +36,7 @@ export async function GET(request: NextRequest) {
               ] },
             ]
           }).populate('departmentId').exec();
-          const result = (JSON.parse(JSON.stringify(resultFind)) as MemoDocument[]|LetterDocument[]|any[]).map((item, i) => {
+          const result = await Promise.all((JSON.parse(JSON.stringify(resultFind)) as MemoDocument[]|LetterDocument[]|any[]).map(async (item, i) => {
             let prio = item.signatureApprovals.filter((s: any) => s.priority === 1 && !s.approvedDate);
             if (prio.length === 0) {
               prio = item.signatureApprovals.filter((s: any) => s.priority === 2 && !s.approvedDate);
@@ -46,9 +51,13 @@ export async function GET(request: NextRequest) {
               isRejected: item.signatureApprovals.some((s: any) => !!s.rejectedDate),
               nextQueue: prio.length > 0 && item.preparedBy !== session.user._id && prio.some((s: any) => s.signature_id == signature_id),
               hasResponded: item.signatureApprovals.some((s: any) => s.signature_id == signature_id && (!!s.approvedDate || !!s.rejectedDate)),
-              highestPosition: (session.user as UserDocument).highestPosition
+              highestPosition: (session.user as UserDocument).highestPosition,
+              preparedByName: (await new Promise(async (resolve) => {
+                const u = await User.findById(item.preparedBy).lean<UserDocument>().exec();
+                resolve(getFullName(u as UserDocument))
+              }))
             };
-          });
+          }));
           return NextResponse.json({ result })
         }
       }

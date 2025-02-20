@@ -185,7 +185,7 @@ export default function CreateMemoLetterFromTemplate({
               <label className="text-xl font-bold">Select Recipient:</label>
               <select className="px-3 py-2 text-lg bg-white rounded shadow mx-auto flex mt-2" value={(selectedIndividual as UserDocument|undefined)?._id} onChange={(e) => onChangeSelectedIndividual(e.target.value)} >
                 <option value="">-- Select Individual --</option>
-                {employees?.map((employee) => (
+                {employees.filter((employee) => !!sessionData && employee._id !== sessionData.user?._id)?.map((employee) => (
                   <option key={employee._id + "Employee"} value={employee._id}>{employee.firstName} {employee.lastName}</option>
                 ))}
               </select>

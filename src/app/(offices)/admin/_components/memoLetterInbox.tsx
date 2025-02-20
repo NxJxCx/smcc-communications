@@ -55,6 +55,7 @@ export default function MemoLetterInbox({ doctype, searchParam, showRejected = f
         || ((new Date(item.updatedAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: 'long' })).toLowerCase().includes(search.toLowerCase())
         || ((new Date(item.updatedAt as string)).toLocaleDateString('en-PH', { year: 'numeric', month: 'short' })).toLowerCase().includes(search.toLowerCase())
         || item.series?.toLowerCase() === search.toLowerCase()
+        || item.preparedByName?.toLowerCase().includes(search.toLowerCase())
       ))
     }
     return filtered
@@ -245,7 +246,7 @@ export default function MemoLetterInbox({ doctype, searchParam, showRejected = f
             { loading && <LoadingComponent /> }
             { !loading && filteredData.length === 0 && <div className="text-center">No {doctype === DocumentType.Memo ? "memorandum" : "letter"} for approval.</div>}
             { !loading && filteredData.map((memoLetter, i) => (
-              <ThumbnailItemWithDepartment layout={viewLayout} key={memoLetter._id} onClick={() => setSelectedMemo(memoLetter)} isRejected={memoLetter.isRejected} preparedByMe={memoLetter.isPreparedByMe} isPending={memoLetter.isPending} thumbnailSrc="/thumbnail-document.png" department={(memoLetter.departmentId as DepartmentDocument).name} label={memoLetter.title} series={memoLetter.series} createdAt={memoLetter.createdAt} updatedAt={memoLetter.updatedAt} />
+              <ThumbnailItemWithDepartment layout={viewLayout} key={memoLetter._id} onClick={() => setSelectedMemo(memoLetter)} isRejected={memoLetter.isRejected} preparedByMe={memoLetter.isPreparedByMe} isPreparedBy={memoLetter.isPreparedBy} isPending={memoLetter.isPending} thumbnailSrc="/thumbnail-document.png" department={(memoLetter.departmentId as DepartmentDocument).name} label={memoLetter.title} series={memoLetter.series} createdAt={memoLetter.createdAt} updatedAt={memoLetter.updatedAt} />
             ))}
           </div>
         </div>
