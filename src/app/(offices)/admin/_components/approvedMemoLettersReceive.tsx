@@ -302,7 +302,7 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
             { loading && <LoadingComponent /> }
             { !loading && filteredData.length === 0 && <div className="text-center">No approved {doctype === DocumentType.Memo ? "memorandum" : "letter"}.</div>}
             { !loading && filteredData.map((memoLetter: any, i: any) => (
-              <ThumbnailItemWithDepartmentReceive layout={viewLayout} onClick={() => onReadMemoLetter(memoLetter)} preparedByMe={false} isPreparedBy={memoLetter.preparedByName} isRead={memoLetter.isRead} key={memoLetter._id} thumbnailSrc="/thumbnail-document.png" department={(memoLetter.departmentId as DepartmentDocument)?.name} label={memoLetter.title} createdAt={memoLetter.createdAt} updatedAt={memoLetter.updatedAt} />
+              <ThumbnailItemWithDepartmentReceive layout={viewLayout} onClick={() => onReadMemoLetter(memoLetter)} series={memoLetter.series} preparedByMe={false} isPreparedBy={memoLetter.preparedByName} isRead={memoLetter.isRead} key={memoLetter._id} thumbnailSrc="/thumbnail-document.png" department={(memoLetter.departmentId as DepartmentDocument)?.name} label={memoLetter.title} createdAt={memoLetter.createdAt} updatedAt={memoLetter.updatedAt} />
             ))}
           </div>
         </div>

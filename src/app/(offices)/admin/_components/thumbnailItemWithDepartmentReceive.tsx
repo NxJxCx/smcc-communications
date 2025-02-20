@@ -10,7 +10,7 @@ function toDateString(date?: string): string {
   return (new Date(date)).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })
 }
 
-export default function ThumbnailItemWithDepartmentReceive({ layout, thumbnailSrc, department, label, isPreparedBy, createdAt, updatedAt, isRejected, preparedByMe, isPending, onClick, isRead }: { isPreparedBy: string, layout: ViewLayout, thumbnailSrc: string; department: string; label: string|React.ReactNode; createdAt?: Date|string|null, updatedAt?: Date|string|null, isRejected?: boolean, preparedByMe?: boolean, isPending?: boolean, onClick: (e?: any) => void, isRead?: boolean }) {
+export default function ThumbnailItemWithDepartmentReceive({ layout, thumbnailSrc, department, series, label, isPreparedBy, createdAt, updatedAt, isRejected, preparedByMe, isPending, onClick, isRead }: { isPreparedBy: string, series: string, layout: ViewLayout, thumbnailSrc: string; department: string; label: string|React.ReactNode; createdAt?: Date|string|null, updatedAt?: Date|string|null, isRejected?: boolean, preparedByMe?: boolean, isPending?: boolean, onClick: (e?: any) => void, isRead?: boolean }) {
   return (<>
     {layout === "grid" && (
       <button type="button" onClick={onClick} className={clsx("text-center hover:bg-gray-400/10 p-1 rounded-lg", isRejected ? "bg-red-300 hover:bg-red-500" : preparedByMe ? "bg-sky-100 hover:bg-sky-300" : isPending ? "bg-yellow-100 hover:bg-yellow-300" : isRead ? "bg-green-100 hover:bg-green-300" : "bg-white")}>
@@ -19,6 +19,7 @@ export default function ThumbnailItemWithDepartmentReceive({ layout, thumbnailSr
         </div>
         <div className="font-[500]">{label}</div>
         <div className="italic">{department || "For Individual"}</div>
+        {!!series && (<div className="italic">Series: {series}</div>)}
         <div className="italic">Prepared By: {isPreparedBy}</div>
         <div>Created: {toDateString(createdAt as string|undefined)}</div>
       </button>
@@ -33,6 +34,7 @@ export default function ThumbnailItemWithDepartmentReceive({ layout, thumbnailSr
           </div>
           <div className="italic text-xs">Prepared By: {isPreparedBy}</div>
           <div className="italic">{department || "For Individual"}</div>
+          {!!series && (<div className="italic text-xs">Series: {series}</div>)}
           <div className="text-xs text-right">{toDateString(createdAt as string|undefined)}</div>
         </button>
       )}
