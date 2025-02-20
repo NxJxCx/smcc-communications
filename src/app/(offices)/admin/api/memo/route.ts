@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       if ([DocumentType.Memo, DocumentType.Letter].includes(doctype as DocumentType)) {
         const esignature = await ESignature.findOne({ adminId: session.user._id }).exec();
         if (!!esignature?._id) {
-          const signature_id = esignature._id;
+          const signature_id = esignature._id.toHexString();
           const MemoLetter = doctype === DocumentType.Memo? Memo : Letter;
           const resultFind = await MemoLetter.find({
             $or: [
@@ -46,10 +46,10 @@ export async function GET(request: NextRequest) {
             }
             return {
               ...item,
-              isPreparedByMe: item.preparedBy === session.user._id,
-              isPending: item.signatureApprovals.some((s: any) => !s.approvedDate) && ((item.preparedBy === session.user._id) || (item.preparedBy !== session.user._id && !!item.signatureApprovals.find((s: any) => s.signature_id == signature_id)?.approvedDate)),
+              isPreparedByMe: item.preparedBy === session.user._id?.toString(),
+              isPending: item.signatureApprovals.some((s: any) => !s.approvedDate) && ((item.preparedBy === session.user._id?.toString()) || (item.preparedBy !== session.user._id?.toString() && !!item.signatureApprovals.find((s: any) => s.signature_id == signature_id)?.approvedDate)),
               isRejected: item.signatureApprovals.some((s: any) => !!s.rejectedDate),
-              nextQueue: prio.length > 0 && item.preparedBy !== session.user._id && prio.some((s: any) => s.signature_id == signature_id),
+              nextQueue: prio.length > 0 && item.preparedBy !== session.user._id?.toString() && prio.some((s: any) => s.signature_id == signature_id),
               hasResponded: item.signatureApprovals.some((s: any) => s.signature_id == signature_id && (!!s.approvedDate || !!s.rejectedDate)),
               highestPosition: (session.user as UserDocument).highestPosition,
               preparedByName: (await new Promise(async (resolve) => {
@@ -58,6 +58,7 @@ export async function GET(request: NextRequest) {
               }))
             };
           }));
+          console.log("result:", result.length);
           return NextResponse.json({ result })
         }
       }

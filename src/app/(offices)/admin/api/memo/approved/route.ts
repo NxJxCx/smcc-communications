@@ -118,7 +118,7 @@ export async function GET(request: NextRequest) {
         }).lean<MemoIndividualDocument[]|LetterIndividualDocument[]>().exec();
         const departmentalMemoLetter = await Promise.all(resultFind.map(async (item, i) => ({
           ...item,
-          isPreparedByMe: item.preparedBy === session.user._id,
+          isPreparedByMe: item.preparedBy === session.user._id?.toString(),
           preparedByName: (await new Promise(async (resolve) => {
             const u = await User.findById(item.preparedBy).lean<UserDocument>().exec();
             resolve(getFullName(u as UserDocument))
@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
         const individualMemoLetter = await Promise.all(
           resultFindIndividual.map(async (item) => ({
             ...item,
-            isPreparedByMe: item.preparedBy === session.user._id,
+            isPreparedByMe: item.preparedBy === session.user._id?.toString(),
             preparedByName: (await new Promise(async (resolve) => {
               const u = await User.findById(item.preparedBy).lean<UserDocument>().exec();
               resolve(getFullName(u as UserDocument))

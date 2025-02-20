@@ -28,7 +28,7 @@ export async function saveMemorandumLetter(departmentId: string, doctype: Docume
   try {
     const session = await getSession(role)
     if (!!session?.user) {
-      const preparedBy = session.user._id;
+      const preparedBy = session.user._id?.toString();
       const department = await Department.findById(departmentId).exec()
       if (!department) {
         return {
