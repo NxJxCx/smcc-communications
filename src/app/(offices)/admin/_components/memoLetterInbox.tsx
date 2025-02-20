@@ -26,9 +26,7 @@ export default function MemoLetterInbox({ doctype, searchParam, showRejected = f
   const isPending = useMemo(() => selectedMemo && selectedMemo.isPending, [selectedMemo])
 
   const filteredData = useMemo(() => {
-    console.log("original data:", [...data], "count:", data.length);
     let filtered = data.filter((doc) => (doc.isPreparedByMe || !!doc.hasResponded || !!doc.nextQueue));
-    console.log("filtered 1: ", [...filtered], "count:", filtered.length);
     if (hideRejected) {
       filtered = filtered.filter((doc) => !doc.isRejected)
     }
@@ -60,7 +58,6 @@ export default function MemoLetterInbox({ doctype, searchParam, showRejected = f
         || item.preparedByName?.toLowerCase().includes(search.toLowerCase())
       ))
     }
-    console.log("final:", [...filtered], "count:", filtered.length);
     return filtered
   }, [data, hidePending, hidePreparedByMe, hideRejected, search])
 

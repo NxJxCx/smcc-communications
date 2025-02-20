@@ -58,7 +58,6 @@ export async function GET(request: NextRequest) {
               }))
             };
           }));
-          console.log("result:", result.length);
           return NextResponse.json({ result })
         }
       }
