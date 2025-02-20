@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       if (!!user) {
         if (user.highestPosition === HighestPosition.Admin) {
           result = await Promise.all(JSON.parse(JSON.stringify(user)).departmentIds.map(async (deptId: string) => {
-            let department: any = Department.findById(deptId);
+            let department: any = Department.findById(deptId).lean<DepartmentDocument>();
             if (doctype === DocumentType.Memo) {
               department = department.populate('memoTemplates');
             } else if (doctype === DocumentType.Letter) {
