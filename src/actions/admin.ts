@@ -277,11 +277,12 @@ export async function saveMemorandumLetterToIndividual(individualId: string, doc
     if (!!session?.user) {
       const preparedBy = session.user._id;
       const individual = await User.findById(individualId).lean<UserDocument>().exec()
-      if (!individual) {
+      if (!individual || (!!individual && !individual?._id)) {
         return {
           error: 'Employee not found'
         }
       }
+      const individual_id = individual._id!.toString();
       const content = formData.get('content')
       const title = formData.get('title')
       const series = formData.get('series')
@@ -301,7 +302,7 @@ export async function saveMemorandumLetterToIndividual(individualId: string, doc
       }));
       if (doctype === DocumentType.Memo) {
         const memo = await MemoIndividual.create({
-          userId: individual._id?.toString(),
+          userId: individual_id,
           title,
           series,
           cc,
@@ -312,7 +313,7 @@ export async function saveMemorandumLetterToIndividual(individualId: string, doc
         if (!!memo?._id) {
           try {
             const href = individual.role === role ? '/' + role + '/received/memo?id=' + memo._id : '/' + Roles.Faculty + '/memo?id=' + memo._id;
-            await addNotification(individual._id!.toString(), {
+            await addNotification(individual_id, {
               title: 'New Memorandum Sent to you',
               message: memo.title + ' for ' + individual.firstName + ' ' + individual.lastName,
               href
@@ -321,7 +322,7 @@ export async function saveMemorandumLetterToIndividual(individualId: string, doc
             console.log(e)
           }
           try {
-            await addNotification(preparedBy._id.toString(), {
+            await addNotification(preparedBy, {
               title: 'New Memorandum Sent to ' + individual.firstName + ' ' + individual.lastName,
               message: memo.title + ' for ' + individual.firstName + ' ' + individual.lastName,
               href: '/' + role + '/forwarded/memo?id=' + memo._id
@@ -336,7 +337,7 @@ export async function saveMemorandumLetterToIndividual(individualId: string, doc
         }
       } else if (doctype === DocumentType.Letter) {
         const letter = await LetterIndividual.create({
-          userId: individual._id?.toString(),
+          userId: individual_id,
           title,
           series,
           cc,
@@ -346,7 +347,7 @@ export async function saveMemorandumLetterToIndividual(individualId: string, doc
         })
         try {
           const href = individual.role === role ? '/' + role + '/received/letter?id=' + letter._id : '/' + Roles.Faculty + '/letter?id=' + letter._id;
-          await addNotification(individual._id!.toString(), {
+          await addNotification(individual_id, {
             title: 'New Memorandum Sent to you',
             message: letter.title + ' for ' + individual.firstName + ' ' + individual.lastName,
             href,
@@ -355,7 +356,7 @@ export async function saveMemorandumLetterToIndividual(individualId: string, doc
           console.log(e)
         }
         try {
-          await addNotification(preparedBy._id.toString(), {
+          await addNotification(preparedBy, {
             title: 'New Memorandum Sent to ' + individual.firstName + ' ' + individual.lastName,
             message: letter.title + ' for ' + individual.firstName + ' ' + individual.lastName,
             href: '/' + role + '/forwarded/letter?id=' + letter._id

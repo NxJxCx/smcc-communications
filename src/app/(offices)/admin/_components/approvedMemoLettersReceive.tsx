@@ -88,8 +88,8 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
     return filtered.map((item: any) => ({
       ...item,
       isRead: !!item.userId ? item.isRead : doctype === DocumentType.Memo
-        ? [...(myUser?.readMemos?.map((v: ReadMemoDocument) => v.memoId) || [])]?.includes(item._id!.toString())
-        : [...(myUser?.readLetters?.map((v: ReadLetterDocument) => v.letterId) || [])]?.includes(item._id!.toString()),
+        ? [...(myUser?.readMemos?.map((v: ReadMemoDocument) => v.memoId) || [])]?.includes(item._id?.toString())
+        : [...(myUser?.readLetters?.map((v: ReadLetterDocument) => v.letterId) || [])]?.includes(item._id?.toString()),
     }));
   }, [data, search, myUser, doctype])
 
@@ -100,7 +100,6 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
     url.searchParams.set('role', Roles.Admin)
     url.searchParams.set('title', selectedMemo?.title!)
     url.searchParams.set('isForIndividual', 'true');
-    console.log(url, url.toString())
     const docWindow = window.open(url, '_blank', 'width=1000,height=1000, menubar=no, toolbar=no, scrollbars=yes, location=no, status=no');
     if (docWindow) {
       docWindow.onbeforeunload = () => window.location.reload();

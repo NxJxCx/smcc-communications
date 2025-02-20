@@ -419,7 +419,6 @@ export default function OCSTinyMCE({ editorRef, signatoriesList, initialContentD
       });
     }
   }, [onAddHorizontal, handleFetchSignatory, onAddPreparedBy, onAddSeries, withSignatories, withPreparedBy, doctype, fullName, departmentId]);
-  console.log(doctype, "vs", departmentId, "vs", fullName)
   return (
     <div className={clsx("flex items-start justify-center", "min-w-[" + size.width + "px]", "max-w-[" + size.width + "px]"  , "min-h-[" + size.height + "px]")}>
       <Editor

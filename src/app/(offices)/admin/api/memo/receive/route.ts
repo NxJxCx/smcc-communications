@@ -1,6 +1,6 @@
 'use server';;
 import connectDB from "@/lib/database";
-import { DocumentType, Roles, UserDocument } from "@/lib/modelInterfaces";
+import { DocumentType, LetterIndividualDocument, MemoIndividualDocument, Roles, UserDocument } from "@/lib/modelInterfaces";
 import LetterIndividual from "@/lib/models/LetterIndividual";
 import MemoIndividual from "@/lib/models/MemoIndividual";
 import User from "@/lib/models/User";
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
         const MemoLetterIndividual = doctype === DocumentType.Memo ? MemoIndividual : LetterIndividual;
         const result2 = await MemoLetterIndividual.find({
           userId: session!.user._id.toString()
-        }).exec();
+        }).lean<MemoIndividualDocument[]|LetterIndividualDocument[]>().exec();
         const allResult = await Promise.all(result2.map(async (item) => ({
           ...item,
           isPreparedByMe: item.preparedBy === session.user._id,
@@ -32,7 +32,8 @@ export async function GET(request: NextRequest) {
             resolve(getFullName(u as UserDocument))
           }))
         })));
-        allResult.sort((a, b) => (new Date(b.updatedAt)).getTime() - (new Date(a.updatedAt)).getTime())
+        allResult.sort((a, b) => (new Date(b.updatedAt!)).getTime() - (new Date(a.updatedAt!)).getTime())
+        console.log(allResult)
         return NextResponse.json({ result: allResult, user })
       }
     }
