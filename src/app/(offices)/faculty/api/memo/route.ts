@@ -21,17 +21,17 @@ export async function GET(request: NextRequest) {
       const doctype = request.nextUrl.searchParams.get('doctype');
       if ([DocumentType.Memo, DocumentType.Letter].includes(doctype as DocumentType)) {
         const selectFields = 'departmentIds ' + (doctype === DocumentType.Memo ? "readMemos" : "readLetters");
-        const user = await User.findById(session.user._id).select(selectFields).exec();
+        const user = await User.findById(session.user._id).select(selectFields).lean<UserDocument>().exec();
         const MemoLetter = doctype === DocumentType.Memo ? Memo : Letter;
         const MemoLetterIndividual = doctype === DocumentType.Memo ? MemoIndividual : LetterIndividual;
-        const userId = user?._id?.toHexString();
+        const userId = user?._id?.toString();
         const result = await MemoLetter.find({
           $and: [
             {
               $or: [
                 {
                   departmentId: {
-                    $in: user._doc.departmentIds,
+                    $in: user!.departmentIds,
                   },
                 },
                 {
@@ -59,17 +59,20 @@ export async function GET(request: NextRequest) {
             }
           ]
         }).populate('departmentId').lean<MemoDocument[]|LetterDocument[]>().exec();
+        console.log("RESULT:", result);
 
         const result2 = await MemoLetterIndividual.find({
-          userId: session!.user._id.toString()
+          userId
         }).lean<MemoIndividualDocument[]|LetterIndividualDocument[]>().exec();
+        console.log("result2", result2);
         const allResult1 = await Promise.all(result.map(async (item) => ({
           ...item,
           preparedByName: (await new Promise(async (resolve) => {
             const u = await User.findById(item.preparedBy).lean<UserDocument>().exec();
             resolve(getFullName(u as UserDocument))
           }))
-        })))
+        })));
+        console.log("allResult1", allResult1);
         const allResult2 = await Promise.all(result2.map(async (item) => ({
           ...item,
           preparedByName: (await new Promise(async (resolve) => {
@@ -77,7 +80,8 @@ export async function GET(request: NextRequest) {
             resolve(getFullName(u as UserDocument))
           }))
         })))
-        const allResult = [...allResult1, allResult2];
+        console.log("allResult2", allResult2);
+        const allResult = [...allResult1, ...allResult2];
         allResult.sort((a, b) => (new Date((b as any).updatedAt)).getTime() - (new Date((a as any).updatedAt)).getTime())
         return NextResponse.json({ result: allResult, user })
       }
