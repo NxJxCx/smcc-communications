@@ -59,12 +59,10 @@ export async function GET(request: NextRequest) {
             }
           ]
         }).populate('departmentId').lean<MemoDocument[]|LetterDocument[]>().exec();
-        console.log("RESULT:", result);
 
         const result2 = await MemoLetterIndividual.find({
           userId
         }).lean<MemoIndividualDocument[]|LetterIndividualDocument[]>().exec();
-        console.log("result2", result2);
         const allResult1 = await Promise.all(result.map(async (item) => ({
           ...item,
           preparedByName: (await new Promise(async (resolve) => {
@@ -72,7 +70,6 @@ export async function GET(request: NextRequest) {
             resolve(getFullName(u as UserDocument))
           }))
         })));
-        console.log("allResult1", allResult1);
         const allResult2 = await Promise.all(result2.map(async (item) => ({
           ...item,
           preparedByName: (await new Promise(async (resolve) => {
@@ -80,7 +77,6 @@ export async function GET(request: NextRequest) {
             resolve(getFullName(u as UserDocument))
           }))
         })))
-        console.log("allResult2", allResult2);
         const allResult = [...allResult1, ...allResult2];
         allResult.sort((a, b) => (new Date((b as any).updatedAt)).getTime() - (new Date((a as any).updatedAt)).getTime())
         return NextResponse.json({ result: allResult, user })
