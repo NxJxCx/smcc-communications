@@ -59,9 +59,17 @@ export async function GET(request: NextRequest) {
             }
           ]
         }).populate('departmentId').lean<MemoDocument[]|LetterDocument[]>().exec();
-
         const result2 = await MemoLetterIndividual.find({
-          userId
+          $or: [
+            {
+              userId
+            },
+            {
+              cc: {
+                $in: [userId]
+              }
+            }
+          ]
         }).lean<MemoIndividualDocument[]|LetterIndividualDocument[]>().exec();
         const allResult1 = await Promise.all(result.map(async (item) => ({
           ...item,
