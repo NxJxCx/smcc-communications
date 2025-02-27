@@ -67,7 +67,7 @@ export default function MemoLetterInbox({ doctype, searchParam, showRejected = f
     setLoading(true)
     fetch(url)
       .then(response => response.json())
-      .then(({ result }) => { setData(result); setLoading(false) })
+      .then(({ result }) => { console.log(result); setData(result); setLoading(false) })
       .catch((e) => { console.log(e); setLoading(false) })
   }, [doctype]);
 
@@ -246,7 +246,7 @@ export default function MemoLetterInbox({ doctype, searchParam, showRejected = f
             { loading && <LoadingComponent /> }
             { !loading && filteredData.length === 0 && <div className="text-center">No {doctype === DocumentType.Memo ? "memorandum" : "letter"} for approval.</div>}
             { !loading && filteredData.map((memoLetter, i) => (
-              <ThumbnailItemWithDepartment layout={viewLayout} key={memoLetter._id} onClick={() => setSelectedMemo(memoLetter)} isRejected={memoLetter.isRejected} preparedByMe={memoLetter.isPreparedByMe} isPreparedBy={memoLetter.preparedByName} isPending={memoLetter.isPending} thumbnailSrc="/thumbnail-document.png" department={(memoLetter.departmentId as DepartmentDocument).name} label={memoLetter.title} series={memoLetter.series} createdAt={memoLetter.createdAt} updatedAt={memoLetter.updatedAt} />
+              <ThumbnailItemWithDepartment layout={viewLayout} withSignatureNames={memoLetter.signatureNames} key={memoLetter._id} onClick={() => setSelectedMemo(memoLetter)} isRejected={memoLetter.isRejected} preparedByMe={memoLetter.isPreparedByMe} isPreparedBy={memoLetter.preparedByName} isPending={memoLetter.isPending} thumbnailSrc="/thumbnail-document.png" department={(memoLetter.departmentId as DepartmentDocument).name} label={memoLetter.title} series={memoLetter.series} createdAt={memoLetter.createdAt} updatedAt={memoLetter.updatedAt} />
             ))}
           </div>
         </div>

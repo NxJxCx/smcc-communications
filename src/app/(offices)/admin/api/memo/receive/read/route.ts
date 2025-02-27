@@ -14,11 +14,12 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getSession(Roles.Admin)
     if (!!session?.user) {
+      const myuserid = session.user._id.toString()
       const id = request.nextUrl.searchParams.get('id');
       const doctype = request.nextUrl.searchParams.get('doctype');
       // const isForIndividual = request.nextUrl.searchParams.get('isForIndividual') === "true";
       if ([DocumentType.Memo, DocumentType.Letter].includes(doctype as DocumentType) && !!id) {
-        const user = await User.findById(session.user._id).exec();
+        const user = await User.findById(myuserid).exec();
         if (!user) {
           return NextResponse.json({ success: false, message: 'User not found' });
         }
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
               console.log("ERROR:", err);
             }
           }
-          const mySig = session.user.role === Roles.Admin ? (await ESignature.findOne({ adminId: session.user._id }).lean<ESignatureDocument>().exec()) : null;
+          const mySig = session.user.role === Roles.Admin ? (await ESignature.findOne({ adminId: myuserid }).lean<ESignatureDocument>().exec()) : null;
           const hasSignatureNotSigned = mySig !== null && memoLetterIndividual && (memoLetterIndividual._doc.signatureApprovals as SignatureApprovals[]).some((esig) => {
             return esig.signature_id.toString() === mySig._id?.toString() && !esig.approvedDate
           });

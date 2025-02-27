@@ -832,6 +832,7 @@ export async function forwardMemorandumLetter(memoLetterId: string, doctype: Doc
   try {
     const session = await getSession(role)
     if (!!session?.user) {
+      const myuserFullname = session.user.fullName
       if (!memoLetterId) {
         return {
           error: 'Memo/Letter not found'
@@ -855,10 +856,11 @@ export async function forwardMemorandumLetter(memoLetterId: string, doctype: Doc
         if (memo.acknowledged && memo.modifiedCount > 0) {
           try {
             const user = await User.findById(forwardTo).lean<UserDocument>().exec();
+            const href = user?.role === Roles.Admin ? '/' + user?.role + '/forwarded/memo?id=' + memoLetterId :  '/' + user?.role + '/memo?id=' + memoLetterId
             await addNotification(forwardTo, {
               title: 'A memorandum has been forwarded to you',
-              message: user?.firstName + ' ' + user?.lastName + ' has forwarded a memorandum.',
-              href: '/' + role + '/forwarded/memo?id=' + memoLetterId
+              message: myuserFullname + ' has forwarded a memorandum.',
+              href,
             })
           } catch (e) {
             console.log(e)
@@ -880,10 +882,11 @@ export async function forwardMemorandumLetter(memoLetterId: string, doctype: Doc
         if (letter.acknowledged && letter.modifiedCount > 0) {
           try {
             const user = await User.findById(forwardTo).lean<UserDocument>().exec();
+            const href = user?.role === Roles.Admin ? '/' + user?.role + '/forwarded/letter?id=' + memoLetterId :  '/' + user?.role + '/letter?id=' + memoLetterId
             await addNotification(forwardTo, {
               title: 'A letter has been forwarded to you',
-              message: user?.firstName + ' ' + user?.lastName + ' has forwarded a letter.',
-              href: '/' + role + '/forwarded/letter?id=' + memoLetterId
+              message: myuserFullname + ' has forwarded a letter.',
+              href,
             })
           } catch (e) {
             console.log(e)

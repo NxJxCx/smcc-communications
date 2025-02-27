@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getSession(Roles.Admin)
     if (!!session?.user) {
+      const myuserid = session.user._id.toString()
       const depid = request.nextUrl.searchParams.get('depid');
       const doctype = request.nextUrl.searchParams.get('doctype');
       const currentYear = new Date().getFullYear();
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
         const MemoModel = !!depid ? Memo : MemoIndividual;
         const memoSeriesLastest = await MemoModel.countDocuments({
           ...(!!depid ? {departmentId: depid} : {}),
-          preparedBy: session.user._id,
+          preparedBy: myuserid,
           createdAt: { $gte: startOfYear, $lt: endOfYear }
         }).exec();
         return NextResponse.json({
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
         const LetterModel = !!depid ? Letter : LetterIndividual;
         const letterSeriesLastest = await LetterModel.countDocuments({
           ...(!!depid ? {departmentId: depid} : {}),
-          preparedBy: session.user._id,
+          preparedBy: myuserid,
           createdAt: { $gte: startOfYear, $lt: endOfYear }
         }).exec();
         return NextResponse.json({

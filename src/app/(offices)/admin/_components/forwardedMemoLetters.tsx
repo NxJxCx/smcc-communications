@@ -285,7 +285,7 @@ export default function ForwardedMemoLetter({ doctype, searchParam }: Readonly<{
 
   return (<>
     <div className="p-6">
-      <h1 className="text-2xl font-[500]">{doctype === DocumentType.Memo ? <>Forwarded Memorandums</> : <>Forwarded Letters</>}</h1>
+      <h1 className="text-2xl font-[500]">{doctype === DocumentType.Memo ? <>Received (CC) Memorandums</> : <>Received (CC) Letters</>}</h1>
       <div className="mt-3 flex flex-col lg:flex-row lg:flex-betweeen flex-wrap w-full min-w-[300px] lg:min-w-[800px] bg-white p-4 rounded-t-lg">
         <div className="flex flex-wrap">
           <label htmlFor="searchMemo" className="font-[500] mr-2 items-center flex">Search:</label>

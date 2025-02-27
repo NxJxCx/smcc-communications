@@ -16,17 +16,18 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getSession(Roles.Admin)
     if (!!session?.user) {
+      const myuserid = session.user._id.toString()
       const doctype = request.nextUrl.searchParams.get('doctype');
       if ([DocumentType.Memo, DocumentType.Letter].includes(doctype as DocumentType)) {
         const selectFields = 'departmentIds ' + (doctype === DocumentType.Memo ? "readMemos" : "readLetters");
-        const user = await User.findById(session.user._id).select(selectFields).exec();
+        const user = await User.findById(myuserid).select(selectFields).exec();
         const MemoLetterIndividual = doctype === DocumentType.Memo ? MemoIndividual : LetterIndividual;
         const result2 = await MemoLetterIndividual.find({
-          userId: session!.user._id.toString()
+          userId: myuserid
         }).lean<MemoIndividualDocument[]|LetterIndividualDocument[]>().exec();
         const allResult = await Promise.all(result2.map(async (item) => ({
           ...item,
-          isPreparedByMe: item.preparedBy === session.user._id?.toString(),
+          isPreparedByMe: item.preparedBy.toString() === myuserid,
           preparedByName: (await new Promise(async (resolve) => {
             const u = await User.findById(item.preparedBy).lean<UserDocument>().exec();
             resolve(getFullName(u as UserDocument))

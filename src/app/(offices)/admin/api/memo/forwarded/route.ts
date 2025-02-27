@@ -19,33 +19,25 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getSession(Roles.Admin)
     if (!!session?.user) {
+      const myuserid = session.user._id.toString()
       const doctype = request.nextUrl.searchParams.get('doctype');
       if ([DocumentType.Memo, DocumentType.Letter].includes(doctype as DocumentType)) {
         const memoLetterField = doctype === DocumentType.Memo ? "archivedMemos" : "archivedLetters";
         const memoLetterIndividualField = doctype === DocumentType.Memo ? "archivedMemoIndividuals" : "archivedLetterIndividuals";
-        const user = await User.findById(session.user._id).select(`departmentIds ${memoLetterField} ${memoLetterIndividualField}`).exec();
+        const user = await User.findById(myuserid).select(`departmentIds ${memoLetterField} ${memoLetterIndividualField}`).exec();
         const MemoLetter = doctype === DocumentType.Memo ? Memo : Letter;
         const MemoLetterIndividual = doctype === DocumentType.Memo ? MemoIndividual : LetterIndividual;
         const resultFind = await MemoLetter.find({
           $and: [
             {
               _id: {
-                $nin: [...(user._doc[memoLetterField] || [])]
+                $nin: [...((user as any)[memoLetterField] || [])]
               }
             },
             {
-              $or: [
-                {
-                  departmentId: {
-                    $in: user._doc.departmentIds,
-                  },
-                },
-                {
-                  cc: {
-                    $in: [user?._id?.toHexString()]
-                  }
-                }
-              ]
+              cc: {
+                $in: [myuserid]
+              }
             },
             {
               signatureApprovals: {
@@ -67,32 +59,32 @@ export async function GET(request: NextRequest) {
         }).populate('departmentId').lean<MemoDocument[]|LetterDocument[]>().exec();
         const resultFindIndividual = await MemoLetterIndividual.find({
           _id: {
-            $nin: [...(user._doc[memoLetterIndividualField] || [])]
+            $nin: [...((user as any)[memoLetterIndividualField] || [])]
           },
           $or: [
             {
-              preparedBy: {
-                $in: [user?._id?.toHexString()]
-              }
-            },
-            {
               cc: {
-                $in: [user?._id?.toHexString()]
+                $in: [myuserid]
               }
             }
           ]
         }).lean<MemoIndividualDocument[]|LetterIndividualDocument[]>().exec();
         const departmentalMemoLetter = await Promise.all(resultFind.map(async (item, i) => ({
             ...item,
-            isPreparedByMe: item.preparedBy === session.user._id?.toString(),
+            isPreparedByMe: item.preparedBy.toString() === myuserid?.toString(),
             preparedByName: (await new Promise(async (resolve) => {
               const u = await User.findById(item.preparedBy).lean<UserDocument>().exec();
               resolve(getFullName(u as UserDocument))
-            }))
-          })))
-        const mySig = session.user!.role === Roles.Admin ? (await ESignature.findOne({ adminId: session.user!._id }).lean<ESignatureDocument>().exec()) : null;
+            })),
+            signatureNames: (await Promise.all(item.signatureApprovals.map(async (sa: SignatureApprovals) => new Promise(async (resolve) => {
+              const es = await ESignature.findById(sa.signature_id).select('adminId').populate('adminId').lean<ESignatureDocument>().exec()
+              const r = !!es ? getFullName((es.adminId as UserDocument)) : null;
+              resolve(r);
+            })))).filter((sa) => !!sa),
+        })))
+        const mySig = session.user!.role === Roles.Admin ? (await ESignature.findOne({ adminId: myuserid }).lean<ESignatureDocument>().exec()) : null;
         const individualMemoLetter = await Promise.all(resultFindIndividual.map(async (item) => {
-          const hasSignatureNotSigned = mySig !== null && item && (item.signatureApprovals as SignatureApprovals[]).some((esig) => {
+          const hasSignatureNotSigned = mySig !== null && !!item && (item.signatureApprovals as SignatureApprovals[]).some((esig) => {
             return esig.signature_id.toString() === mySig._id?.toString() && !esig.approvedDate
           });
           return {

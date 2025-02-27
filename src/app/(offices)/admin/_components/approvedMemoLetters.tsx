@@ -47,7 +47,7 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
     setLoading(true)
     fetch(url)
       .then(response => response.json())
-      .then(({ result }) => { setData(result?.departments); setDataIndividual(result?.individuals); setLoading(false) })
+      .then(({ result }) => { setData(result?.departments); /*setDataIndividual(result?.individuals);*/ setLoading(false) })
       .catch((e) => { console.log(e); setLoading(false) })
   }, [doctype]);
 
@@ -367,7 +367,6 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
   }, [allUsers, selectedMemo, getFullName, sessionData, doctype, getData, onBack])
 
   const [viewLayout, setViewLayout] = useState<ViewLayout>("list")
-
   return (<>
     <div className="p-6">
       <h1 className="text-2xl font-[500]">{doctype === DocumentType.Memo ? "Approved Memorandums" : "Approved Letters"}</h1>
@@ -389,7 +388,7 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
             { loading && <LoadingComponent /> }
             { !loading && filteredData.length === 0 && <div className="text-center">No approved {doctype === DocumentType.Memo ? "memorandum" : "letter"}.</div>}
             { !loading && filteredData.map((memoLetter, i) => (
-              <ThumbnailItemWithDepartment layout={viewLayout} series={memoLetter?.series} onClick={() => setSelectedMemo(memoLetter)} preparedByMe={memoLetter.isPreparedByMe} isPreparedBy={memoLetter.preparedByName} key={memoLetter._id} thumbnailSrc="/thumbnail-document.png" department={(memoLetter as any).departmentId?.name} label={memoLetter.title} createdAt={memoLetter.createdAt} updatedAt={memoLetter.updatedAt} />
+              <ThumbnailItemWithDepartment layout={viewLayout} withSignatureNames={memoLetter.signatureNames as string[]} series={memoLetter?.series} onClick={() => setSelectedMemo(memoLetter)} preparedByMe={memoLetter.isPreparedByMe} isPreparedBy={memoLetter.preparedByName} key={memoLetter._id} thumbnailSrc="/thumbnail-document.png" department={(memoLetter as any).departmentId?.name} label={memoLetter.title} createdAt={memoLetter.createdAt} updatedAt={memoLetter.updatedAt} />
             ))}
           </div>
         </div>
