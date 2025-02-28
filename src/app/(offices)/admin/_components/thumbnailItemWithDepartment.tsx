@@ -36,7 +36,7 @@ export default function ThumbnailItemWithDepartment({ withSignatureNames, isPrep
           </div>
         </div>
         <div className="italic text-xs border-x px-1 flex items-center"><div className="h-fit w-full">Prepared By: <div>{isPreparedBy}</div></div></div>
-        {withSignatureNames && <div className="italic text-xs border-r px-1 flex items-center"><div className="w-full h-fit">Approvals: ({withSignatureNames.length})
+        {withSignatureNames && <div className="italic text-xs border-r px-1 flex items-center"><div className="w-full h-fit">Received: ({withSignatureNames.length})
           {withSignatureNames.map((wsn, i) => <div key={wsn + "_" + i}>{wsn}</div>)}</div></div>}
         <div className="italic text-center border-r px-1 flex items-center"><div className="h-fit w-full">{department || "For Individual"}</div></div>
         {!!series && (<div className="italic text-xs border-r px-1 flex items-center"><div className="h-fit w-full">Series: <div>{series}</div></div></div>)}

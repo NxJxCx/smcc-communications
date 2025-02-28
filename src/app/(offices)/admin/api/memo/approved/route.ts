@@ -137,7 +137,18 @@ export async function GET(request: NextRequest) {
             preparedByName: (await new Promise(async (resolve) => {
               const u = await User.findById(item.preparedBy).lean<UserDocument>().exec();
               resolve(getFullName(u as UserDocument))
-            }))
+            })),
+            signatureNames: (await Promise.all([
+              ...[item.userId].map(async (uid) => new Promise(async (resolve) => {
+                const u = await User.findById(uid).lean<UserDocument>().exec();
+                resolve(getFullName(u as UserDocument))
+              })),
+              ...item.signatureApprovals.map(async (sa: SignatureApprovals) => new Promise(async (resolve) => {
+                const es = await ESignature.findById(sa.signature_id).select('adminId').populate('adminId').lean<ESignatureDocument>().exec()
+                const r = !!es ? getFullName((es.adminId as UserDocument)) : null;
+                resolve(r);
+              }))
+            ])).reduce((caller: any[], sa: any) => !!sa && !caller.includes(sa) ? [...caller, sa] : caller, []),
           }))
         )
         return NextResponse.json({

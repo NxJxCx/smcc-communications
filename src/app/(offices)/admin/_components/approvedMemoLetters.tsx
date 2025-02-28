@@ -47,7 +47,7 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
     setLoading(true)
     fetch(url)
       .then(response => response.json())
-      .then(({ result }) => { setData(result?.departments); /*setDataIndividual(result?.individuals);*/ setLoading(false) })
+      .then(({ result }) => { setData(result?.departments); setDataIndividual(result?.individuals); setLoading(false) })
       .catch((e) => { console.log(e); setLoading(false) })
   }, [doctype]);
 
