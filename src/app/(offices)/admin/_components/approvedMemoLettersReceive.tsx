@@ -315,7 +315,7 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
       <hr className="border w-full h-[1px] my-2" />
       <div className="w-full flex justify-end items-center gap-x-3 pr-2">
         {hasSignatureAvailable && <button type="button" className="rounded-lg bg-blue-300 hover:bg-blue-100 text-black px-3 py-1 ml-4" onClick={onSignSignature}><EditIcon display="inline" /> Sign Your Signature</button>}
-        <button type="button" className="rounded-lg bg-blue-300 hover:bg-blue-100 text-black px-3 py-1 ml-4" onClick={onArchive}><ArchiveIcon display="inline" /> Archive</button>
+        {/* <button type="button" className="rounded-lg bg-blue-300 hover:bg-blue-100 text-black px-3 py-1 ml-4" onClick={onArchive}><ArchiveIcon display="inline" /> Archive</button> */}
         <button type="button" className="rounded-lg bg-blue-300 hover:bg-blue-100 text-black px-3 py-1 ml-4" onClick={onForwardTo}><FastForwardIcon display="inline" /> Forward To</button>
         <button type="button" className="rounded-lg bg-blue-300 hover:bg-blue-100 text-black px-3 py-1 ml-4" onClick={onPrint}><PrintIcon display="inline" /> Print</button>
         <button type="button" className="rounded-lg bg-gray-300 hover:bg-yellow-100 text-black px-3 py-1 mr-4" onClick={onBack}>Close</button>

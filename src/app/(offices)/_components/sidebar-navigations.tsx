@@ -69,10 +69,10 @@ const adminSidebarNavList: any[] = [
     name: 'Received (CC)',
     url: '/admin/forwarded',
   },
-  {
-    name: 'Archive',
-    url: '/admin/archive',
-  },
+  // {
+  //   name: 'Archive',
+  //   url: '/admin/archive',
+  // },
   {
     name: 'Reports',
     url: '/admin/reports',

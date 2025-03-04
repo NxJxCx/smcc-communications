@@ -327,7 +327,7 @@ export default function ForwardedMemoLetter({ doctype, searchParam }: Readonly<{
         </div>
         <div className="flex items-center justify-end gap-x-3">
           {selectedMemo?.hasSignatureNotSigned && <button type="button" className="rounded-lg bg-blue-300 hover:bg-blue-100 text-black px-3 py-1 ml-4" onClick={onSignSignature}><EditIcon display="inline" /> Sign Your Signature</button>}
-          <button type="button" className="rounded-lg bg-blue-300 hover:bg-blue-100 text-black px-3 py-1 ml-4" onClick={onArchive}><ArchiveIcon display="inline" /> Archive</button>
+          {/* <button type="button" className="rounded-lg bg-blue-300 hover:bg-blue-100 text-black px-3 py-1 ml-4" onClick={onArchive}><ArchiveIcon display="inline" /> Archive</button> */}
           <button type="button" className="rounded-lg bg-blue-300 hover:bg-blue-100 text-black px-3 py-1 ml-4" onClick={onPrint}><PrintIcon display="inline" /> Print</button>
           <button type="button" className="rounded-lg bg-gray-300 hover:bg-yellow-100 text-black px-3 py-1" onClick={onBack}>Close</button>
         </div>
