@@ -397,9 +397,10 @@ export async function signMemoLetterIndividual(doctype: DocumentType, memoLetter
           const updated = await memo.save({ new: true, upsert: false, runValidators: true })
           if (!!updated?._id) {
             const u = await User.findById(memo.preparedBy).lean<UserDocument>().exec();
-            if (u?._id) {
+            const eu = await User.findById(eSignature.adminId.toString()).lean<UserDocument>().exec();
+            if (u?._id && eu?._id) {
               await addNotification(u._id.toString(), {
-                title: 'Signature signed by ' + getFullName(u),
+                title: 'Signature signed by ' + getFullName(eu),
                 message: memo.title + ' (Individual) signed.',
                 href: '/' + role + '/received/memo?id=' + memo._id
               });
@@ -414,9 +415,10 @@ export async function signMemoLetterIndividual(doctype: DocumentType, memoLetter
           const updated = await letter.save({ new: true, upsert: false, runValidators: true })
           if (!!updated?._id) {
             const u = await User.findById(letter.preparedBy).lean<UserDocument>().exec();
-            if (u?._id) {
+            const eu = await User.findById(eSignature.adminId.toString()).lean<UserDocument>().exec();
+            if (u?._id && eu?._id) {
               await addNotification(u._id.toString(), {
-                title: 'Signature signed by ' + getFullName(u),
+                title: 'Signature signed by ' + getFullName(eu),
                 message: letter.title + ' (Individual) signed.',
                 href: '/' + role + '/received/letter?id=' + letter._id
               });
