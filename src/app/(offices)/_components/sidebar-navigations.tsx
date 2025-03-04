@@ -41,10 +41,10 @@ const superAdminSidebarNavList: SidebarNavigation[] = [
 ]
 
 const adminSidebarNavList: any[] = [
-  {
-    name: 'Notifications',
-    url: '/admin',
-  },
+  // {
+  //   name: 'Notifications',
+  //   url: '/admin',
+  // },
   {
     name: 'My E-Signature',
     url: '/admin/esignature',
@@ -84,10 +84,10 @@ const adminSidebarNavList: any[] = [
 ]
 
 const facultySidebarNavList: any[] = [
-  {
-    name: 'Notifications',
-    url: '/faculty',
-  },
+  // {
+  //   name: 'Notifications',
+  //   url: '/faculty',
+  // },
   {
     name: 'Memorandoms',
     url: '/faculty/memo',
