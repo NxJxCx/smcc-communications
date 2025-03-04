@@ -1,6 +1,6 @@
 'use server';;
 import connectDB from "@/lib/database";
-import { DocumentType, LetterDocument, MemoDocument, Roles } from "@/lib/modelInterfaces";
+import { DocumentType, ESignatureDocument, LetterDocument, MemoDocument, Roles } from "@/lib/modelInterfaces";
 import Department from "@/lib/models/Department";
 import ESignature from "@/lib/models/ESignature";
 import Letter from "@/lib/models/Letter";
@@ -388,14 +388,22 @@ export async function signMemoLetterIndividual(doctype: DocumentType, memoLetter
   try {
     const session = await getSession(role)
     if (!!session?.user) {
-      const eSignature = await ESignature.findOne({ adminId: session.user._id }).exec()
+      const eSignature = await ESignature.findOne({ adminId: session.user._id }).lean<ESignatureDocument>().exec()
       if (!!eSignature?._id) {
-        const sid = eSignature._id.toHexString()
+        const sid = eSignature._id.toString()
         if (doctype === DocumentType.Memo) {
           const memo = await MemoIndividual.findById(memoLetterIndividualId).exec()
           memo.signatureApprovals.find((signatureApproval: any) => signatureApproval.signature_id.toHexString() === sid).approvedDate = new Date()
           const updated = await memo.save({ new: true, upsert: false, runValidators: true })
           if (!!updated?._id) {
+            const u = await User.findById(memo.preparedBy).lean<UserDocument>().exec();
+            if (u?._id) {
+              await addNotification(u._id.toString(), {
+                title: 'Signature signed by ' + getFullName(u),
+                message: memo.title + ' (Individual) signed.',
+                href: '/' + role + '/received/memo?id=' + memo._id
+              });
+            }
             return {
               success: "Memorandum signed successfully",
             }
@@ -405,6 +413,14 @@ export async function signMemoLetterIndividual(doctype: DocumentType, memoLetter
           letter.signatureApprovals.find((signatureApproval: any) => signatureApproval.signature_id.toHexString() === sid).approvedDate = new Date()
           const updated = await letter.save({ new: true, upsert: false, runValidators: true })
           if (!!updated?._id) {
+            const u = await User.findById(letter.preparedBy).lean<UserDocument>().exec();
+            if (u?._id) {
+              await addNotification(u._id.toString(), {
+                title: 'Signature signed by ' + getFullName(u),
+                message: letter.title + ' (Individual) signed.',
+                href: '/' + role + '/received/letter?id=' + letter._id
+              });
+            }
             return {
               success: "Letter signed successfully",
             }
