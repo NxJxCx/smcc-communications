@@ -191,7 +191,7 @@ export default function MemoLetterInbox({ doctype, searchParam }: Readonly<{ doc
         let isIndividual = false
         // then select all users from departmentId
         const inMemo = [selectedMemo?.preparedBy, ...(selectedMemo?.cc || []), sessionData?.user?._id]
-        if (!!selectedMemo?.signatureApprovals) {
+        if (!(selectedMemo as any)?.userId) {
           const allESignatures: string[] = (selectedMemo?.signatureApprovals as SignatureApprovals[]).map((sa) => sa.signature_id as string)
           const inMemoSignatures = allUsers[departmentId].users.filter(user => !!user.signatureId && allESignatures.includes(user.signatureId)).map((user) => user._id)
           inMemoSignatures.concat(inMemoSignatures)
